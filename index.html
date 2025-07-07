@@ -3,26 +3,106 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Your Name | Future Dev</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Minimal Studio</title>
+  <script src="https://cdn.tailwindcss.com "></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js "></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js "></script>
+  <style>
+    body {
+      scroll-behavior: smooth;
+    }
+    .fade-up {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+  </style>
 </head>
-<body>
-  <div class="hero">
-    <h1>Hello, I'm <span>Your Name</span></h1>
-    <p>A passionate first-year Software Engineering student ready to build cool stuff!</p>
-    
-    <div class="buttons">
-      <a href="#portfolio" class="btn">View My Portfolio</a>
-      <a href="assets/cv.pdf" class="btn btn-outline" download>Download My CV</a>
+<body class="bg-black text-white font-sans">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 w-full z-50 bg-black bg-opacity-70 backdrop-blur-md px-6 py-4 flex justify-between items-center">
+    <div class="text-xl font-bold">MinimalStudio</div>
+    <ul class="hidden md:flex space-x-6 uppercase text-sm tracking-wider">
+      <li><a href="#about" class="hover:text-gray-400">About</a></li>
+      <li><a href="#services" class="hover:text-gray-400">Services</a></li>
+      <li><a href="#contact" class="hover:text-gray-400">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="h-screen flex items-center justify-center px-6">
+    <div class="text-center max-w-3xl mx-auto">
+      <h1 class="text-5xl md:text-7xl font-light leading-tight fade-up">We create digital experiences that inspire.</h1>
+      <p class="mt-6 text-lg text-gray-400 fade-up">Minimal designs. Maximum impact.</p>
     </div>
-  </div>
+  </section>
 
-  <div id="portfolio" class="portfolio-section">
-    <h2>My Projects & Portfolio</h2>
-    <p>Here’s where you can showcase your projects, code snippets, or links to GitHub.</p>
-    <!-- You can expand this section later -->
-  </div>
+  <!-- About Section -->
+  <section id="about" class="min-h-screen px-6 py-20 flex items-center fade-up">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-light mb-6">Who We Are</h2>
+      <p class="text-gray-400 leading-relaxed">
+        We're a creative studio focused on crafting elegant, functional, and meaningful digital products.
+        Our team brings together designers, developers, and strategists to deliver unforgettable web experiences.
+      </p>
+    </div>
+  </section>
 
-  <script src="script.js"></script>
+  <!-- Services Section -->
+  <section id="services" class="min-h-screen bg-gray-900 px-6 py-20 fade-up">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-4xl font-light mb-10">What We Do</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <h3 class="text-xl font-medium mb-2">Web Design</h3>
+          <p class="text-gray-400">Beautiful, responsive interfaces tailored to your brand and audience.</p>
+        </div>
+        <div>
+          <h3 class="text-xl font-medium mb-2">Development</h3>
+          <p class="text-gray-400">Fast, scalable websites built with performance and accessibility in mind.</p>
+        </div>
+        <div>
+          <h3 class="text-xl font-medium mb-2">Branding</h3>
+          <p class="text-gray-400">Visual identity systems that reflect your values and vision.</p>
+        </div>
+        <div>
+          <h3 class="text-xl font-medium mb-2">Strategy</h3>
+          <p class="text-gray-400">Insights-driven planning to help you grow and succeed online.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="min-h-screen px-6 py-20 fade-up">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-4xl font-light mb-6">Get In Touch</h2>
+      <p class="text-gray-400 mb-6">Have a project? Let’s talk about how we can bring it to life.</p>
+      <a href="mailto:hello@minimalstudio.com" class="inline-block underline hover:text-gray-300">hello@minimalstudio.com</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="text-center text-sm text-gray-600 py-6">
+    &copy; 2025 MinimalStudio. All rights reserved.
+  </footer>
+
+  <!-- Scroll Animations -->
+  <script>
+    gsap.utils.toArray(".fade-up").forEach((section) => {
+      gsap.from(section, {
+        opacity: 0,
+        y: 40,
+        duration: 1,
+        scrollTrigger: {
+          trigger: section,
+          start: "top 80%",
+          end: "bottom 20%",
+          toggleActions: "play none none reverse"
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>
