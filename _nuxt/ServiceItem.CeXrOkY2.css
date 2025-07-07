@@ -1,0 +1,126 @@
+.service-item {
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%
+}
+
+.service-item:not(:first-child) {
+    transform: translateY(101%)
+}
+
+.service-item:first-child {
+    z-index: 1
+}
+
+.service-item:nth-child(2) {
+    z-index: 2
+}
+
+.service-item:nth-child(3) {
+    z-index: 3
+}
+
+.service-item:nth-child(4) {
+    z-index: 4
+}
+
+.service-item:nth-child(5) {
+    z-index: 5
+}
+
+.service-item:nth-child(6) {
+    z-index: 6
+}
+
+@media (hover:hover) {
+    .service-item:hover .service-item__media {
+        transform: scale(1.1) rotate(1deg)
+    }
+}
+
+.service-item__wrapper {
+    clip-path: inset(0 0 0 0 round .4rem);
+    display: flex;
+    height: 100%;
+    width: 100%
+}
+
+.service-item__fig {
+    border-radius: .4rem;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    width: 100%
+}
+
+.service-item__fig .base-image--fit {
+    height: calc(100% + .2rem);
+    left: -.1rem;
+    position: relative;
+    top: -.1rem;
+    width: calc(100% + .2rem)
+}
+
+@media (hover:hover) {
+    .service-item__media {
+        transition: transform 1.4s cubic-bezier(.22, 1, .36, 1)
+    }
+}
+
+.service-item__fig-caption {
+    color: #eeede9;
+    left: 2rem;
+    position: absolute;
+    top: 1.7rem
+}
+
+@media (min-width:1024px) {
+    .service-item__fig-caption {
+        left: 1.38889vw;
+        top: 1.18056vw
+    }
+}
+
+.service-item__fig-caption .animated-label:before {
+    background-color: transparent;
+    bottom: 0;
+    content: "";
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0
+}
+
+.service-item__btn {
+    bottom: 0;
+    left: 0;
+    padding: 1rem;
+    position: absolute;
+    right: 0;
+    top: 0
+}
+
+@media (hover:hover) {
+    .service-item__btn {
+        display: none
+    }
+}
+
+.service-item__btn .btn {
+    align-items: flex-end;
+    height: 100%;
+    justify-content: flex-end;
+    width: 100%
+}
+
+@media (max-width:1023px) {
+    .service-item__btn .btn {
+        color: #929292
+    }
+    .service-item__btn .btn__svg-wrapper {
+        height: 3.6rem;
+        width: 3.6rem
+    }
+}

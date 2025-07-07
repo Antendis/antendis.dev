@@ -1,0 +1,257 @@
+.home-hero {
+    color: #abaaaa;
+    height: 100svh;
+    position: relative
+}
+
+@media (min-width:1024px) {
+    .home-hero {
+        height: 120svh;
+        left: 0;
+        max-width: inherit;
+        transform: none
+    }
+}
+
+.home-hero__wrapper {
+    bottom: -100svh;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%
+}
+
+.home-hero__sticky {
+    height: 100svh;
+    position: sticky;
+    top: 0
+}
+
+.home-hero__inner {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    position: relative
+}
+
+.home-hero__title {
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 0
+}
+
+.home-hero__scroll {
+    bottom: 1.5rem;
+    left: 1.2rem;
+    mix-blend-mode: difference;
+    opacity: 0;
+    position: absolute;
+    transition: opacity .4s linear .5s
+}
+
+.is-visible .home-hero__scroll {
+    opacity: 1
+}
+
+@media (hover:hover) {
+    .home-hero__scroll {
+        display: none
+    }
+}
+
+.home-hero__reel {
+    bottom: 1.5rem;
+    clip-path: inset(0 0 0 0 round .4rem);
+    right: 1.2rem;
+    width: 26.4vw
+}
+
+.home-hero__reel.reel {
+    position: absolute
+}
+
+@media (min-width:1024px) {
+    .home-hero__reel {
+        bottom: 1.38889vw;
+        right: 1.38889vw;
+        width: 12.36111vw
+    }
+}
+
+.home-about {
+    margin-bottom: 6.4rem;
+    padding-top: 19.7rem;
+    position: relative;
+    z-index: 1
+}
+
+@media (min-width:1024px) {
+    .home-about {
+        margin-bottom: 7.98611vw;
+        padding-top: unset
+    }
+}
+
+.home-about:before {
+    background-color: transparent;
+    bottom: -6.4rem;
+    content: "";
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%
+}
+
+@media (min-width:1024px) {
+    .home-about:before {
+        bottom: -7.98611vw
+    }
+}
+
+.home-about__wrapper {
+    grid-column: 1/span 6
+}
+
+@media (min-width:1024px) {
+    .home-about__wrapper {
+        grid-column-end: span 8;
+        margin-top: 20.06944vw
+    }
+}
+
+.home-about__title {
+    padding-top: 1.8rem
+}
+
+@media (min-width:1024px) {
+    .home-about__title {
+        padding-top: 2.08333vw
+    }
+}
+
+.home-work {
+    position: relative
+}
+
+.home-work__cta {
+    display: flex;
+    justify-content: center
+}
+
+.home-work__cta .btn__label {
+    color: #929292
+}
+
+.home-clients {
+    padding-top: 6.7rem
+}
+
+@media (min-width:1024px) {
+    .home-clients {
+        padding-bottom: 1.38889vw;
+        padding-top: 6.66667vw
+    }
+}
+
+.home-clients__wrapper {
+    display: flex
+}
+
+@media (min-width:1024px) {
+    .home-clients__wrapper {
+        padding-top: 1.38889vw
+    }
+}
+
+.home-clients__fig {
+    height: 17rem;
+    padding: 0 1.5rem
+}
+
+@media (min-width:1024px) {
+    .home-clients__fig {
+        height: 13.88889vw;
+        padding: 0 3.47222vw
+    }
+}
+
+.home-clients__fig picture {
+    height: 100%
+}
+
+.home-clients__fig img {
+    height: 100%;
+    max-width: inherit;
+    width: auto
+}
+
+.home-awards__title {
+    grid-column: 1/span 6;
+    margin: 11.9rem 0 6.5rem
+}
+
+@media (min-width:1024px) {
+    .home-awards__title {
+        grid-column-end: span 8;
+        margin: 13.88889vw 0 6.94444vw
+    }
+}
+
+.home-lab {
+    color: #eeede9;
+    height: var(--inner-height);
+    position: relative
+}
+
+.home-lab__wrapper {
+    color: #929292;
+    height: 100%;
+    padding-top: 11.7rem
+}
+
+@media (max-width:767px) {
+    .home-lab__wrapper {
+        background-color: #212121
+    }
+}
+
+@media (min-width:1024px) {
+    .home-lab__wrapper {
+        padding-top: 16.66667vw
+    }
+}
+
+.home-lab__inner {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    row-gap: 1.9rem;
+    z-index: 1
+}
+
+@media (min-width:1024px) {
+    .home-lab__inner {
+        row-gap: 1.04167vw
+    }
+}
+
+.home-lab__title {
+    text-align: center
+}
+
+.home-lab__video {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    position: absolute
+}
+
+@media (min-width:768px) {
+    .home-lab__video {
+        display: none
+    }
+}
