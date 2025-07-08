@@ -1,10 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+
 body {
-  font-family: sans-serif;
-  text-align: center;
-  padding: 2em;
-  background-color: #f0f0f0;
-}
-button {
-  padding: 10px 20px;
-  font-size: 1em;
-}
+    background-color: #141617;
+    font-family: 'Fira Code', monospace;
+    font-size: 20px;
+    color: #b0cdf1;
+
+    padding-top: 10%;
+    padding-bottom: 10%;
+    padding-left: 12%;
+    padding-right: 20%;
+  }
+
+  /* RIBBON */
+  header {
+    position: fixed;
+    top: 0;
+    height: 30px;
+    width: 100%;
+    background-color: #141617;
+    padding: 20px;
+    text-align: center;
+    transition: top 0.5s ease;
+    margin-left: -13%;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  }
+  
+  header.hidden {
+    top: -30px;
+  }
+
+  /*wcdawdcwadcawcdacwdawcaw */
+  
+  /* HERO TITLE STUFF */
+
+  #himynameis {
+    color: #00A4E9;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9em; 
+    transition-delay: 0;
+    padding-left: 1%;
+  }
+
+  #bigname {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.8em; 
+    margin-top: -4%;
+    margin-bottom: -6%;
+    transition-delay: 150ms;
+  }
+
+  #shortsummary {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.6em; 
+    margin-top: -6%;
+    margin-bottom: -2%;
+    transition-delay: 400ms;
+    opacity: 55%;
+  }
+
+  #summary {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8em; 
+    transition-delay: 650ms;
+    margin-right: 30%;
+  }
+
+
+
+  section{
+    margin-bottom: 400px; 
+  }
+
+
+  /* FADE ANIMATIONS */
+  .hidden {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(60%);
+    transition: all 0.55s;
+  }
+
+  .show {
+    opacity: 0.9;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+
+
+
+
+  /* SCROLLBAR */
+  body::-webkit-scrollbar {
+    width: 0.35em;
+    background-color: #141617;
+  }
+  
+  body::-webkit-scrollbar-thumb {
+    background-color: #27292b;
+    border-radius: 10px;
+  }
+
+
+  
+    /* SIDE BARS (only show for desktop) */
+  @media only screen and (min-width: 768px) {
+
+    /* desktop */
+    .element {
+      display: block;
+    }
+  }
+
+
+  
+
+
+  @media only screen and (max-width: 767px) {
+    /* mobile */
+    .element {
+      display: none;
+    }
+
+    #bigname {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8em; 
+      margin-top: -16%;
+      margin-bottom: -16%;
+      transition-delay: 150ms;
+    }
+
+    #shortsummary {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2em; 
+      margin-top: -6%;
+      margin-bottom: -2%;
+      transition-delay: 400ms;
+    }
+
+    #summary {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8em; 
+      transition-delay: 650ms;
+      margin-right: 12%;
+    }
+
+  }
+
+  
