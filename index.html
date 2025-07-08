@@ -20,6 +20,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      opacity: 1;
+      transform: translateY(0);
       transition: opacity 1s ease, transform 1s ease;
     }
     #introLoader.fade-out {
@@ -92,12 +94,16 @@
   </div>
 
   <script>
-    // Intro splash animation
+    // Intro splash animation with delay
     window.addEventListener('load', () => {
       const loader = document.getElementById('introLoader');
-      document.body.classList.remove('loading');
-      loader.classList.add('fade-out');
-      setTimeout(() => loader.style.display = 'none', 1000);
+      setTimeout(() => {
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          loader.style.display = 'none';
+          document.body.classList.remove('loading');
+        }, 1000); // match CSS transition
+      }, 1500); // delay before fade out starts
     });
 
     // Reveal on scroll
