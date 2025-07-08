@@ -9,6 +9,23 @@
     html {
       scroll-behavior: smooth;
     }
+    body.loading #content {
+      display: none;
+    }
+    #introLoader {
+      position: fixed;
+      inset: 0;
+      background: #060405;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    #introLoader.fade-out {
+      opacity: 0;
+      transform: translateY(-100px);
+    }
     .reveal {
       opacity: 0;
       transform: translateY(40px);
@@ -20,66 +37,76 @@
     }
   </style>
 </head>
-<body class="bg-[#060405] text-white font-sans">
-  <!-- Intro Splash -->
-  <section id="intro" class="reveal min-h-screen flex items-center justify-center text-center px-6">
-    <div>
-      <h1 class="text-5xl md:text-7xl font-bold mb-4 tracking-tight">Hey, I'm Rohail Sheikh</h1>
-      <p class="text-lg md:text-xl text-gray-400">I'm a software engineering student building projects in AI, machine learning, and the web.</p>
-      <div class="mt-10">
-        <a href="#projects" class="text-teal-400 text-lg hover:underline">View my work ↓</a>
-      </div>
-    </div>
-  </section>
+<body class="bg-[#060405] text-white font-sans loading">
+  <!-- Initial Loader -->
+  <div id="introLoader">
+    <h1 class="text-5xl md:text-7xl font-bold tracking-tight">Rohail Sheikh</h1>
+  </div>
 
-  <!-- Projects -->
-  <section id="projects" class="px-6 py-24 bg-[#0b0809]">
-    <h2 class="text-4xl font-bold mb-12 text-center">Projects</h2>
-    <div class="grid md:grid-cols-2 gap-10">
-      
-      <div class="reveal bg-[#1a1718] p-6 rounded-xl hover:scale-105 transition-transform">
-        <h3 class="text-2xl font-semibold mb-2">LLM Chatbot</h3>
-        <p class="text-gray-400">A chatbot powered by a fine-tuned LLM trained on custom datasets. Built using Python & Transformers.</p>
+  <!-- Page Content -->
+  <div id="content">
+    <!-- Intro Splash -->
+    <section id="intro" class="reveal min-h-screen flex items-center justify-center text-center px-6">
+      <div>
+        <h1 class="text-5xl md:text-7xl font-bold mb-4 tracking-tight">Hey, I'm Rohail Sheikh</h1>
+        <p class="text-lg md:text-xl text-gray-400">I'm a software engineering student building projects in AI, machine learning, and the web.</p>
+        <div class="mt-10">
+          <a href="#projects" class="text-teal-400 text-lg hover:underline">View my work ↓</a>
+        </div>
       </div>
-      
-      <div class="reveal bg-[#1a1718] p-6 rounded-xl hover:scale-105 transition-transform">
-        <h3 class="text-2xl font-semibold mb-2">ML Fraud Detection</h3>
-        <p class="text-gray-400">Machine learning project detecting credit card fraud using XGBoost & Python.</p>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects" class="px-6 py-24 bg-[#0b0809]">
+      <h2 class="text-4xl font-bold mb-12 text-center">Projects</h2>
+      <div class="grid md:grid-cols-2 gap-10">
+        <div class="reveal bg-[#1a1718] p-6 rounded-xl hover:scale-105 transition-transform">
+          <h3 class="text-2xl font-semibold mb-2">LLM Chatbot</h3>
+          <p class="text-gray-400">A chatbot powered by a fine-tuned LLM trained on custom datasets. Built using Python & Transformers.</p>
+        </div>
+        <div class="reveal bg-[#1a1718] p-6 rounded-xl hover:scale-105 transition-transform">
+          <h3 class="text-2xl font-semibold mb-2">ML Fraud Detection</h3>
+          <p class="text-gray-400">Machine learning project detecting credit card fraud using XGBoost & Python.</p>
+        </div>
       </div>
+    </section>
 
-      <div class="reveal bg-[#1a1718] p-6 rounded-xl hover:scale-105 transition-transform">
-        <h3 class="text-2xl font-semibold mb-2">This site</h3>
-        <p class="text-gray-400">Always a WIP.</p>
+    <!-- About -->
+    <section id="about" class="px-6 py-24">
+      <h2 class="text-4xl font-bold mb-6 text-center">About Me</h2>
+      <p class="text-gray-300 max-w-3xl mx-auto text-center">
+        I'm a first-year Software Engineering student passionate about building smart systems and cool interfaces. Currently learning full-stack dev and exploring AI applications in everyday tools.
+      </p>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="px-6 py-24 bg-[#0b0809]">
+      <h2 class="text-4xl font-bold mb-6 text-center">Contact</h2>
+      <p class="text-center text-gray-400 mb-6">Let’s connect:</p>
+      <div class="flex justify-center space-x-6">
+        <a href="https://github.com/rohailsheikh" target="_blank" class="hover:text-teal-400">GitHub</a>
+        <a href="#" class="hover:text-teal-400">LinkedIn</a>
+        <a href="mailto:rohail@example.com" class="hover:text-teal-400">Email</a>
       </div>
-      
-    </div>
-  </section>
-
-  <!-- About -->
-  <section id="about" class="px-6 py-24">
-    <h2 class="text-4xl font-bold mb-6 text-center">About Me</h2>
-    <p class="text-gray-300 max-w-3xl mx-auto text-center">
-      I'm a first-year Software Engineering student passionate about building smart systems and cool interfaces. Currently learning full-stack dev and exploring AI applications in everyday tools.
-    </p>
-  </section>
-
-  <!-- Contact -->
-  <section id="contact" class="px-6 py-24 bg-[#0b0809]">
-    <h2 class="text-4xl font-bold mb-6 text-center">Contact</h2>
-    <p class="text-center text-gray-400 mb-6">Let’s connect:</p>
-    <div class="flex justify-center space-x-6">
-      <a href="https://github.com/antendis" target="_blank" class="hover:text-teal-400">GitHub</a>
-      <a href="https://www.linkedin.com/in/rohail-sheikh-188947215/" target="_blank" class="hover:text-teal-400">LinkedIn</a>
-      <a href="mailto:antendis@gmail.com" class="hover:text-teal-400">Email</a>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <script>
+    // Intro splash animation
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('introLoader');
+      document.body.classList.remove('loading');
+      loader.classList.add('fade-out');
+      setTimeout(() => loader.style.display = 'none', 1000);
+    });
+
+    // Reveal on scroll
     const reveals = document.querySelectorAll('.reveal');
-    const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('active');
+          observer.unobserve(entry.target);
         }
       });
     }, { threshold: 0.1 });
