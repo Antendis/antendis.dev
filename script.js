@@ -1,3 +1,19 @@
+// Dynamic age calculation
+function updateAge() {
+  const birthDate = new Date('2003-05-22');
+  const now = new Date();
+  const ageInMilliseconds = now - birthDate;
+  const ageInYears = ageInMilliseconds / (365.25 * 24 * 60 * 60 * 1000);
+  const ageElement = document.getElementById('age');
+  if (ageElement) {
+    ageElement.textContent = `${ageInYears.toFixed(9)} years old`;
+  }
+  requestAnimationFrame(updateAge);
+}
+
+// Start age animation
+updateAge();
+
 // Intro splash animation with delay
 window.addEventListener('load', () => {
   const loader = document.getElementById('introLoader');
