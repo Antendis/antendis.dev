@@ -96,6 +96,17 @@ body.loading #content {
   transition: all 0.8s ease-in;
 }
 
+.reveal-fast {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease-out;
+}
+
+.reveal-fast.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 #intro.reveal {
   transform: translateY(-50px);
 }

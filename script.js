@@ -11,7 +11,7 @@ window.addEventListener('load', () => {
 });
 
 // Reveal on scroll
-const reveals = document.querySelectorAll('.reveal');
+const reveals = document.querySelectorAll('.reveal, .reveal-fast');
 const observer = new IntersectionObserver((entries, observer) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
