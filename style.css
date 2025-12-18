@@ -1,0 +1,257 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  position: relative;
+  overflow-x: hidden;
+}
+
+code, .mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Organic Background */
+.organic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #0d1117;
+  background-image: 
+    radial-gradient(ellipse at 20% 30%, rgba(52, 211, 153, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(74, 222, 128, 0.03) 0%, transparent 50%);
+}
+
+/* Subtle Grid */
+.grid-pattern {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-image: 
+    linear-gradient(rgba(52, 211, 153, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52, 211, 153, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+body.loading #content {
+  display: none;
+}
+
+#introLoader {
+  position: fixed;
+  inset: 0;
+  background: #0d1117;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+#introLoader.fade-out {
+  opacity: 0;
+}
+
+#introLoader.fade-out #loaderName {
+  animation: slideRight 0.8s ease-in forwards;
+}
+
+#introLoader.fade-out #loaderStatus {
+  animation: slideLeft 0.8s ease-in forwards;
+}
+
+@keyframes slideRight {
+  to {
+    transform: translateX(100vw);
+    opacity: 0;
+  }
+}
+
+@keyframes slideLeft {
+  to {
+    transform: translateX(-100vw);
+    opacity: 0;
+  }
+}
+
+.loader-text {
+  color: #34d399;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.8s ease-in;
+}
+
+.reveal-fast {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease-out;
+}
+
+.reveal-fast.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#intro.reveal {
+  transform: translateY(-50px);
+}
+
+#intro.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.8s ease-out;
+}
+
+.slide-down {
+  opacity: 0;
+  transform: translateY(-50px);
+  transition: all 0.8s ease-out;
+}
+
+.slide-down.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-up {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s ease-out;
+}
+
+.slide-up.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Plant Card */
+.plant-card {
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.plant-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #34d399, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.plant-card:hover {
+  border-color: rgba(52, 211, 153, 0.3);
+  transform: translateY(-4px);
+  background: rgba(22, 27, 34, 0.8);
+}
+
+.plant-card:hover::before {
+  opacity: 1;
+}
+
+/* Terminal Text */
+.terminal-text {
+  color: #34d399;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Accent Color */
+.accent {
+  color: #34d399;
+}
+
+.accent-bg {
+  background: #34d399;
+}
+
+/* Tag Styles */
+.tag {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.tag:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+/* Button */
+.btn {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  transform: translateY(-2px);
+}
+
+/* Content Wrapper */
+.content-wrapper {
+  position: relative;
+  z-index: 10;
+}
+
+/* Growing Accent Line */
+.grow-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #34d399;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.4s ease;
+}
+
+.plant-card:hover .grow-line {
+  transform: scaleY(1);
+}
+
+/* Link Styling */
+a {
+  color: #34d399;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #4ade80;
+}
