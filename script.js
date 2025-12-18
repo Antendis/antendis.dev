@@ -1,6 +1,18 @@
-// Scroll reveal animations
+// Intro splash animation with delay
+window.addEventListener('load', () => {
+  const loader = document.getElementById('introLoader');
+  setTimeout(() => {
+    loader.classList.add('fade-out');
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.body.classList.remove('loading');
+    }, 700); // match CSS transition
+  }, 1500); // delay before fade out starts
+});
+
+// Reveal on scroll
 const reveals = document.querySelectorAll('.reveal');
-const observer = new IntersectionObserver((entries) => {
+const observer = new IntersectionObserver((entries, observer) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('active');
@@ -11,16 +23,15 @@ const observer = new IntersectionObserver((entries) => {
 
 reveals.forEach(r => observer.observe(r));
 
-// Smooth scroll for navigation
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
+// Animate slide-down and slide-up elements
+const slideElements = document.querySelectorAll('.slide-down, .slide-up');
+const slideObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('active');
+      slideObserver.unobserve(entry.target);
     }
   });
-});
+}, { threshold: 0.1 });
+
+slideElements.forEach(el => slideObserver.observe(el));
