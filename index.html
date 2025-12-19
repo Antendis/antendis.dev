@@ -27,6 +27,8 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="config.js"></script>
+  <!-- Three.js for 3D globe -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body class="text-white font-sans loading">
   <!-- Initial Loader -->
@@ -45,21 +47,31 @@
   <div id="content" class="content-wrapper">
     <!-- Hero Section -->
     <section id="intro" class="reveal min-h-screen flex items-center justify-center px-6 py-20">
-      <div class="max-w-3xl">
-        <div class="mb-6 slide-down">
-          <span class="tag">🌱 growing & learning</span>
-          <span class="mono text-sm text-gray-500 ml-3" id="age"></span>
-        </div>
-        <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight slide-down">hey, i'm rohail</h1>
-        <p class="text-xl md:text-2xl text-gray-400 mb-8 leading-relaxed slide-up">software engineering student building things with <span class="accent">python</span>. passionate about machine learning, automation and making stuff that actually works.</p>
-        <p class="mono text-sm text-gray-500 mb-10 slide-up">> currently_status: ["learning", "building", "seeking_placement"]</p>
-        <div class="flex flex-wrap gap-4 slide-up">
-          <a href="#projects" class="btn">see what i've built</a>
-          <a href="#achievements" class="btn">see my uni achievements</a>
-          <a href="#contact" class="text-gray-400 hover:text-accent transition-colors flex items-center gap-2">
-            <span>get in touch</span>
-            <span>→</span>
-          </a>
+      <div class="max-w-7xl w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <!-- Left: Text Content -->
+          <div>
+            <div class="mb-6 slide-down">
+              <span class="tag">🌱 growing & learning</span>
+              <span class="mono text-sm text-gray-500 ml-3 tag-age-desktop" id="age"></span>
+              <span class="mono text-sm text-gray-500 tag-age-mobile" id="age-mobile"></span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight slide-down">hey, i'm rohail</h1>
+            <p class="text-xl md:text-2xl text-gray-400 mb-8 leading-relaxed slide-left">software engineering student building things primarily with <span class="accent">python</span>. passionate about machine learning, automation and making stuff that actually works.</p>
+            <p class="mono text-sm text-gray-500 mb-10 slide-up">> current_status: ["learning", "building", "seeking_placement"]</p>
+            <div class="flex flex-wrap gap-4 slide-up">
+              <a href="#projects" class="btn">see what i've built</a>
+              <a href="#achievements" class="btn">see my uni achievements</a>
+              <a href="#contact" class="text-gray-400 hover:text-accent transition-colors flex items-center gap-2 slide-up">
+                <span>get in touch</span>
+                <span>→</span>
+              </a>
+            </div>
+          </div>
+          <!-- Right: Globe Visualization -->
+          <div class="globe-container hidden lg:block slide-right">
+            <div id="globeViz" class="w-full h-[500px] relative"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -240,5 +252,6 @@
   </div>
 
   <script src="script.js"></script>
+  <script src="globe.js"></script>
 </body>
 </html>

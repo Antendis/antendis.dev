@@ -1,12 +1,17 @@
 // Dynamic age calculation
+
 function updateAge() {
   const birthDate = new Date('2003-05-22');
   const now = new Date();
   const ageInMilliseconds = now - birthDate;
   const ageInYears = ageInMilliseconds / (365.25 * 24 * 60 * 60 * 1000);
   const ageElement = document.getElementById('age');
+  const ageMobile = document.getElementById('age-mobile');
   if (ageElement) {
     ageElement.textContent = `${ageInYears.toFixed(9)} years old`;
+  }
+  if (ageMobile) {
+    ageMobile.textContent = `${ageInYears.toFixed(9)} years old`;
   }
   requestAnimationFrame(updateAge);
 }
@@ -39,8 +44,9 @@ const observer = new IntersectionObserver((entries, observer) => {
 
 reveals.forEach(r => observer.observe(r));
 
-// Animate slide-down and slide-up elements
-const slideElements = document.querySelectorAll('.slide-down, .slide-up');
+
+// Animate slide-down, slide-up, slide-left, and slide-right elements
+const slideElements = document.querySelectorAll('.slide-down, .slide-up, .slide-left, .slide-right');
 const slideObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
