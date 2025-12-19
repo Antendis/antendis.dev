@@ -39,8 +39,9 @@ const observer = new IntersectionObserver((entries, observer) => {
 
 reveals.forEach(r => observer.observe(r));
 
-// Animate slide-down and slide-up elements
-const slideElements = document.querySelectorAll('.slide-down, .slide-up');
+
+// Animate slide-down, slide-up, slide-left, and slide-right elements
+const slideElements = document.querySelectorAll('.slide-down, .slide-up, .slide-left, .slide-right');
 const slideObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
