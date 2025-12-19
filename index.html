@@ -16,6 +16,14 @@
 </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Suppress Tailwind CDN warning for portfolio site
+    tailwind.config = {
+      theme: {
+        extend: {}
+      }
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="config.js"></script>
@@ -43,7 +51,7 @@
           <span class="mono text-sm text-gray-500 ml-3" id="age"></span>
         </div>
         <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight slide-down">hey, i'm rohail</h1>
-        <p class="text-xl md:text-2xl text-gray-400 mb-8 leading-relaxed slide-up">software engineering student building things with <span class="accent">python</span>. passionate about ML, automation and making stuff that actually works.</p>
+        <p class="text-xl md:text-2xl text-gray-400 mb-8 leading-relaxed slide-up">software engineering student building things with <span class="accent">python</span>. passionate about machine learning, automation and making stuff that actually works.</p>
         <p class="mono text-sm text-gray-500 mb-10 slide-up">> currently_status: ["learning", "building", "seeking_placement"]</p>
         <div class="flex flex-wrap gap-4 slide-up">
           <a href="#projects" class="btn">see what i've built</a>
