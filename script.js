@@ -145,3 +145,60 @@ if (typeof config !== 'undefined') {
   loadAchievements();
   loadTechStack();
 }
+
+// Copy to clipboard function
+function copyToClipboard(text, button) {
+  const textSpan = button.querySelector('.copy-text');
+  const originalText = textSpan.textContent;
+  
+  // Lock button width to prevent size change
+  if (!button.style.width) {
+    button.style.width = button.offsetWidth + 'px';
+  }
+  
+  // Try modern clipboard API first
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showCopied(textSpan, originalText, button);
+    }).catch(err => {
+      fallbackCopy(text, textSpan, originalText, button);
+    });
+  } else {
+    fallbackCopy(text, textSpan, originalText, button);
+  }
+}
+
+function fallbackCopy(text, textSpan, originalText, button) {
+  // Fallback method using textarea
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  
+  try {
+    document.execCommand('copy');
+    showCopied(textSpan, originalText, button);
+  } catch (err) {
+    console.error('Failed to copy:', err);
+    textSpan.textContent = 'Copy failed';
+    setTimeout(() => {
+      textSpan.textContent = originalText;
+    }, 2000);
+  }
+  
+  document.body.removeChild(textarea);
+}
+
+function showCopied(textSpan, originalText, button) {
+  textSpan.textContent = 'Copied!';
+  button.style.background = 'rgba(52, 211, 153, 0.25)';
+  button.style.borderColor = '#34d399';
+  
+  setTimeout(() => {
+    textSpan.textContent = originalText;
+    button.style.background = '';
+    button.style.borderColor = '';
+  }, 2000);
+}
