@@ -51,3 +51,97 @@ const slideObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 
 slideElements.forEach(el => slideObserver.observe(el));
+
+// Load achievements and grades from config
+function loadAchievements() {
+  // Hackathon counter
+  const hackathonCount = document.getElementById('hackathonCount');
+  if (hackathonCount && config.achievements) {
+    hackathonCount.textContent = config.achievements.hackathons;
+  }
+
+  // Roles list
+  const rolesList = document.getElementById('rolesList');
+  if (rolesList && config.achievements && config.achievements.roles) {
+    config.achievements.roles.forEach(role => {
+      const roleDiv = document.createElement('div');
+      roleDiv.className = 'p-4 bg-gray-800/30 border border-gray-700/30 rounded-lg';
+      roleDiv.innerHTML = `
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">${role.icon}</span>
+          <div>
+            <div class="font-semibold text-accent">${role.title}</div>
+            ${role.organization ? `<div class="text-sm text-gray-400">${role.organization}</div>` : ''}
+          </div>
+        </div>
+      `;
+      rolesList.appendChild(roleDiv);
+    });
+  }
+
+  // Grades list with visual bars
+  const gradesList = document.getElementById('gradesList');
+  if (gradesList && config.grades) {
+    gradesList.className = 'grid grid-cols-2 gap-3';
+    
+    config.grades.forEach(item => {
+      const gradeDiv = document.createElement('div');
+      gradeDiv.className = 'p-3 bg-gray-800/20 rounded-lg';
+      
+      gradeDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-medium text-sm">${item.subject}</span>
+          <span class="font-bold accent text-lg">${item.grade}%</span>
+        </div>
+        <div class="w-full bg-gray-700/30 rounded-full h-2">
+          <div class="bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full transition-all duration-1000" style="width: ${item.grade}%"></div>
+        </div>
+      `;
+      gradesList.appendChild(gradeDiv);
+    });
+  }
+}
+
+// Load tech stack from config
+function loadTechStack() {
+  if (!config.tech) return;
+
+  // Languages
+  const langContainer = document.getElementById('techLanguages');
+  if (langContainer && config.tech.languages) {
+    config.tech.languages.forEach(lang => {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = lang;
+      langContainer.appendChild(tag);
+    });
+  }
+
+  // AI/ML
+  const aimlContainer = document.getElementById('techAiml');
+  if (aimlContainer && config.tech.aiml) {
+    config.tech.aiml.forEach(tech => {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = tech;
+      aimlContainer.appendChild(tag);
+    });
+  }
+
+  // Tools
+  const toolsContainer = document.getElementById('techTools');
+  if (toolsContainer && config.tech.tools) {
+    config.tech.tools.forEach(tool => {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = tool;
+      toolsContainer.appendChild(tag);
+    });
+  }
+}
+
+// Load achievements and tech stack when page loads
+if (typeof config !== 'undefined') {
+  loadAchievements();
+  loadTechStack();
+}

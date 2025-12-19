@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
 </head>
 <body class="text-white font-sans loading">
   <!-- Initial Loader -->
@@ -35,7 +36,7 @@
         <p class="mono text-sm text-gray-500 mb-10 slide-up">> currently_status: ["learning", "building", "seeking_placement"]</p>
         <div class="flex flex-wrap gap-4 slide-up">
           <a href="#projects" class="btn">see what i've built</a>
-          <a href="#projects" class="btn">see my uni achievements</a>
+          <a href="#achievements" class="btn">see my uni achievements</a>
           <a href="#contact" class="text-gray-400 hover:text-accent transition-colors flex items-center gap-2">
             <span>get in touch</span>
             <span>→</span>
@@ -51,7 +52,7 @@
           <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> things i've built</h2>
           <p class="text-gray-500 mono text-sm">// projects that actually work</p>
         </div>
-        
+
         <div class="space-y-6">
           <!-- Project 1 -->
           <div class="reveal plant-card p-6 md:p-8">
@@ -132,43 +133,79 @@
       </div>
     </section>
 
-    <!-- Tech Stack -->
+    <!-- Uni Achievements -->
+    <section id="achievements" class="px-6 pt-24">
+      <div class="max-w-6xl mx-auto">
+        <div class="reveal-fast mb-8">
+          <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> uni achievements</h2>
+          <p class="text-gray-500 mono text-sm">// milestones in my academic journey</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roles & Achievements -->
+    <section class="px-6 pb-24">
+      <div class="max-w-6xl mx-auto">
+        <div class="space-y-6">
+          <div class="reveal plant-card p-8">
+            <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+              <span>🏆</span> roles & activities
+            </h3>
+            
+            <!-- Hackathon Counter -->
+            <div class="mb-6 p-4 bg-green-900/20 border border-green-700/30 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="text-lg font-semibold">Hackathons Attended</span>
+                <span class="text-4xl font-bold accent" id="hackathonCount">0</span>
+              </div>
+            </div>
+
+            <!-- Roles List -->
+            <div class="space-y-4" id="rolesList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Academic Grades -->
+          <div class="reveal plant-card p-8">
+            <div class="flex items-baseline justify-between mb-6 flex-wrap gap-2">
+              <h3 class="text-2xl font-bold flex items-center gap-2">
+                <span>📚</span> academic performance
+              </h3>
+              <span class="text-xs text-gray-500 mono">40 = 2:2 (pass) • 70+ = 1st</span>
+            </div>
+            <div id="gradesList">
+              <!-- Populated by JS with grid layout -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section id="skills" class="px-6 py-24">
       <div class="max-w-6xl mx-auto">
         <div class="reveal-fast mb-12">
           <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> tech i work with</h2>
           <p class="text-gray-500 mono text-sm">// tools in my garden 🌱</p>
         </div>
-        
+
         <div class="reveal plant-card p-8">
           <div class="grid md:grid-cols-3 gap-8">
             <div>
               <p class="text-sm text-gray-500 mono mb-3">languages:</p>
-              <div class="flex flex-wrap gap-2">
-                <span class="tag">python</span>
-                <span class="tag">javascript</span>
-                <span class="tag">sql</span>
-                <span class="tag">html/css</span>
-                <span class="tag">java</span>
-              </div>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500 mono mb-3">ai/ml:</p>
-              <div class="flex flex-wrap gap-2">
-                <span class="tag">tensorflow</span>
-                <span class="tag">pytorch</span>
-                <span class="tag">scikit-learn</span>
-                <span class="tag">xgboost</span>
+              <div class="flex flex-wrap gap-2" id="techLanguages">
+                <!-- Populated by JS -->
               </div>
             </div>
             <div>
               <p class="text-sm text-gray-500 mono mb-3">tools:</p>
-              <div class="flex flex-wrap gap-2">
-                <span class="tag">git</span>
-                <span class="tag">docker</span>
-                <span class="tag">flask</span>
-                <span class="tag">fastapi</span>
-                <span class="tag">vs code</span>
+              <div class="flex flex-wrap gap-2" id="techTools">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500 mono mb-3">ai/ml:</p>
+              <div class="flex flex-wrap gap-2" id="techAiml">
+                <!-- Populated by JS -->
               </div>
             </div>
           </div>
@@ -186,7 +223,7 @@
         <div class="reveal plant-card p-8 md:p-12">
           <div class="mb-8"><div class="text-6xl mb-6">🌱</div></div>
           <p class="text-gray-300 leading-relaxed mb-6">
-            first-year software engineering student who actually enjoys debugging. i'm into building stuff that works - whether that's AI models, web scrapers, or data pipelines.
+            second-year software engineering student who actually enjoys the studying. i'm into building stuff that works - whether that's ways to automate tasks, watching machines learn, or awesome visuals.
           </p>
           <p class="text-gray-300 leading-relaxed mb-6">
             most of my work is in python, but i'm always picking up new tools. right now i'm deep into machine learning and trying to figure out how to make AI actually useful instead of just impressive.
