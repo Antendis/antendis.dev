@@ -1,3 +1,19 @@
+.tag-age-mobile {
+  display: none !important;
+}
+.tag-age-desktop {
+  display: inline !important;
+}
+@media (max-width: 768px) {
+  .tag-age-mobile {
+    display: block !important;
+    margin-left: 0 !important;
+    margin-top: 0.5rem;
+  }
+  .tag-age-desktop {
+    display: none !important;
+  }
+}
 .slide-right {
   opacity: 0;
   transform: translateX(100px);

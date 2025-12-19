@@ -1,12 +1,17 @@
 // Dynamic age calculation
+
 function updateAge() {
   const birthDate = new Date('2003-05-22');
   const now = new Date();
   const ageInMilliseconds = now - birthDate;
   const ageInYears = ageInMilliseconds / (365.25 * 24 * 60 * 60 * 1000);
   const ageElement = document.getElementById('age');
+  const ageMobile = document.getElementById('age-mobile');
   if (ageElement) {
     ageElement.textContent = `${ageInYears.toFixed(9)} years old`;
+  }
+  if (ageMobile) {
+    ageMobile.textContent = `${ageInYears.toFixed(9)} years old`;
   }
   requestAnimationFrame(updateAge);
 }
