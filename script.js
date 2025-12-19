@@ -202,3 +202,129 @@ function showCopied(textSpan, originalText, button) {
     button.style.borderColor = '';
   }, 2000);
 }
+
+// ==========================================
+// VISITOR LOCATION TRACKING
+// ==========================================
+
+// Get or initialize visitor data from localStorage
+function getVisitorData() {
+  const data = localStorage.getItem('visitorLocations');
+  return data ? JSON.parse(data) : { visitors: [], lastUpdate: null };
+}
+
+// Save visitor data to localStorage
+function saveVisitorData(data) {
+  localStorage.setItem('visitorLocations', JSON.stringify(data));
+}
+
+// Fetch current visitor's location
+async function trackVisitorLocation() {
+  try {
+    // Check if we already tracked this session
+    const sessionTracked = sessionStorage.getItem('locationTracked');
+    if (sessionTracked) {
+      console.log('Location already tracked this session');
+      return;
+    }
+
+    console.log('Fetching visitor location...');
+    
+    // Using ipapi.co free API (1,000 requests/day, no API key needed)
+    const response = await fetch('https://ipapi.co/json/', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const locationData = await response.json();
+    
+    // Extract relevant data
+    const visitor = {
+      timestamp: new Date().toISOString(),
+      country: locationData.country_name || 'Unknown',
+      countryCode: locationData.country_code || 'XX',
+      city: locationData.city || 'Unknown',
+      region: locationData.region || '',
+      latitude: locationData.latitude || 0,
+      longitude: locationData.longitude || 0,
+      timezone: locationData.timezone || '',
+      ip: locationData.ip || 'Unknown' // Consider privacy: you might want to hash or not store this
+    };
+
+    console.log('Location detected:', visitor);
+
+    // Get existing data
+    const data = getVisitorData();
+    
+    // Add new visitor (keep last 50)
+    data.visitors.unshift(visitor);
+    data.visitors = data.visitors.slice(0, 50);
+    data.lastUpdate = new Date().toISOString();
+    
+    // Save to localStorage
+    saveVisitorData(data);
+    
+    // Mark as tracked for this session
+    sessionStorage.setItem('locationTracked', 'true');
+    
+    console.log('Visitor location saved. Total visitors tracked:', data.visitors.length);
+    
+    // Dispatch custom event for globe to listen to
+    window.dispatchEvent(new CustomEvent('visitorLocationUpdated', { 
+      detail: { visitor, allVisitors: data.visitors } 
+    }));
+
+  } catch (error) {
+    console.error('Error fetching location:', error);
+    
+    // Fallback: Add anonymous visitor
+    const data = getVisitorData();
+    data.visitors.unshift({
+      timestamp: new Date().toISOString(),
+      country: 'Unknown',
+      countryCode: 'XX',
+      city: 'Unknown',
+      latitude: 0,
+      longitude: 0
+    });
+    data.visitors = data.visitors.slice(0, 50);
+    saveVisitorData(data);
+    
+    sessionStorage.setItem('locationTracked', 'true');
+  }
+}
+
+// Get all tracked visitors (for globe visualization)
+function getAllVisitors() {
+  const data = getVisitorData();
+  return data.visitors;
+}
+
+// Clear old visitors (optional - call this to reset)
+function clearVisitorData() {
+  localStorage.removeItem('visitorLocations');
+  sessionStorage.removeItem('locationTracked');
+  console.log('Visitor data cleared');
+}
+
+// Auto-track location when page loads
+window.addEventListener('load', () => {
+  // Small delay to not interfere with page load
+  setTimeout(() => {
+    trackVisitorLocation();
+  }, 2000);
+});
+
+// Expose functions globally for debugging and globe integration
+window.visitorTracking = {
+  getAllVisitors,
+  clearVisitorData,
+  getVisitorData,
+  trackVisitorLocation
+};
