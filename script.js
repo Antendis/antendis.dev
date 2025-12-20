@@ -152,6 +152,36 @@ if (typeof config !== 'undefined') {
   loadTechStack();
 }
 
+// Attach hover handlers so hackathon card glows when roles beneath it are hovered
+function attachRoleHoverHandlers() {
+  const rolesList = document.getElementById('rolesList');
+  const hackCard = document.querySelector('.hackathon-card');
+  if (!rolesList || !hackCard) return;
+
+  // Add hover via delegation: when mouse enters any child, add glow.
+  rolesList.addEventListener('mouseover', (e) => {
+    // only trigger when entering a role item (or its children)
+    const roleItem = e.target.closest && e.target.closest('#rolesList > div');
+    if (roleItem && rolesList.contains(roleItem)) {
+      hackCard.classList.add('hover-glow');
+    }
+  });
+
+  // Remove glow when leaving the rolesList container
+  rolesList.addEventListener('mouseout', (e) => {
+    const to = e.relatedTarget;
+    if (!to || !rolesList.contains(to)) {
+      hackCard.classList.remove('hover-glow');
+    }
+  });
+}
+
+// Call after achievements are loaded (safe to call even if rolesList empty)
+window.addEventListener('load', () => {
+  // slight delay to ensure JS-populated elements exist
+  setTimeout(attachRoleHoverHandlers, 100);
+});
+
 // Copy to clipboard function
 function copyToClipboard(text, button) {
   const textSpan = button.querySelector('.copy-text');
