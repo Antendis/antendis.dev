@@ -544,3 +544,32 @@ a:hover {
     gap: 1.5rem;
   }
 }
+
+/* Prevent pointer cursor when hovering hero text (keep buttons/links interactive) */
+#intro h1,
+#intro p,
+#intro .mono,
+#intro .tag,
+#intro span {
+  cursor: default;
+}
+/* Ensure buttons (and their inner text/elements) always show pointer cursor */
+#intro .btn,
+#intro .btn-cta,
+#intro .btn-copy,
+#intro .btn *,
+#intro .btn-cta *,
+#intro .btn-copy * {
+  cursor: pointer !important;
+}
+
+/* Global: treat headings as non-pointer (titles shouldn't show pointer) */
+h1, h2, h3, h4, h5, h6 {
+  cursor: default !important;
+}
+
+/* Utility: disable pointer cursor for an entire section/container while keeping interactivity */
+.no-pointer, .no-pointer * {
+  cursor: default !important;
+}
+
