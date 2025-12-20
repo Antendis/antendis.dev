@@ -563,3 +563,13 @@ a:hover {
   cursor: pointer !important;
 }
 
+/* Global: treat headings as non-pointer (titles shouldn't show pointer) */
+h1, h2, h3, h4, h5, h6 {
+  cursor: default !important;
+}
+
+/* Utility: disable pointer cursor for an entire section/container while keeping interactivity */
+.no-pointer, .no-pointer * {
+  cursor: default !important;
+}
+
