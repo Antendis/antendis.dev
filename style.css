@@ -544,3 +544,22 @@ a:hover {
     gap: 1.5rem;
   }
 }
+
+/* Prevent pointer cursor when hovering hero text (keep buttons/links interactive) */
+#intro h1,
+#intro p,
+#intro .mono,
+#intro .tag,
+#intro span {
+  cursor: default;
+}
+/* Ensure buttons (and their inner text/elements) always show pointer cursor */
+#intro .btn,
+#intro .btn-cta,
+#intro .btn-copy,
+#intro .btn *,
+#intro .btn-cta *,
+#intro .btn-copy * {
+  cursor: pointer !important;
+}
+
