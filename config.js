@@ -22,8 +22,8 @@ const config = {
 
   // Tech stack (moved from HTML for easy updates)
   tech: {
-    languages: ["python", "javascript", "C", "html/css", "java"],
-    aiml: ["tensorflow", "pytorch", "scikit-learn"],
+    languages: ["python", "javascript", "C", "html/css", "java", "Lua soon..."],
+    aiml: ["tensorflow", "pytorch", "scikit-learn", "llama"],
     tools: ["git", "docker", "azure", "figma", "jira", "jupyter notebook"]
   }
 };
