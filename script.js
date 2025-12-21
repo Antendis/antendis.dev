@@ -239,9 +239,8 @@ function showCopied(textSpan, originalText, button) {
   }, 2000);
 }
 
-// ==========================================
+
 // VISITOR LOCATION TRACKING
-// ==========================================
 
 // Get or initialize visitor data from localStorage
 function getVisitorData() {
@@ -266,7 +265,7 @@ async function trackVisitorLocation() {
 
     console.log('Fetching visitor location...');
     
-    // Using ipapi.co free API (1,000 requests/day, no API key needed)
+    // Using ipapi.co free API (1,000 requests/day)
     const response = await fetch('https://ipapi.co/json/', {
       method: 'GET',
       headers: {
@@ -290,7 +289,7 @@ async function trackVisitorLocation() {
       latitude: locationData.latitude || 0,
       longitude: locationData.longitude || 0,
       timezone: locationData.timezone || '',
-      ip: locationData.ip || 'Unknown' // Consider privacy: you might want to hash or not store this
+      ip: locationData.ip || 'Unknown' // Consider privacy: might want to hash or not store this
     };
 
     console.log('Location detected:', visitor);
