@@ -2,7 +2,7 @@
 const config = {
   // Achievements
   achievements: {
-    hackathons: 3, // Update this number as you attend more
+    hackathons: 3, 
     roles: [
       { title: "BU Student Representative", icon: "🎓" },
       { title: "Treasurer", organization: "Computing Society", icon: "💰" }
@@ -16,11 +16,10 @@ const config = {
     { subject: "Data Management", grade: 81 },
     { subject: "Computer Fundamentals", grade: 67 },
     { subject: "Computing and Society", grade: 87 },
-    { subject: "Computing in Business", grade: 70 },
-    // Add more subjects as needed - 6 per year
+    { subject: "Computing in Business", grade: 70 }
   ],
 
-  // Tech stack (moved from HTML for easy updates)
+  // Tech stack
   tech: {
     languages: ["python", "javascript", "C", "html/css", "java", "Lua soon..."],
     aiml: ["tensorflow", "pytorch", "scikit-learn", "llama"],
