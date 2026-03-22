@@ -9,15 +9,22 @@ const config = {
     ]
   },
 
-  // Academic grades (0-100 scale)
-  grades: [
-    { subject: "Mathematics", grade: 76 },
-    { subject: "Programming", grade: 93 },
-    { subject: "Data Management", grade: 81 },
-    { subject: "Computer Fundamentals", grade: 67 },
-    { subject: "Computing and Society", grade: 87 },
-    { subject: "Computing in Business", grade: 70 }
-  ],
+  // Academic grades grouped by university year (0-100 scale)
+  gradesByYear: {
+    "Year 1": [
+      { subject: "Mathematics", grade: 76 },
+      { subject: "Programming", grade: 93 },
+      { subject: "Data Management", grade: 81 },
+      { subject: "Computer Fundamentals", grade: 67 },
+      { subject: "Computing and Society", grade: 87 },
+      { subject: "Computing in Business", grade: 70 }
+    ],
+    "Year 2": [
+      { subject: "Software Engineering", grade: 77 },
+      { subject: "System Analysis and Design", grade: 67 },
+      { subject: "Machine Learning", grade: 86 }
+    ]
+  },
 
   // Tech stack
   tech: {

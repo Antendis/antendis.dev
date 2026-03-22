@@ -85,25 +85,50 @@ function loadAchievements() {
     });
   }
 
-  // Grades list with visual bars
+  // Grades list grouped by university year
   const gradesList = document.getElementById('gradesList');
-  if (gradesList && config.grades) {
-    gradesList.className = 'grid grid-cols-2 gap-3';
-    
-    config.grades.forEach(item => {
-      const gradeDiv = document.createElement('div');
-      gradeDiv.className = 'p-3 bg-gray-800/20 rounded-lg';
-      
-      gradeDiv.innerHTML = `
-        <div class="flex justify-between items-center mb-2">
-          <span class="font-medium text-sm">${item.subject}</span>
-          <span class="font-bold accent text-lg">${item.grade}%</span>
-        </div>
-        <div class="w-full bg-gray-700/30 rounded-full h-2">
-          <div class="bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full transition-all duration-1000" style="width: ${item.grade}%"></div>
-        </div>
-      `;
-      gradesList.appendChild(gradeDiv);
+  if (gradesList && (config.gradesByYear || config.grades)) {
+    const gradesByYear = config.gradesByYear || { "Year 1": config.grades };
+    gradesList.className = 'space-y-6';
+
+    Object.entries(gradesByYear).forEach(([year, grades]) => {
+      const yearSection = document.createElement('div');
+      yearSection.className = 'p-4 bg-gray-900/20 border border-gray-700/30 rounded-lg';
+
+      const yearTitle = document.createElement('h4');
+      yearTitle.className = 'font-semibold text-base mb-3 text-gray-200';
+      yearTitle.textContent = year;
+      yearSection.appendChild(yearTitle);
+
+      if (!grades || grades.length === 0) {
+        const emptyState = document.createElement('p');
+        emptyState.className = 'text-sm text-gray-500';
+        emptyState.textContent = 'No modules added yet.';
+        yearSection.appendChild(emptyState);
+      } else {
+        const yearGrid = document.createElement('div');
+        yearGrid.className = 'grid grid-cols-2 gap-3';
+
+        grades.forEach(item => {
+          const gradeDiv = document.createElement('div');
+          gradeDiv.className = 'p-3 bg-gray-800/20 rounded-lg';
+
+          gradeDiv.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-medium text-sm">${item.subject}</span>
+              <span class="font-bold accent text-lg">${item.grade}%</span>
+            </div>
+            <div class="w-full bg-gray-700/30 rounded-full h-2">
+              <div class="bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full transition-all duration-1000" style="width: ${item.grade}%"></div>
+            </div>
+          `;
+          yearGrid.appendChild(gradeDiv);
+        });
+
+        yearSection.appendChild(yearGrid);
+      }
+
+      gradesList.appendChild(yearSection);
     });
   }
 }
