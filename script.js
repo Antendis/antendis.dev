@@ -133,6 +133,94 @@ function loadAchievements() {
   }
 }
 
+// Load projects from config
+function loadProjects() {
+  if (typeof config === 'undefined' || !config.projects) return;
+
+  const grid = document.getElementById('projectsGrid');
+  if (!grid) return;
+
+  // Clear any existing nodes before rendering
+  grid.innerHTML = '';
+
+  config.projects.forEach(project => {
+    const card = document.createElement('a');
+    card.className = 'project-card reveal';
+    card.href = project.url;
+    card.target = project.openInNewTab ? '_blank' : '_self';
+    card.rel = project.openInNewTab ? 'noopener' : '';
+    card.setAttribute('aria-label', project.title);
+
+    if (project.image) {
+      const img = document.createElement('img');
+      img.src = project.image;
+      img.alt = `${project.title} preview`;
+      card.appendChild(img);
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'project-overlay';
+    card.appendChild(overlay);
+
+    const content = document.createElement('div');
+    content.className = 'project-content';
+
+    const top = document.createElement('div');
+    top.className = 'space-y-3';
+
+    const meta = document.createElement('div');
+    meta.className = 'project-meta';
+    meta.innerHTML = `<span>${project.id || 'project'}</span>${project.type ? `<span>• ${project.type}</span>` : ''}`;
+    top.appendChild(meta);
+
+    const title = document.createElement('h3');
+    title.className = 'project-title';
+    title.textContent = project.title;
+    top.appendChild(title);
+
+    const desc = document.createElement('p');
+    desc.className = 'project-desc';
+    desc.textContent = project.description;
+    top.appendChild(desc);
+
+    if (project.tags && project.tags.length) {
+      const tags = document.createElement('div');
+      tags.className = 'project-tags';
+      project.tags.forEach(tagText => {
+        const tag = document.createElement('span');
+        tag.className = 'project-tag';
+        tag.textContent = tagText;
+        tags.appendChild(tag);
+      });
+      top.appendChild(tags);
+    }
+
+    content.appendChild(top);
+
+    const footer = document.createElement('div');
+    footer.className = 'project-footer';
+
+    const status = document.createElement('span');
+    status.className = `project-status ${project.status === 'live' ? 'live' : ''}`;
+    status.textContent = project.statusLabel || (project.status === 'live' ? 'live' : 'in progress');
+    footer.appendChild(status);
+
+    const link = document.createElement('span');
+    link.className = 'project-link';
+    link.innerHTML = 'Open project <span aria-hidden="true">→</span>';
+    footer.appendChild(link);
+
+    content.appendChild(footer);
+    card.appendChild(content);
+    grid.appendChild(card);
+
+    // Observe for reveal animation once injected
+    if (observer && observer.observe) {
+      observer.observe(card);
+    }
+  });
+}
+
 // Load tech stack from config
 function loadTechStack() {
   if (!config.tech) return;
@@ -175,6 +263,7 @@ function loadTechStack() {
 if (typeof config !== 'undefined') {
   loadAchievements();
   loadTechStack();
+  loadProjects();
 }
 
 // Attach hover handlers so hackathon card glows when roles beneath it are hovered

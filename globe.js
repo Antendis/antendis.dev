@@ -160,15 +160,10 @@ function updateVisitorMarkers() {
   visitorMarkers.forEach(m => globeGroup.remove(m));
   visitorMarkers = [];
 
-  const visitors = window.visitorTracking ? window.visitorTracking.getAllVisitors() : [];
-  
-  visitors.slice(0, 20).forEach((v, i) => {
-    if (v.latitude && v.longitude) {
-      const marker = createVisitorMarker(v.latitude, v.longitude, i === 0);
-      visitorMarkers.push(marker);
-      globeGroup.add(marker);
-    }
-  });
+  // Fixed home marker — Bournemouth, UK
+  const homeMarker = createVisitorMarker(50.7192, -1.8808, true);
+  visitorMarkers.push(homeMarker);
+  globeGroup.add(homeMarker);
 }
 
 function createVisitorMarker(lat, lon, isCurrent = false) {

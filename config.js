@@ -31,5 +31,33 @@ const config = {
     languages: ["python", "javascript", "C", "html/css", "java", "Lua soon..."],
     aiml: ["tensorflow", "pytorch", "scikit-learn", "llama"],
     tools: ["git", "docker", "azure", "figma", "jira", "jupyter notebook"]
-  }
+  },
+
+  // Projects
+  projects: [
+    {
+      id: "portfolio-site",
+      title: "This Portfolio",
+      description: "The site you are browsing right now—static, performant, and instrumented with location-aware globe viz.",
+      url: "/#intro",
+      status: "live",
+      statusLabel: "live",
+      type: "portfolio",
+      tags: ["tailwind", "three.js", "design"],
+      image: "https://images.unsplash.com/photo-1454165205744-3b78555e5572?auto=format&fit=crop&w=1200&q=80",
+      openInNewTab: false
+    },
+    {
+      id: "ml-pipeline",
+      title: "ML Pipeline Sandbox",
+      description: "Experimentation space for model training + evaluation; staging for future public demo.",
+      url: "https://github.com/antendis",
+      status: "in-progress",
+      statusLabel: "in progress",
+      type: "ml",
+      tags: ["python", "pytorch", "experiments"],
+      image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+      openInNewTab: true
+    }
+  ]
 };
