@@ -328,12 +328,12 @@ body.loading #content {
 }
 
 .project-tag {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
   padding: 0.35rem 0.7rem;
   border-radius: 9999px;
   font-size: 0.75rem;
-  color: #cbd5e1;
+  color: #34d399;
   font-family: 'JetBrains Mono', monospace;
 }
 

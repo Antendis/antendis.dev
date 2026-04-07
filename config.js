@@ -2,7 +2,7 @@
 const config = {
   // Achievements
   achievements: {
-    hackathons: 3, 
+    hackathons: 4,
     roles: [
       { title: "BU Student Representative", icon: "🎓" },
       { title: "Treasurer", organization: "Computing Society", icon: "💰" }
@@ -28,36 +28,48 @@ const config = {
 
   // Tech stack
   tech: {
-    languages: ["python", "javascript", "C", "html/css", "java", "Lua soon..."],
-    aiml: ["tensorflow", "pytorch", "scikit-learn", "llama"],
-    tools: ["git", "docker", "azure", "figma", "jira", "jupyter notebook"]
+    languages: ["python", "javascript", "C", "C#", "html/css"],
+    aiml: ["pytorch", "tensorflow", "scikit-learn", "numpy", "pandas"],
+    tools: ["git", "azure", "linux", "docker", "figma", "jira", "jupyter", "oracle cloud", "google cloud", "react"]
   },
 
   // Projects
   projects: [
     {
+      id: "rl-game-agent",
+      title: "Reinforcement Learning Game Agent",
+      description: "Self-taught RL agent that learns to play a game via memory scanning and reward signals. Built with PyTorch, Stable Baselines3, and OpenCV — a self-directed dive into applied reinforcement learning.",
+      url: "https://github.com/antendis/ML-Happy-Turret",
+      status: "live",
+      statusLabel: "personal project",
+      type: "ml",
+      tags: ["python", "pytorch", "stable-baselines3", "opencv"],
+      image: "https://images.unsplash.com/photo-1535016120720-40c646be5580?auto=format&fit=crop&w=1200&q=80",
+      openInNewTab: true
+    },
+    {
+      id: "marcus-aurelius-bot",
+      title: "Marcus Aurelius Chatbot",
+      description: "University SWE assignment. A chatbot that responds as Marcus Aurelius, drawing on Stoic philosophy. Built with a custom response engine in vanilla JS, no external AI APIs.",
+      url: "https://github.com/antendis",
+      status: "live",
+      statusLabel: "university project",
+      type: "web app",
+      tags: ["javascript", "html/css", "huggingface"],
+      image: "https://images.unsplash.com/photo-1512295767273-ac109ac3acfa?auto=format&fit=crop&w=1200&q=80",
+      openInNewTab: true
+    },
+    {
       id: "portfolio-site",
       title: "This Portfolio",
-      description: "The site you are browsing right now—static, performant, and instrumented with location-aware globe viz.",
+      description: "This site. Designed and built from scratch with Tailwind, vanilla JS, and Three.js for the 3D globe. Scroll animations, mobile-responsive, and all content driven from a single config file.",
       url: "/#intro",
       status: "live",
-      statusLabel: "live",
+      statusLabel: "personal project",
       type: "portfolio",
-      tags: ["tailwind", "three.js", "design"],
+      tags: ["tailwind", "three.js", "javascript"],
       image: "https://images.unsplash.com/photo-1454165205744-3b78555e5572?auto=format&fit=crop&w=1200&q=80",
       openInNewTab: false
     },
-    {
-      id: "ml-pipeline",
-      title: "ML Pipeline Sandbox",
-      description: "Experimentation space for model training + evaluation; staging for future public demo.",
-      url: "https://github.com/antendis",
-      status: "in-progress",
-      statusLabel: "in progress",
-      type: "ml",
-      tags: ["python", "pytorch", "experiments"],
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
-      openInNewTab: true
-    }
   ]
 };
