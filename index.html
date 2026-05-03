@@ -39,6 +39,20 @@
     </div>
   </div>
 
+  <!-- Nav Bar -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-inner">
+      <a href="#intro" class="nav-logo mono">rs<span class="accent">.</span>dev</a>
+      <div class="nav-links">
+        <a href="#projects" class="nav-link">projects</a>
+        <a href="#achievements" class="nav-link">uni</a>
+        <a href="#skills" class="nav-link">skills</a>
+        <a href="#about" class="nav-link">about</a>
+        <a href="#contact" class="nav-link nav-link-cta">contact →</a>
+      </div>
+    </div>
+  </nav>
+
   <!-- Organic Background -->
   <div class="organic-bg"></div>
   <div class="grid-pattern"></div>
@@ -85,16 +99,74 @@
         </div>
 
         <div class="space-y-6">
-          <!-- Project -->
+          <!-- Project: OnePot Banking -->
           <div class="reveal plant-card p-6 md:p-8">
             <div class="grow-line"></div>
             <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
               <div>
-                <h3 class="text-2xl font-bold mb-2">will be up shortly <span class="text-2xl">🚧</span></h3>
+                <h3 class="text-2xl font-bold mb-2">OnePot Banking App</h3>
                 <p class="text-gray-400 leading-relaxed mb-4 max-w-2xl">
-                  projects coming soon!
+                  Full-stack banking demo built during a JPMorgan SWE experience week. Features user registration, 2-step OTP login, and shared savings groups — built with Next.js 15, Prisma, and custom auth from scratch.
                 </p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="tag">TypeScript</span>
+                  <span class="tag">Next.js 15</span>
+                  <span class="tag">Prisma</span>
+                  <span class="tag">Tailwind</span>
+                  <span class="tag">group project</span>
+                </div>
               </div>
+              <a href="https://github.com/Antendis/JPM-Banking-App-Demo-Group-2" target="_blank" class="btn flex items-center gap-2 shrink-0">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                view repo
+              </a>
+            </div>
+          </div>
+
+          <!-- Project: Vehicle Routing Problem -->
+          <div class="reveal plant-card p-6 md:p-8">
+            <div class="grow-line"></div>
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 class="text-2xl font-bold mb-2">Vehicle Routing Problem</h3>
+                <p class="text-gray-400 leading-relaxed mb-4 max-w-2xl">
+                  University algorithms assignment implementing and benchmarking multiple VRP solvers — nearest neighbour, Clarke-Wright savings, and 2-opt local search. Includes an animated visualiser that renders live route updates as the algorithms run.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="tag">Python</span>
+                  <span class="tag">algorithms</span>
+                  <span class="tag">Pygame</span>
+                  <span class="tag">data structures</span>
+                </div>
+              </div>
+              <a href="https://github.com/Antendis/Vehicle-Routing-Problem" target="_blank" class="btn flex items-center gap-2 shrink-0">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                view repo
+              </a>
+            </div>
+          </div>
+
+          <!-- Project: ML Happy Turret -->
+          <div class="reveal plant-card p-6 md:p-8">
+            <div class="grow-line"></div>
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 class="text-2xl font-bold mb-2">ML Happy Turret</h3>
+                <p class="text-gray-400 leading-relaxed mb-4 max-w-2xl">
+                  Reinforcement learning agent trained to play a game by scanning live memory to extract reward signals — no game API, just raw process memory. Built out of curiosity about what you can teach a model when you write the feedback loop yourself.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="tag">Python</span>
+                  <span class="tag">PyTorch</span>
+                  <span class="tag">Stable Baselines3</span>
+                  <span class="tag">reinforcement learning</span>
+                  <span class="tag">computer vision</span>
+                </div>
+              </div>
+              <a href="https://github.com/Antendis/ML-Happy-Turret" target="_blank" class="btn flex items-center gap-2 shrink-0">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                view repo
+              </a>
             </div>
           </div>
         </div>
@@ -191,10 +263,10 @@
         <div class="reveal plant-card p-8 md:p-12">
           <div class="mb-8"><div class="text-6xl mb-6">🌱</div></div>
           <p class="text-gray-300 leading-relaxed mb-6">
-            Second-year software engineering student with ~80% grades on average. I'm into learning how to do new things currently thats watching machines learn and making awesome visuals (or playing the piano).
+            Second-year software engineering student averaging ~80% across my modules. Right now I'm deep into machine learning and algorithmic problem solving — I learn best by building things, so most of my time goes towards projects that push me into unfamiliar territory.
           </p>
           <p class="text-gray-300 leading-relaxed mb-6">
-            Most of my work is in Python, but I'm always picking up new tools. My personal learning philosphy is that you learn best by doing, so I try to experience and experiment as much as possible.
+            Most of my work is in Python, but I pick up whatever the problem calls for. I've shipped a full-stack TypeScript app, trained RL agents, and visualised route optimisation algorithms — not because they were assigned, but because they were interesting.
           </p>
           <p class="text-gray-300 leading-relaxed mb-6">
             <span class="accent">Actively looking for placement opportunities</span> where I can work on real problems and learn from people who are where I want to be.
