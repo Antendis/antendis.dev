@@ -2,7 +2,7 @@
 const config = {
   // Achievements
   achievements: {
-    hackathons: 3, 
+    hackathons: 4,
     roles: [
       { title: "BU Student Representative", icon: "🎓" },
       { title: "Treasurer", organization: "Computing Society", icon: "💰" }
