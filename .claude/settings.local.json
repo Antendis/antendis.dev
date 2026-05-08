@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(ls c:/Users/Anten/Documents/GitHub/antendis.dev/*.txt c:/Users/Anten/Documents/GitHub/antendis.dev/*.xml c:/Users/Anten/Documents/GitHub/antendis.dev/robots* c:/Users/Anten/Documents/GitHub/antendis.dev/sitemap*)"
     ]
   }
 }
