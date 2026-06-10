@@ -184,9 +184,8 @@ body {
   height: 100vh;
   height: 100dvh;
   display: flex;
-  align-items: center;
-  padding: 2rem;
-  border-left: 1px solid var(--rule);
+  align-items: flex-start;
+  padding: clamp(2.5rem, 12vh, 5.5rem) 2rem 2rem 3rem;
 }
 
 #globeViz {
@@ -712,6 +711,14 @@ a:hover {
 
   .content {
     padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .js .panel {
+    display: block;
+  }
+
+  .js .panel.is-active {
+    animation: none;
   }
 }
 
