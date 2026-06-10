@@ -1,8 +1,57 @@
-// Nav scroll behaviour
-window.addEventListener('scroll', () => {
-  const nav = document.getElementById('navbar');
-  if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
-});
+// Hash-based panel router
+(function () {
+  const PANELS = ['intro', 'projects', 'achievements', 'skills', 'contact'];
+  const ALIASES = { about: 'intro', home: 'intro' };
+  const TITLES = {
+    intro: 'Rohail Sheikh | Software Engineer',
+    projects: 'Work | Rohail Sheikh',
+    achievements: 'University | Rohail Sheikh',
+    skills: 'Skills | Rohail Sheikh',
+    contact: 'Contact | Rohail Sheikh'
+  };
+
+  function resolve(hash) {
+    const id = (hash || '').replace(/^#/, '');
+    return PANELS.includes(id) ? id : (ALIASES[id] || 'intro');
+  }
+
+  function show(id, moveFocus) {
+    document.querySelectorAll('.panel').forEach(p => {
+      p.classList.toggle('is-active', p.id === id);
+    });
+    document.querySelectorAll('.side-link').forEach(a => {
+      const current = a.dataset.panel === id;
+      a.classList.toggle('is-current', current);
+      if (current) {
+        a.setAttribute('aria-current', 'page');
+      } else {
+        a.removeAttribute('aria-current');
+      }
+    });
+    document.title = TITLES[id];
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    if (moveFocus) {
+      document.getElementById('main').focus({ preventScroll: true });
+    }
+    if (typeof gtag === 'function') {
+      gtag('event', 'page_view', { page_location: location.href });
+    }
+  }
+
+  window.addEventListener('hashchange', () => show(resolve(location.hash), true));
+  show(resolve(location.hash), false);
+
+  // Clicking a link to the already-active panel fires no hashchange, so the
+  // browser's native fragment scroll would tuck the page top under the bar.
+  document.querySelectorAll('.side-link, .side-logo').forEach(a => {
+    a.addEventListener('click', e => {
+      if (resolve(a.hash) === resolve(location.hash)) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    });
+  });
+})();
 
 // Dynamic age calculation
 

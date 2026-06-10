@@ -5,6 +5,7 @@
 let camera, scene, renderer;
 let globeGroup;
 let visitorMarkers = [];
+let globeVisible = false;
 const GLOBE_RADIUS = 100;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -12,22 +13,7 @@ const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 const INK = 0x1A1813;
 const GREEN = 0x2F5D43;
 
-function initGlobe() {
-  const container = document.getElementById('globeViz');
-  
-  if (!container || typeof THREE === 'undefined') {
-    console.error('Globe setup failed:', { container: !!container, THREE: typeof THREE });
-    return;
-  }
-
-  const width = container.clientWidth;
-  const height = container.clientHeight;
-  
-  if (width === 0 || height === 0) {
-    setTimeout(initGlobe, 100);
-    return;
-  }
-
+function initGlobe(container, width, height) {
   // Scene setup
   scene = new THREE.Scene();
   globeGroup = new THREE.Group();
@@ -38,6 +24,7 @@ function initGlobe() {
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(width, height);
   renderer.setClearColor(0x000000, 0);
   container.appendChild(renderer.domElement);
@@ -45,15 +32,12 @@ function initGlobe() {
   // Load GeoJSON and create globe
   loadGlobeFromGeoJSON();
 
-  // Window resize
-  window.addEventListener('resize', onGlobeResize);
-
   // Start animation
   animateGlobe();
 
   // Listen for visitor updates
   window.addEventListener('visitorLocationUpdated', updateVisitorMarkers);
-  
+
   console.log('Globe initialized successfully');
 }
 
@@ -213,6 +197,9 @@ function createVisitorMarker(lat, lon, isCurrent = false) {
 function animateGlobe() {
   requestAnimationFrame(animateGlobe);
 
+  // Skip work entirely while the rail is hidden or the tab is backgrounded
+  if (!globeVisible || document.hidden) return;
+
   if (globeGroup && !REDUCED_MOTION) {
     globeGroup.rotation.y += 0.001; // Slow rotation
   }
@@ -234,19 +221,33 @@ function animateGlobe() {
   renderer.render(scene, camera);
 }
 
-function onGlobeResize() {
-  const container = document.getElementById('globeViz');
-  if (!container) return;
-
-  const width = container.clientWidth;
-  const height = container.clientHeight;
-
+function onGlobeResize(width, height) {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
 }
 
-// Initialize when page loads
+// Initialize lazily: a ResizeObserver fires only when #globeViz actually has
+// layout size, so hidden viewports (<1200px) never create a WebGL context.
 window.addEventListener('load', () => {
-  setTimeout(initGlobe, 1000);
+  const container = document.getElementById('globeViz');
+
+  if (!container || typeof THREE === 'undefined') {
+    console.error('Globe setup failed:', { container: !!container, THREE: typeof THREE });
+    return;
+  }
+
+  let initialized = false;
+  new ResizeObserver(entries => {
+    const { width, height } = entries[0].contentRect;
+    globeVisible = width > 0 && height > 0;
+    if (!globeVisible) return;
+
+    if (!initialized) {
+      initialized = true;
+      initGlobe(container, width, height);
+    } else {
+      onGlobeResize(width, height);
+    }
+  }).observe(container);
 });
