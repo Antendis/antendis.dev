@@ -1,11 +1,16 @@
 // ==========================================
-// 3D GLOBE VISUALIZATION - GitHub Style
+// 3D GLOBE VISUALIZATION - ink-line cartography
 // ==========================================
 
 let camera, scene, renderer;
 let globeGroup;
 let visitorMarkers = [];
 const GLOBE_RADIUS = 100;
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Palette (matches style.css tokens)
+const INK = 0x1A1813;
+const GREEN = 0x2F5D43;
 
 function initGlobe() {
   const container = document.getElementById('globeViz');
@@ -79,8 +84,8 @@ function latLonToVector3(lat, lon, radius) {
 
 function createGlobeFromGeoJSON(geojson) {
   const lineMaterial = new THREE.LineBasicMaterial({
-    color: 0x34d399,
-    opacity: 0.4,
+    color: INK,
+    opacity: 0.5,
     transparent: true,
     linewidth: 1
   });
@@ -123,8 +128,8 @@ function createLineFromCoordinates(coordinates, material) {
 
 function createGridLines() {
   const gridMaterial = new THREE.LineBasicMaterial({
-    color: 0x34d399,
-    opacity: 0.15,
+    color: INK,
+    opacity: 0.08,
     transparent: true
   });
   
@@ -181,9 +186,9 @@ function createVisitorMarker(lat, lon, isCurrent = false) {
 
   const geometry = new THREE.SphereGeometry(isCurrent ? 3 : 2, 16, 16);
   const material = new THREE.MeshBasicMaterial({
-    color: isCurrent ? 0xff0000 : 0xff4444,
+    color: isCurrent ? GREEN : INK,
     transparent: true,
-    opacity: isCurrent ? 1 : 0.6
+    opacity: isCurrent ? 1 : 0.45
   });
   
   const marker = new THREE.Mesh(geometry, material);
@@ -192,7 +197,7 @@ function createVisitorMarker(lat, lon, isCurrent = false) {
   if (isCurrent) {
     const glowGeometry = new THREE.SphereGeometry(5, 16, 16);
     const glowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
+      color: GREEN,
       transparent: true,
       opacity: 0.3
     });
@@ -208,21 +213,23 @@ function createVisitorMarker(lat, lon, isCurrent = false) {
 function animateGlobe() {
   requestAnimationFrame(animateGlobe);
 
-  if (globeGroup) {
+  if (globeGroup && !REDUCED_MOTION) {
     globeGroup.rotation.y += 0.001; // Slow rotation
   }
 
   // Pulsate current visitor marker
-  const time = Date.now() * 0.003;
-  visitorMarkers.forEach(m => {
-    if (m.userData.isCurrent) {
-      const scale = 1 + Math.sin(time) * 0.3;
-      m.scale.set(scale, scale, scale);
-      if (m.userData.glow) {
-        m.userData.glow.material.opacity = 0.2 + Math.sin(time) * 0.2;
+  if (!REDUCED_MOTION) {
+    const time = Date.now() * 0.003;
+    visitorMarkers.forEach(m => {
+      if (m.userData.isCurrent) {
+        const scale = 1 + Math.sin(time) * 0.3;
+        m.scale.set(scale, scale, scale);
+        if (m.userData.glow) {
+          m.userData.glow.material.opacity = 0.2 + Math.sin(time) * 0.2;
+        }
       }
-    }
-  });
+    });
+  }
 
   renderer.render(scene, camera);
 }
