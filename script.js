@@ -12,57 +12,14 @@ function updateAge() {
   const ageInMilliseconds = now - birthDate;
   const ageInYears = ageInMilliseconds / (365.25 * 24 * 60 * 60 * 1000);
   const ageElement = document.getElementById('age');
-  const ageMobile = document.getElementById('age-mobile');
   if (ageElement) {
     ageElement.textContent = `${ageInYears.toFixed(9)} years old`;
-  }
-  if (ageMobile) {
-    ageMobile.textContent = `${ageInYears.toFixed(9)} years old`;
   }
   requestAnimationFrame(updateAge);
 }
 
 // Start age animation
 updateAge();
-
-// Intro splash animation with delay
-window.addEventListener('load', () => {
-  const loader = document.getElementById('introLoader');
-  setTimeout(() => {
-    loader.classList.add('fade-out');
-    setTimeout(() => {
-      loader.style.display = 'none';
-      document.body.classList.remove('loading');
-    }, 700); // match CSS transition
-  }, 1500); // delay before fade out starts
-});
-
-// Reveal on scroll
-const reveals = document.querySelectorAll('.reveal, .reveal-fast');
-const observer = new IntersectionObserver((entries, observer) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('active');
-      observer.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.1 });
-
-reveals.forEach(r => observer.observe(r));
-
-
-// Animate slide-down, slide-up, slide-left, and slide-right elements
-const slideElements = document.querySelectorAll('.slide-down, .slide-up, .slide-left, .slide-right');
-const slideObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('active');
-      slideObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.1 });
-
-slideElements.forEach(el => slideObserver.observe(el));
 
 // Load achievements and grades from config
 function loadAchievements() {
@@ -76,18 +33,13 @@ function loadAchievements() {
   const rolesList = document.getElementById('rolesList');
   if (rolesList && config.achievements && config.achievements.roles) {
     config.achievements.roles.forEach(role => {
-      const roleDiv = document.createElement('div');
-      roleDiv.className = 'p-4 bg-gray-800/30 border border-gray-700/30 rounded-lg';
-      roleDiv.innerHTML = `
-        <div class="flex items-start gap-3">
-          <span class="text-2xl">${role.icon}</span>
-          <div>
-            <div class="font-semibold text-accent">${role.title}</div>
-            ${role.organization ? `<div class="text-sm text-gray-400">${role.organization}</div>` : ''}
-          </div>
-        </div>
+      const roleItem = document.createElement('li');
+      roleItem.className = 'data-row';
+      roleItem.innerHTML = `
+        <span class="data-title">${role.title}</span>
+        ${role.organization ? `<span class="data-detail">${role.organization}</span>` : ''}
       `;
-      rolesList.appendChild(roleDiv);
+      rolesList.appendChild(roleItem);
     });
   }
 
@@ -95,43 +47,40 @@ function loadAchievements() {
   const gradesList = document.getElementById('gradesList');
   if (gradesList && (config.gradesByYear || config.grades)) {
     const gradesByYear = config.gradesByYear || { "Year 1": config.grades };
-    gradesList.className = 'space-y-6';
+    gradesList.className = 'grade-years';
 
     Object.entries(gradesByYear).forEach(([year, grades]) => {
-      const yearSection = document.createElement('div');
-      yearSection.className = 'p-4 bg-gray-900/20 border border-gray-700/30 rounded-lg';
+      const yearSection = document.createElement('section');
+      yearSection.className = 'grade-year';
 
       const yearTitle = document.createElement('h4');
-      yearTitle.className = 'font-semibold text-base mb-3 text-gray-200';
-      yearTitle.textContent = year;
+      yearTitle.className = 'mono-label';
+      yearTitle.textContent = year.toLowerCase();
       yearSection.appendChild(yearTitle);
 
       if (!grades || grades.length === 0) {
         const emptyState = document.createElement('p');
-        emptyState.className = 'text-sm text-gray-500';
+        emptyState.className = 'grade-empty';
         emptyState.textContent = 'No modules added yet.';
         yearSection.appendChild(emptyState);
       } else {
-        const yearGrid = document.createElement('div');
-        yearGrid.className = 'grid grid-cols-2 gap-3';
+        const yearList = document.createElement('ul');
+        yearList.className = 'grade-rows';
 
         grades.forEach(item => {
-          const gradeDiv = document.createElement('div');
-          gradeDiv.className = 'p-3 bg-gray-800/20 rounded-lg';
+          const gradeItem = document.createElement('li');
+          gradeItem.className = item.grade >= 70 ? 'grade-row is-first' : 'grade-row';
+          gradeItem.style.setProperty('--grade', item.grade);
 
-          gradeDiv.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-medium text-sm">${item.subject}</span>
-              <span class="font-bold accent text-lg">${item.grade}%</span>
-            </div>
-            <div class="w-full bg-gray-700/30 rounded-full h-2">
-              <div class="bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full transition-all duration-1000" style="width: ${item.grade}%"></div>
-            </div>
+          gradeItem.innerHTML = `
+            <span class="grade-subject">${item.subject}</span>
+            <span class="grade-bar" aria-hidden="true"><span class="grade-fill"></span></span>
+            <span class="grade-num">${item.grade}%</span>
           `;
-          yearGrid.appendChild(gradeDiv);
+          yearList.appendChild(gradeItem);
         });
 
-        yearSection.appendChild(yearGrid);
+        yearSection.appendChild(yearList);
       }
 
       gradesList.appendChild(yearSection);
@@ -147,10 +96,9 @@ function loadTechStack() {
   const langContainer = document.getElementById('techLanguages');
   if (langContainer && config.tech.languages) {
     config.tech.languages.forEach(lang => {
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.textContent = lang;
-      langContainer.appendChild(tag);
+      const item = document.createElement('li');
+      item.textContent = lang;
+      langContainer.appendChild(item);
     });
   }
 
@@ -158,10 +106,9 @@ function loadTechStack() {
   const aimlContainer = document.getElementById('techAiml');
   if (aimlContainer && config.tech.aiml) {
     config.tech.aiml.forEach(tech => {
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.textContent = tech;
-      aimlContainer.appendChild(tag);
+      const item = document.createElement('li');
+      item.textContent = tech;
+      aimlContainer.appendChild(item);
     });
   }
 
@@ -169,10 +116,9 @@ function loadTechStack() {
   const toolsContainer = document.getElementById('techTools');
   if (toolsContainer && config.tech.tools) {
     config.tech.tools.forEach(tool => {
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.textContent = tool;
-      toolsContainer.appendChild(tag);
+      const item = document.createElement('li');
+      item.textContent = tool;
+      toolsContainer.appendChild(item);
     });
   }
 }
@@ -182,36 +128,6 @@ if (typeof config !== 'undefined') {
   loadAchievements();
   loadTechStack();
 }
-
-// Attach hover handlers so hackathon card glows when roles beneath it are hovered
-function attachRoleHoverHandlers() {
-  const rolesList = document.getElementById('rolesList');
-  const hackCard = document.querySelector('.hackathon-card');
-  if (!rolesList || !hackCard) return;
-
-  // Add hover via delegation: when mouse enters any child, add glow.
-  rolesList.addEventListener('mouseover', (e) => {
-    // only trigger when entering a role item (or its children)
-    const roleItem = e.target.closest && e.target.closest('#rolesList > div');
-    if (roleItem && rolesList.contains(roleItem)) {
-      hackCard.classList.add('hover-glow');
-    }
-  });
-
-  // Remove glow when leaving the rolesList container
-  rolesList.addEventListener('mouseout', (e) => {
-    const to = e.relatedTarget;
-    if (!to || !rolesList.contains(to)) {
-      hackCard.classList.remove('hover-glow');
-    }
-  });
-}
-
-// Call after achievements are loaded (safe to call even if rolesList empty)
-window.addEventListener('load', () => {
-  // slight delay to ensure JS-populated elements exist
-  setTimeout(attachRoleHoverHandlers, 100);
-});
 
 // Copy to clipboard function
 function copyToClipboard(text, button) {
@@ -259,14 +175,12 @@ function fallbackCopy(text, textSpan, originalText, button) {
 }
 
 function showCopied(textSpan, originalText, button) {
-  textSpan.textContent = 'Copied!';
-  button.style.background = 'rgba(52, 211, 153, 0.25)';
-  button.style.borderColor = '#34d399';
-  
+  textSpan.textContent = 'copied';
+  button.classList.add('copied');
+
   setTimeout(() => {
     textSpan.textContent = originalText;
-    button.style.background = '';
-    button.style.borderColor = '';
+    button.classList.remove('copied');
   }, 2000);
 }
 

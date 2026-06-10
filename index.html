@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rohail Sheikh - Software Engineer 🌱</title>
-  <meta name="description" content="Rohail Sheikh, software engineering student building things with Python, machine learning, and full-stack web. Actively seeking placement opportunities." />
+  <title>Rohail Sheikh — Software Engineer</title>
+  <meta name="description" content="Rohail Sheikh, software engineering student building things with Python, machine learning and full-stack web. Starting a placement at Cold Banana in Bournemouth." />
   <meta name="keywords" content="Rohail Sheikh, software engineer, software engineering student, Python developer, machine learning, reinforcement learning, Next.js, TypeScript, portfolio, placement, Bournemouth University" />
   <meta name="author" content="Rohail Sheikh" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://antendis.dev/" />
-  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="theme-color" content="#FAF7F2" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23FAF7F2'/%3E%3Ctext x='30' y='46' font-family='Georgia, Times New Roman, serif' font-style='italic' font-size='42' text-anchor='middle' fill='%231A1813'%3Er%3C/text%3E%3Ccircle cx='46' cy='44' r='3.5' fill='%232F5D43'/%3E%3C/svg%3E" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://antendis.dev/" />
-  <meta property="og:title" content="Rohail Sheikh - Software Engineer 🌱" />
-  <meta property="og:description" content="Software engineering student building things with Python, machine learning, and full-stack web. Actively seeking placement opportunities." />
+  <meta property="og:title" content="Rohail Sheikh — Software Engineer" />
+  <meta property="og:description" content="Software engineering student building things with Python, machine learning and full-stack web. Starting a placement at Cold Banana in Bournemouth." />
   <meta property="og:site_name" content="Rohail Sheikh" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Rohail Sheikh - Software Engineer 🌱" />
-  <meta name="twitter:description" content="Software engineering student building things with Python, machine learning, and full-stack web. Actively seeking placement opportunities." />
+  <meta name="twitter:title" content="Rohail Sheikh — Software Engineer" />
+  <meta name="twitter:description" content="Software engineering student building things with Python, machine learning and full-stack web. Starting a placement at Cold Banana in Bournemouth." />
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -31,7 +32,7 @@
     "name": "Rohail Sheikh",
     "url": "https://antendis.dev",
     "jobTitle": "Software Engineering Student",
-    "description": "Software engineering student building things with Python, machine learning, and full-stack web. Actively seeking placement opportunities.",
+    "description": "Software engineering student building things with Python, machine learning and full-stack web. Starting a placement at Cold Banana in Bournemouth.",
     "email": "rohailsheikh256@gmail.com",
     "sameAs": [
       "https://github.com/antendis",
@@ -51,269 +52,204 @@
   gtag('config', 'G-6F6E6L3M36');
 </script>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    // Suppress Tailwind CDN warning for portfolio site
-    tailwind.config = {
-      theme: {
-        extend: {}
-      }
-    }
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="config.js"></script>
   <!-- Three.js for 3D globe -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body class="text-white font-sans loading">
-  <!-- Initial Loader -->
-  <div id="introLoader">
-    <div class="text-center">
-      <div id="loaderName" class="loader-text text-3xl mb-2">C:\rohail-sheikh></div>
-      <div id="loaderStatus" class="loader-text text-xl">loading portfolio...</div>
-    </div>
-  </div>
-
+<body>
   <!-- Nav Bar -->
-  <nav id="navbar" class="navbar">
+  <nav id="navbar" class="navbar" aria-label="Primary">
     <div class="nav-inner">
-      <a href="#intro" class="nav-logo mono" aria-label="Rohail Sheikh - Home">antendis<span class="accent">.</span>dev</a>
+      <a href="#intro" class="nav-logo" aria-label="Rohail Sheikh - Home">antendis<span class="accent">.</span>dev</a>
       <div class="nav-links">
         <a href="#projects" class="nav-link">projects</a>
         <a href="#achievements" class="nav-link">uni</a>
         <a href="#skills" class="nav-link">skills</a>
         <a href="#about" class="nav-link">about</a>
-        <a href="#contact" class="nav-link nav-link-cta">contact →</a>
+        <a href="#contact" class="nav-link nav-link-cta">contact</a>
       </div>
     </div>
   </nav>
 
-  <!-- Organic Background -->
-  <div class="organic-bg"></div>
-  <div class="grid-pattern"></div>
-
-  <!-- Page Content -->
-  <div id="content" class="content-wrapper">
-    <!-- Hero Section -->
-    <section id="intro" class="reveal min-h-screen flex items-center justify-center px-6 py-20">
-      <div class="max-w-7xl w-full">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <!-- Left: Text Content -->
-          <div>
-            <div class="mb-6 slide-down">
-              <span class="tag">🌱 growing & learning</span>
-              <span class="mono text-sm text-gray-500 ml-3 tag-age-desktop" id="age"></span>
-              <span class="mono text-sm text-gray-500 tag-age-mobile" id="age-mobile"></span>
-            </div>
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight slide-down">hey, i'm rohail</h1>
-            <p class="text-xl md:text-2xl text-gray-400 mb-8 leading-relaxed slide-left">software engineering student building things primarily with <span class="accent">python</span>. passionate about machine learning, automation and making stuff that actually works.</p>
-            <p class="mono text-sm text-gray-500 mb-10 slide-up">> current_status: ["learning", "building", "found_placement"]</p>
-            <div class="flex flex-wrap gap-4 slide-up">
-              <a href="#projects" class="btn flex items-center">see what i've built</a>
-              <a href="#achievements" class="btn flex items-center">see my uni achievements</a>
-              <a href="#contact" class="btn-cta flex items-center gap-2">
-                <span>get in touch</span>
-                <span>→</span>
-              </a>
-            </div>
-          </div>
-          <!-- Right: Globe Visualization -->
-          <div class="globe-container hidden lg:block slide-right">
-            <div id="globeViz" class="w-full h-[500px] relative"></div>
-          </div>
+  <main id="content">
+    <!-- Hero -->
+    <header id="intro" class="hero">
+      <div class="container hero-grid">
+        <div class="hero-text">
+          <p class="kicker">currently — learning, building, placement found</p>
+          <h1 class="hero-title">hey, i&rsquo;m rohail</h1>
+          <p class="hero-lede">software engineering student building things primarily with <span class="accent">python</span>. passionate about machine learning, automation and making stuff that actually works.</p>
+          <p class="hero-age"><span id="age"></span></p>
+          <nav class="hero-links" aria-label="Highlights">
+            <a href="#projects">see what i&rsquo;ve built</a>
+            <a href="#achievements">see my uni achievements</a>
+            <a href="#contact" class="link-accent">get in touch &rarr;</a>
+          </nav>
+        </div>
+        <div class="globe-container" aria-hidden="true">
+          <div id="globeViz"></div>
         </div>
       </div>
-    </section>
+    </header>
 
-    <!-- Projects Section -->
-    <section id="projects" class="px-6 py-24">
-      <div class="max-w-6xl mx-auto">
-        <div class="reveal-fast mb-16">
-          <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> things i've built</h2>
-          <p class="text-gray-500 mono text-sm no-pointer">// projects that actually work</p>
-        </div>
+    <!-- Projects -->
+    <section id="projects" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="section-no">01 — work</p>
+          <h2>things i&rsquo;ve built</h2>
+          <p class="section-sub">projects that actually work</p>
+        </header>
 
-        <div class="space-y-6">
-          <!-- Project: OnePot Banking -->
-          <div class="reveal plant-card p-6 md:p-8">
-            <div class="grow-line"></div>
-            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
-              <div>
-                <div class="flex items-center gap-3 mb-2">
-                  <h3 class="text-2xl font-bold">OnePot Banking App</h3>
-                  <span class="mono text-sm text-gray-500">06.05.2026</span>
-                </div>
-                <p class="text-gray-400 leading-relaxed mb-4 max-w-2xl">
-                  Full-stack banking demo built during a JPMorgan SWE experience week. Features user registration, 2-step OTP login, and shared savings groups, built with Next.js 15, Prisma, and custom auth from scratch.
-                </p>
-                <div class="flex flex-wrap gap-2">
-                  <span class="tag">TypeScript</span>
-                  <span class="tag">Next.js 15</span>
-                  <span class="tag">Prisma</span>
-                  <span class="tag">Tailwind</span>
-                  <span class="tag">group project</span>
-                </div>
+        <ul class="entry-list">
+          <li class="entry">
+            <div class="entry-main">
+              <div class="entry-titleline">
+                <h3 class="entry-title">OnePot Banking App</h3>
+                <span class="entry-date">06.05.2026</span>
               </div>
-              <a href="https://jpm-banking-app-demo-group-2.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn flex items-center gap-2 shrink-0" aria-label="View OnePot Banking App live site">
-                <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                view site
-              </a>
+              <p class="entry-desc">
+                Full-stack banking demo built during a JPMorgan SWE experience week. Features user registration, 2-step OTP login, and shared savings groups, built with Next.js 15, Prisma, and custom auth from scratch.
+              </p>
+              <p class="entry-stack">TypeScript &middot; Next.js 15 &middot; Prisma &middot; Tailwind &middot; group project</p>
             </div>
+            <div class="entry-side">
+              <a href="https://jpm-banking-app-demo-group-2.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="View OnePot Banking App live site">view site &nearr;</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- University -->
+    <section id="achievements" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="section-no">02 — university</p>
+          <h2>uni achievements</h2>
+          <p class="section-sub">milestones in my academic journey</p>
+        </header>
+
+        <div class="uni-block">
+          <h3 class="mono-label">roles &amp; activities</h3>
+          <ul class="data-rows" id="rolesList">
+            <!-- Populated by JS -->
+          </ul>
+          <div class="data-row hackathon-row">
+            <span class="data-title">hackathons attended</span>
+            <span class="data-num" id="hackathonCount">0</span>
+          </div>
+        </div>
+
+        <div class="uni-block">
+          <div class="grades-head">
+            <h3 class="mono-label">academic performance</h3>
+            <span class="grades-legend">40 = 3rd (pass) &middot; 70+ = 1st</span>
+          </div>
+          <div id="gradesList">
+            <!-- Populated by JS -->
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Uni Achievements -->
-    <section id="achievements" class="px-6 pt-24">
-      <div class="max-w-6xl mx-auto">
-        <div class="reveal-fast mb-8">
-          <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> uni achievements</h2>
-          <p class="text-gray-500 mono text-sm no-pointer">// milestones in my academic journey</p>
-        </div>
-      </div>
-    </section>
+    <!-- Skills -->
+    <section id="skills" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="section-no">03 — skills</p>
+          <h2>tech i work with</h2>
+          <p class="section-sub">tools in my shed</p>
+        </header>
 
-    <!-- Roles & Achievements -->
-    <section class="px-6 pb-24 no-pointer">
-      <div class="max-w-6xl mx-auto">
-        <div class="space-y-6">
-          <div class="reveal plant-card p-8">
-            <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
-              <span>🏆</span> roles & activities
-            </h3>
-            
-            <!-- Hackathon Counter -->
-            <div class="mb-6 p-4 bg-green-900/20 border border-green-700/30 rounded-lg hackathon-card">
-              <div class="flex items-center justify-between">
-                <span class="text-lg font-semibold">Hackathons Attended</span>
-                <span class="text-4xl font-bold accent" id="hackathonCount">0</span>
-              </div>
-            </div>
-
-            <!-- Roles List -->
-            <div class="space-y-4" id="rolesList">
+        <div class="skills-grid">
+          <div class="skills-col">
+            <h3 class="mono-label">languages</h3>
+            <ul class="skills-list" id="techLanguages">
               <!-- Populated by JS -->
-            </div>
+            </ul>
           </div>
-
-          <!-- Academic Grades -->
-          <div class="reveal plant-card p-8">
-            <div class="flex items-baseline justify-between mb-6 flex-wrap gap-2">
-              <h3 class="text-2xl font-bold flex items-center gap-2">
-                <span>📚</span> academic performance
-              </h3>
-              <span class="text-xs text-gray-500 mono">40 = 3rd (pass) • 70+ = 1st</span>
-            </div>
-            <div id="gradesList">
-              <!-- Populated by JS with grid layout -->
-            </div>
+          <div class="skills-col">
+            <h3 class="mono-label">tools</h3>
+            <ul class="skills-list" id="techTools">
+              <!-- Populated by JS -->
+            </ul>
           </div>
-        </div>
-      </div>
-    </section>
-    <section id="skills" class="px-6 py-24 no-pointer">
-      <div class="max-w-6xl mx-auto">
-        <div class="reveal-fast mb-12">
-          <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> tech i work with</h2>
-          <p class="text-gray-500 mono text-sm">// tools in my shed 🌱</p>
-        </div>
-
-        <div class="reveal plant-card p-8">
-          <div class="grid md:grid-cols-3 gap-8">
-            <div>
-              <p class="text-sm text-gray-500 mono mb-3">languages:</p>
-              <div class="flex flex-wrap gap-2" id="techLanguages">
-                <!-- Populated by JS -->
-              </div>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500 mono mb-3">tools:</p>
-              <div class="flex flex-wrap gap-2" id="techTools">
-                <!-- Populated by JS -->
-              </div>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500 mono mb-3">ai/ml:</p>
-              <div class="flex flex-wrap gap-2" id="techAiml">
-                <!-- Populated by JS -->
-              </div>
-            </div>
+          <div class="skills-col">
+            <h3 class="mono-label">ai / ml</h3>
+            <ul class="skills-list" id="techAiml">
+              <!-- Populated by JS -->
+            </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="px-6 py-24">
-      <div class="max-w-4xl mx-auto">
-        <div class="reveal-fast mb-12">
-          <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> about me</h2>
-          <p class="text-gray-500 mono text-sm no-pointer">// who's tending this garden</p>
-        </div>
-        <div class="reveal plant-card p-8 md:p-12">
-          <div class="mb-8"><div class="text-6xl mb-6">🌱</div></div>
-          <p class="text-gray-300 leading-relaxed mb-6">
-            I'm Rohail Sheikh, a second-year software engineering student averaging ~80% across my modules. Right now I'm deep into machine learning and algorithmic problem solving. I learn best by building things, so most of my time goes towards projects that push me into unfamiliar territory.
+    <!-- About -->
+    <section id="about" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="section-no">04 — about</p>
+          <h2>about me</h2>
+          <p class="section-sub">who&rsquo;s tending this garden</p>
+        </header>
+
+        <div class="prose">
+          <p>
+            I&rsquo;m Rohail Sheikh, a second-year software engineering student averaging ~80% across my modules. Right now I&rsquo;m deep into machine learning and algorithmic problem solving. I learn best by building things, so most of my time goes towards projects that push me into unfamiliar territory.
           </p>
-          <p class="text-gray-300 leading-relaxed mb-6">
-            Most of my work is in Python, but I pick up whatever the problem calls for. I've shipped a full-stack TypeScript app, trained RL agents, and visualised route optimisation algorithms. Not because they were assigned, but because they were interesting.
+          <p>
+            Most of my work is in Python, but I pick up whatever the problem calls for. I&rsquo;ve shipped a full-stack TypeScript app, trained RL agents, and visualised route optimisation algorithms. Not because they were assigned, but because they were interesting.
           </p>
-          <p class="text-gray-300 leading-relaxed mb-6">
-            Looking forward to starting my placement at <span class="accent">Cold Banana</span> in Bournemouth, where I'll be picking up C# and React.
+          <p>
+            Looking forward to starting my placement at <span class="accent">Cold Banana</span> in Bournemouth, where I&rsquo;ll be picking up C# and React.
           </p>
-          <p class="mono text-sm text-gray-500">> echo "always growing" 🌿</p>
+          <p class="signoff">always growing.</p>
         </div>
       </div>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="px-6 py-24 no-pointer">
-      <div class="max-w-4xl mx-auto">
-        <div class="reveal-fast mb-12">
-          <h2 class="text-4xl md:text-5xl font-bold mb-3"><span class="terminal-text">#</span> let's connect</h2>
-          <p class="text-gray-500 mono text-sm">// open to placements & collab</p>
-        </div>
-        <div class="reveal plant-card p-8 md:p-12">
-          <div class="flex flex-wrap gap-4 mb-6">
-            <a href="https://github.com/antendis" target="_blank" rel="noopener noreferrer" class="btn flex items-center gap-2" aria-label="Rohail Sheikh on GitHub">
-              <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-              </svg>
-              <span>github</span>
-            </a>
-            <a href="https://www.linkedin.com/in/rohail-sheikh-188947215/" target="_blank" rel="noopener noreferrer" class="btn flex items-center gap-2" aria-label="Rohail Sheikh on LinkedIn">
-              <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              <span>linkedin</span>
-            </a>
-          </div>
-          <div class="border-t border-gray-700/30 pt-6 mt-6">
-            <p class="text-gray-500 text-sm mb-3 mono">// click to copy</p>
-            <div class="flex flex-wrap gap-4">
-              <button onclick="copyToClipboard('rohailsheikh256@gmail.com', this)" class="btn-copy flex items-center gap-2" aria-label="Copy email address rohailsheikh256@gmail.com">
-                <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                <span class="copy-text">rohailsheikh256@gmail.com</span>
-              </button>
-              <a href="Rohail Sheikh CV.pdf" download class="btn flex items-center gap-2" aria-label="Download Rohail Sheikh's CV">
-                <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>
-                </svg>
-                <span>Download CV</span>
-              </a>
-            </div>
-          </div>
-          <div class="border-t border-gray-700/30 pt-6 mt-6">
-            <p class="mono text-sm text-gray-500">built with care and ☕ by Rohail Sheikh // 2026</p>
-          </div>
-        </div>
+    <!-- Contact -->
+    <section id="contact" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="section-no">05 — contact</p>
+          <h2>let&rsquo;s connect</h2>
+          <p class="section-sub">open to placements &amp; collab</p>
+        </header>
+
+        <ul class="contact-rows">
+          <li class="contact-row">
+            <span class="mono-label">github</span>
+            <a href="https://github.com/antendis" target="_blank" rel="noopener noreferrer" aria-label="Rohail Sheikh on GitHub">github.com/antendis &nearr;</a>
+          </li>
+          <li class="contact-row">
+            <span class="mono-label">linkedin</span>
+            <a href="https://www.linkedin.com/in/rohail-sheikh-188947215/" target="_blank" rel="noopener noreferrer" aria-label="Rohail Sheikh on LinkedIn">linkedin.com/in/rohail-sheikh &nearr;</a>
+          </li>
+          <li class="contact-row">
+            <span class="mono-label">email</span>
+            <button class="btn-copy" onclick="copyToClipboard('rohailsheikh256@gmail.com', this)" aria-label="Copy email address rohailsheikh256@gmail.com">
+              <span class="copy-text">rohailsheikh256@gmail.com</span>
+              <span class="copy-hint">click to copy</span>
+            </button>
+          </li>
+          <li class="contact-row">
+            <span class="mono-label">cv</span>
+            <a href="Rohail Sheikh CV.pdf" download aria-label="Download Rohail Sheikh's CV">download cv (pdf) &darr;</a>
+          </li>
+        </ul>
+
+        <footer class="footer">
+          <p>built with care by rohail sheikh — 2026</p>
+        </footer>
       </div>
     </section>
-  </div>
+  </main>
 
   <script src="script.js"></script>
   <script src="globe.js"></script>
