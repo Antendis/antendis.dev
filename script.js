@@ -183,9 +183,10 @@ function copyToClipboard(text, button) {
   const textSpan = button.querySelector('.copy-text');
   const originalText = textSpan.textContent;
   
-  // Lock button width to prevent size change
-  if (!button.style.width) {
-    button.style.width = button.offsetWidth + 'px';
+  // Reserve the button's footprint so the shorter "copied" state does not
+  // shift layout; ceil avoids a fractional-px squeeze that wrapped the hint.
+  if (!button.style.minWidth) {
+    button.style.minWidth = Math.ceil(button.getBoundingClientRect().width) + 'px';
   }
   
   // Try modern clipboard API first
@@ -235,85 +236,130 @@ function showCopied(textSpan, originalText, button) {
 
 
 // VISITOR LOCATION TRACKING
+// When config.visitsApi is set, visits are shared through a Cloudflare Worker
+// and every viewer sees everyone from the last 24 hours. Without it, the globe
+// falls back to this browser's own localStorage history (also 24h-filtered).
+// No IP addresses are stored in either mode.
 
-// Get or initialize visitor data from localStorage
+const DAY_MS = 24 * 60 * 60 * 1000;
+let visitorsCache = [];
+
+// Server entry { t, lat, lon, city, country } -> the shape globe.js expects
+function mapEntry(e, isSelf) {
+  return {
+    timestamp: new Date(e.t).toISOString(),
+    latitude: e.lat,
+    longitude: e.lon,
+    city: e.city || '',
+    country: e.country || '',
+    isSelf: !!isSelf
+  };
+}
+
+function cellKey(lat, lon) {
+  return lat.toFixed(1) + ',' + lon.toFixed(1);
+}
+
+function publishVisitors(self, others) {
+  const list = [];
+  const seen = new Set();
+  if (self) {
+    list.push(mapEntry(self, true));
+    seen.add(cellKey(self.lat, self.lon));
+  }
+  others.forEach(e => {
+    if (!Number.isFinite(e.lat) || !Number.isFinite(e.lon)) return;
+    const key = cellKey(e.lat, e.lon);
+    if (seen.has(key)) return;
+    seen.add(key);
+    list.push(mapEntry(e, false));
+  });
+  visitorsCache = list;
+  window.dispatchEvent(new CustomEvent('visitorLocationUpdated', {
+    detail: { visitor: list[0] || null, allVisitors: visitorsCache }
+  }));
+}
+
+async function trackSharedVisits(api) {
+  const cached = sessionStorage.getItem('visitSelf');
+  if (cached === null) {
+    // First load this session: record the visit; the response carries our own
+    // geo plus everyone else, so no follow-up read is needed.
+    const res = await fetch(api + '/visit', { method: 'POST' });
+    if (!res.ok) throw new Error('visit POST failed: ' + res.status);
+    const data = await res.json();
+    sessionStorage.setItem('visitSelf', JSON.stringify(data.self));
+    publishVisitors(data.self, data.others || []);
+  } else {
+    const res = await fetch(api + '/visits');
+    if (!res.ok) throw new Error('visits GET failed: ' + res.status);
+    const data = await res.json();
+    const self = cached === 'null' ? null : JSON.parse(cached);
+    let visitors = data.visitors || [];
+    if (self) {
+      // Our own stored record comes back in the list; drop at most one match
+      // so we are not drawn twice.
+      const i = visitors.findIndex(v => v.t === self.t);
+      if (i !== -1) visitors = visitors.slice(0, i).concat(visitors.slice(i + 1));
+    }
+    publishVisitors(self, visitors);
+  }
+}
+
+// ---- localStorage fallback (no backend configured) ----
+
 function getVisitorData() {
   const data = localStorage.getItem('visitorLocations');
   return data ? JSON.parse(data) : { visitors: [], lastUpdate: null };
 }
 
-// Save visitor data to localStorage
 function saveVisitorData(data) {
   localStorage.setItem('visitorLocations', JSON.stringify(data));
 }
 
-// Fetch current visitor's location
-async function trackVisitorLocation() {
-  try {
-    // Check if we already tracked this session
-    const sessionTracked = sessionStorage.getItem('locationTracked');
-    if (sessionTracked) {
-      console.log('Location already tracked this session');
-      return;
-    }
+function recentLocalVisitors() {
+  const cutoff = Date.now() - DAY_MS;
+  return getVisitorData().visitors.filter(v => {
+    const t = Date.parse(v.timestamp);
+    return Number.isFinite(t) && t > cutoff;
+  });
+}
 
-    console.log('Fetching visitor location...');
-    
-    // Using ipapi.co free API (1,000 requests/day)
+function publishLocal() {
+  visitorsCache = recentLocalVisitors().map((v, i) => {
+    if (i === 0) v.isSelf = true;
+    return v;
+  });
+  window.dispatchEvent(new CustomEvent('visitorLocationUpdated', {
+    detail: { visitor: visitorsCache[0] || null, allVisitors: visitorsCache }
+  }));
+}
+
+async function trackLocalVisit() {
+  if (sessionStorage.getItem('locationTracked')) {
+    publishLocal();
+    return;
+  }
+  const data = getVisitorData();
+  try {
     const response = await fetch('https://ipapi.co/json/', {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      }
+      headers: { 'Accept': 'application/json' }
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const locationData = await response.json();
-    
-    // Extract relevant data
-    const visitor = {
+    if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
+    const loc = await response.json();
+    data.visitors.unshift({
       timestamp: new Date().toISOString(),
-      country: locationData.country_name || 'Unknown',
-      countryCode: locationData.country_code || 'XX',
-      city: locationData.city || 'Unknown',
-      region: locationData.region || '',
-      latitude: locationData.latitude || 0,
-      longitude: locationData.longitude || 0,
-      timezone: locationData.timezone || '',
-      ip: locationData.ip || 'Unknown' // Consider privacy: might want to hash or not store this
-    };
-
-    console.log('Location detected:', visitor);
-
-    // Get existing data
-    const data = getVisitorData();
-    
-    // Add new visitor (keep last 50)
-    data.visitors.unshift(visitor);
-    data.visitors = data.visitors.slice(0, 50);
-    data.lastUpdate = new Date().toISOString();
-    
-    // Save to localStorage
-    saveVisitorData(data);
-    
-    // Mark as tracked for this session
-    sessionStorage.setItem('locationTracked', 'true');
-    
-    console.log('Visitor location saved. Total visitors tracked:', data.visitors.length);
-    
-    // Dispatch custom event for globe to listen to
-    window.dispatchEvent(new CustomEvent('visitorLocationUpdated', { 
-      detail: { visitor, allVisitors: data.visitors } 
-    }));
-
+      country: loc.country_name || 'Unknown',
+      countryCode: loc.country_code || 'XX',
+      city: loc.city || 'Unknown',
+      region: loc.region || '',
+      latitude: loc.latitude || 0,
+      longitude: loc.longitude || 0,
+      timezone: loc.timezone || ''
+    });
   } catch (error) {
-    console.error('Error fetching location:', error);
-    
-    // Fallback: Add anonymous visitor
-    const data = getVisitorData();
+    console.warn('Location lookup failed:', error);
     data.visitors.unshift({
       timestamp: new Date().toISOString(),
       country: 'Unknown',
@@ -322,29 +368,48 @@ async function trackVisitorLocation() {
       latitude: 0,
       longitude: 0
     });
-    data.visitors = data.visitors.slice(0, 50);
-    saveVisitorData(data);
-    
-    sessionStorage.setItem('locationTracked', 'true');
+  }
+  data.visitors = data.visitors.slice(0, 50);
+  data.lastUpdate = new Date().toISOString();
+  saveVisitorData(data);
+  sessionStorage.setItem('locationTracked', 'true');
+  publishLocal();
+}
+
+function trackVisitorLocation() {
+  const api = (typeof config !== 'undefined' && config.visitsApi) ? config.visitsApi : '';
+  if (api) {
+    trackSharedVisits(api).catch(error => {
+      console.warn('Shared visit tracking failed:', error);
+      window.dispatchEvent(new CustomEvent('visitorLocationUpdated', {
+        detail: { visitor: visitorsCache[0] || null, allVisitors: visitorsCache }
+      }));
+    });
+  } else {
+    trackLocalVisit();
   }
 }
 
-// Get all tracked visitors (for globe visualization)
 function getAllVisitors() {
-  const data = getVisitorData();
-  return data.visitors;
+  return visitorsCache;
 }
 
-// Clear old visitors (optional - call this to reset)
 function clearVisitorData() {
   localStorage.removeItem('visitorLocations');
   sessionStorage.removeItem('locationTracked');
+  sessionStorage.removeItem('visitSelf');
+  visitorsCache = [];
   console.log('Visitor data cleared');
+}
+
+// Seed the cache so the globe has dots as soon as it draws, before the
+// tracking round-trip completes.
+if (!(typeof config !== 'undefined' && config.visitsApi)) {
+  visitorsCache = recentLocalVisitors();
 }
 
 // Auto-track location when page loads
 window.addEventListener('load', () => {
-  // Small delay to not interfere with page load
   setTimeout(() => {
     trackVisitorLocation();
   }, 2000);
