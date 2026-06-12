@@ -28,8 +28,11 @@ const config = {
 
   // Tech stack
   tech: {
-    languages: ["python", "javascript", "C", "html/css", "java"],
-    aiml: ["tensorflow", "pytorch", "scikit-learn", "llama"],
-    tools: ["git", "docker", "azure", "figma", "jira", "jupyter notebook"]
-  }
+    languages: ["python", "javascript", "C", "C#", "html/css"],
+    tools: ["react", "node.js", "sql", "rest apis", "pytest", "git", "github actions", "docker", "azure", "vercel", "powershell", "figma", "jira", "jupyter notebook", "pandas", "numpy", "tensorflow", "pytorch", "scikit-learn", "ollama"]
+  },
+
+  // Visitor-globe backend (Cloudflare Worker base URL, no trailing slash).
+  // Empty string = feature off; the globe falls back to this browser's own history.
+  visitsApi: ""
 };
