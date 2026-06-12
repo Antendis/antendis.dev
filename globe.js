@@ -151,13 +151,16 @@ function updateVisitorMarkers() {
 
   const visitors = window.visitorTracking ? window.visitorTracking.getAllVisitors() : [];
   
-  visitors.slice(0, 20).forEach((v, i) => {
-    if (v.latitude && v.longitude) {
-      const marker = createVisitorMarker(v.latitude, v.longitude, i === 0);
+  visitors.slice(0, 20).forEach(v => {
+    if (Number.isFinite(v.latitude) && Number.isFinite(v.longitude)) {
+      const marker = createVisitorMarker(v.latitude, v.longitude, v.isSelf === true);
       visitorMarkers.push(marker);
       globeGroup.add(marker);
     }
   });
+  // Test hooks: markers live inside WebGL and are otherwise unobservable.
+  window.__globeMarkerCount = visitorMarkers.length;
+  window.__globeHasCurrent = visitorMarkers.some(m => m.userData.isCurrent);
 }
 
 function createVisitorMarker(lat, lon, isCurrent = false) {

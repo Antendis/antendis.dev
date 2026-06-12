@@ -140,6 +140,9 @@ body {
   color: var(--ink-3);
   text-decoration: none;
   width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .side-foot a:hover {
@@ -185,7 +188,7 @@ body {
   height: 100dvh;
   display: flex;
   align-items: flex-start;
-  padding: clamp(2.5rem, 12vh, 5.5rem) 2rem 2rem 3rem;
+  padding: clamp(2.5rem, 11vh, 5rem) 3rem 2rem 1.5rem;
 }
 
 #globeViz {
@@ -193,6 +196,7 @@ body {
   width: 100%;
   aspect-ratio: 1;
   max-height: 70vh;
+  margin-left: clamp(-17rem, calc((1500px - 100vw) * 0.7), 0rem);
 }
 
 /* ---------- type ---------- */
@@ -233,6 +237,18 @@ a:hover {
   color: var(--ink-2);
 }
 
+.icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.contact-row .mono-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* ---------- hero ---------- */
 
 .kicker {
@@ -241,6 +257,8 @@ a:hover {
   letter-spacing: 0.08em;
   color: var(--ink-2);
   margin-bottom: 2.25rem;
+  font-variant-numeric: tabular-nums;
+  min-height: 1.2em;
 }
 
 .hero-title {
@@ -256,15 +274,6 @@ a:hover {
   line-height: 1.55;
   color: var(--ink-2);
   max-width: 36ch;
-}
-
-.hero-age {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
-  margin: 1.75rem 0 2.25rem;
-  min-height: 1.2em;
 }
 
 .hero-links {
@@ -590,6 +599,7 @@ a:hover {
   letter-spacing: 0.08em;
   color: var(--ink-3);
   margin-left: 0.9rem;
+  white-space: nowrap;
 }
 
 .btn-copy.copied .copy-text {
@@ -625,8 +635,17 @@ a:hover {
 
 @media (min-width: 768px) {
   .skills-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 2fr;
     gap: 3rem;
+  }
+
+  .skills-list--wide {
+    columns: 2;
+    column-gap: 3rem;
+  }
+
+  .skills-list--wide li {
+    break-inside: avoid;
   }
 
   .grade-years {
