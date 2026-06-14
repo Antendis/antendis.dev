@@ -153,6 +153,8 @@ body {
 
 .content {
   padding: clamp(3rem, 7vh, 5.25rem) clamp(2rem, 5vw, 4.5rem);
+  /* extra bottom room so content doesn't hide behind fixed footer */
+  padding-bottom: calc(clamp(2rem, 5vw, 4.5rem) + 3rem);
 }
 
 .panel {
@@ -591,8 +593,11 @@ a:hover {
 }
 
 .footer {
-  margin-top: clamp(3rem, 8vh, 5rem);
-  padding: 0 0 clamp(2rem, 4vh, 3rem);
+  position: fixed;
+  bottom: clamp(1.25rem, 2.75vh, 2rem);
+  left: calc(var(--sidebar-w) + clamp(2rem, 5vw, 4.5rem));
+  z-index: 10;
+  pointer-events: none;
 }
 
 .footer p {
@@ -716,6 +721,11 @@ a:hover {
 
   .js .panel.is-active {
     animation: none;
+  }
+
+  .footer {
+    position: static;
+    padding: 1.5rem 0 2rem;
   }
 }
 
