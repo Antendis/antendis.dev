@@ -29,6 +29,9 @@
       }
     });
     document.title = TITLES[id];
+    // Expose active panel on <html> so CSS can drive rail-extra visibility
+    // and any other panel-specific styles without extra JS.
+    document.documentElement.dataset.panel = id;
     window.scrollTo({ top: 0, behavior: 'auto' });
     if (moveFocus) {
       document.getElementById('main').focus({ preventScroll: true });
@@ -107,7 +110,13 @@ function loadAchievements() {
       yearTitle.textContent = year.toLowerCase();
       yearSection.appendChild(yearTitle);
 
-      if (!grades || grades.length === 0) {
+      if (grades === null) {
+        // Explicit null = placement year placeholder
+        const placeholder = document.createElement('p');
+        placeholder.className = 'grade-empty grade-placement';
+        placeholder.textContent = 'on placement currently, year 3 soon…';
+        yearSection.appendChild(placeholder);
+      } else if (!grades || grades.length === 0) {
         const emptyState = document.createElement('p');
         emptyState.className = 'grade-empty';
         emptyState.textContent = 'No modules added yet.';

@@ -6,6 +6,9 @@ let camera, scene, renderer;
 let globeGroup;
 let visitorMarkers = [];
 let globeVisible = false;
+let globeContainer = null;
+let lastGlobeW = 0;
+let lastGlobeH = 0;
 const GLOBE_RADIUS = 100;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -203,6 +206,19 @@ function animateGlobe() {
   // Skip work entirely while the rail is hidden or the tab is backgrounded
   if (!globeVisible || document.hidden) return;
 
+  // Track the container size every frame so CSS size transitions (the globe
+  // shrinking/growing when switching to/from the university tab) render
+  // smoothly rather than snapping at the end of the transition.
+  if (globeContainer) {
+    const w = globeContainer.clientWidth;
+    const h = globeContainer.clientHeight;
+    if (w > 0 && h > 0 && (w !== lastGlobeW || h !== lastGlobeH)) {
+      lastGlobeW = w;
+      lastGlobeH = h;
+      onGlobeResize(w, h);
+    }
+  }
+
   if (globeGroup && !REDUCED_MOTION) {
     globeGroup.rotation.y += 0.001; // Slow rotation
   }
@@ -234,6 +250,7 @@ function onGlobeResize(width, height) {
 // layout size, so hidden viewports (<1200px) never create a WebGL context.
 window.addEventListener('load', () => {
   const container = document.getElementById('globeViz');
+  globeContainer = container;
 
   if (!container || typeof THREE === 'undefined') {
     console.error('Globe setup failed:', { container: !!container, THREE: typeof THREE });

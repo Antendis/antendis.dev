@@ -23,7 +23,8 @@ const config = {
       { subject: "Software Engineering", grade: 77 },
       { subject: "System Analysis and Design", grade: 67 },
       { subject: "Machine Learning", grade: 86 }
-    ]
+    ],
+    "Year 3": null
   },
 
   // Tech stack

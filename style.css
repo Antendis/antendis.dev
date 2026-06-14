@@ -4,7 +4,7 @@
    ========================================================== */
 
 :root {
-  --paper: #FAF7F2;
+  --paper: #F7F1E3;
   --ink: #1A1813;
   --ink-2: #57534A;
   --ink-3: #8A857B;
@@ -152,13 +152,35 @@ body {
 /* ---------- content ---------- */
 
 .content {
-  padding: clamp(3rem, 7vh, 5.25rem) clamp(2rem, 5vw, 4.5rem);
-  /* extra bottom room so content doesn't hide behind fixed footer */
-  padding-bottom: calc(clamp(2rem, 5vw, 4.5rem) + 3rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(3rem, 7vh, 5.25rem) clamp(2rem, 5vw, 4.5rem) clamp(2rem, 5vw, 4.5rem);
 }
 
 .panel {
   max-width: 64ch;
+}
+
+/* Intro panel: vertically centered, biased slightly upward */
+#intro.is-active {
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-bottom: 14%;
+}
+
+/* Achievements panel: wider to fill toward globe */
+#achievements {
+  max-width: none;
+}
+
+#achievements .section-head {
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+#achievements .uni-block {
+  margin-bottom: 0;
 }
 
 .js .panel {
@@ -189,8 +211,10 @@ body {
   height: 100vh;
   height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   padding: clamp(2.5rem, 11vh, 5rem) 3rem 2rem 1.5rem;
+  overflow: hidden;
 }
 
 #globeViz {
@@ -199,6 +223,56 @@ body {
   aspect-ratio: 1;
   max-height: 70vh;
   margin-left: clamp(-17rem, calc((1500px - 100vw) * 0.7), 0rem);
+  flex-shrink: 0;
+}
+
+/* Shrink globe on university tab to make room for roles */
+html[data-panel="achievements"] #globeViz {
+  max-height: 42vh;
+  /* Reduce the negative bleed so the globe doesn't overlap achievements content */
+  margin-left: clamp(-6rem, calc((1500px - 100vw) * 0.3), 0rem);
+}
+
+/* Animate the globe shrinking/growing as tabs switch (per-frame redraw is
+   driven from the render loop in globe.js so the WebGL canvas tracks it). */
+@media (prefers-reduced-motion: no-preference) {
+  #globeViz {
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Rail extra: roles & activities shown only on university tab */
+.rail-extra {
+  display: none;
+  width: 100%;
+  padding-top: 1.5rem;
+  overflow: hidden;
+}
+
+html[data-panel="achievements"] .rail-extra {
+  display: block;
+}
+
+.rail-extra .mono-label {
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.rail-extra .data-rows {
+  font-size: 0.9375rem;
+}
+
+.rail-extra .data-row {
+  padding: 0.6rem 0;
+}
+
+.rail-extra .data-title {
+  font-size: 0.9375rem;
+}
+
+.rail-extra .data-num {
+  font-size: 1.4rem;
 }
 
 /* ---------- type ---------- */
@@ -421,7 +495,7 @@ a:hover {
 
 .grade-years {
   display: grid;
-  gap: 2.75rem;
+  gap: 1.75rem;
   align-items: start;
 }
 
@@ -437,15 +511,15 @@ a:hover {
 
 .grade-row {
   display: grid;
-  grid-template-columns: 1fr minmax(56px, 110px) 3.2rem;
-  gap: 1.1rem;
+  grid-template-columns: 1fr minmax(40px, 80px) 2.8rem;
+  gap: 0.75rem;
   align-items: center;
   border-top: 1px solid var(--rule-soft);
-  padding: 0.72rem 0;
+  padding: 0.42rem 0;
 }
 
 .grade-subject {
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .grade-bar {
@@ -480,8 +554,9 @@ a:hover {
 
 .grade-empty {
   font-style: italic;
+  font-size: 0.875rem;
   color: var(--ink-3);
-  padding: 0.72rem 0;
+  padding: 0.42rem 0;
   border-top: 1px solid var(--rule-soft);
 }
 
@@ -593,10 +668,8 @@ a:hover {
 }
 
 .footer {
-  position: fixed;
-  bottom: clamp(1.25rem, 2.75vh, 2rem);
-  left: calc(var(--sidebar-w) + clamp(2rem, 5vw, 4.5rem));
-  z-index: 10;
+  margin-top: auto;
+  padding-top: 2rem;
   pointer-events: none;
 }
 
@@ -633,7 +706,7 @@ a:hover {
 
   .grade-years {
     grid-template-columns: 1fr 1fr;
-    gap: 2rem 3.5rem;
+    gap: 1.25rem 2rem;
   }
 
   .entry {
@@ -644,6 +717,13 @@ a:hover {
 
   .entry-side {
     padding-top: 0.35rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .grade-years {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.1rem 1.75rem;
   }
 }
 
@@ -724,7 +804,6 @@ a:hover {
   }
 
   .footer {
-    position: static;
     padding: 1.5rem 0 2rem;
   }
 }

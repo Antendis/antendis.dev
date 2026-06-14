@@ -9,8 +9,8 @@
   <meta name="author" content="Rohail Sheikh" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://antendis.dev/" />
-  <meta name="theme-color" content="#FAF7F2" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23FAF7F2'/%3E%3Ctext x='30' y='46' font-family='Georgia, Times New Roman, serif' font-style='italic' font-size='42' text-anchor='middle' fill='%231A1813'%3Er%3C/text%3E%3Ccircle cx='46' cy='44' r='3.5' fill='%232F5D43'/%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#F7F1E3" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23F7F1E3'/%3E%3Ctext x='30' y='46' font-family='Georgia, Times New Roman, serif' font-style='italic' font-size='42' text-anchor='middle' fill='%231A1813'%3Er%3C/text%3E%3Ccircle cx='46' cy='44' r='3.5' fill='%232F5D43'/%3E%3C/svg%3E" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
@@ -90,7 +90,7 @@
     <main id="main" class="content" tabindex="-1">
       <!-- Home -->
       <section id="intro" class="panel">
-        <h1 class="hero-title">hey, i&rsquo;m rohail</h1>
+        <h1 class="hero-title">hey, i&rsquo;m <span class="accent">rohail</span></h1>
         <div class="prose">
           <p>
             I&rsquo;m a <span id="age" class="age-inline"></span> <span class="accent">Software Engineer</span>ing student building things primarily with <span class="accent">python</span>, passionate about machine learning, automation and making stuff that looks cool. I&rsquo;m averaging ~80% across my university modules, deep into algorithmic problem solving, and looking forward to starting my placement at <span class="accent">Cold Banana</span> in Bournemouth, where I&rsquo;ll be picking up <span class="accent">C#</span> for <span class="accent">.NET</span> alongside <span class="accent">Vue</span> and <span class="accent">React</span>. I learn best by building, and making mistakes so I spend a lot of time on personal projects (like this).
@@ -134,17 +134,6 @@
           <h2>uni achievements</h2>
           <p class="section-sub">milestones in my journey of knowledge</p>
         </header>
-
-        <div class="uni-block">
-          <h3 class="mono-label">roles &amp; activities</h3>
-          <ul class="data-rows" id="rolesList">
-            <!-- Populated by JS -->
-          </ul>
-          <div class="data-row hackathon-row">
-            <span class="data-title">hackathons attended</span>
-            <span class="data-num" id="hackathonCount">0</span>
-          </div>
-        </div>
 
         <div class="uni-block">
           <div class="grades-head">
@@ -219,8 +208,18 @@
     </main>
 
     <!-- Globe rail -->
-    <div class="globe-rail" aria-hidden="true">
-      <div id="globeViz"></div>
+    <div class="globe-rail">
+      <div id="globeViz" aria-hidden="true"></div>
+      <aside class="rail-extra" id="railExtra" aria-label="Roles and activities">
+        <h3 class="mono-label">roles &amp; activities</h3>
+        <ul class="data-rows" id="rolesList">
+          <!-- Populated by JS -->
+        </ul>
+        <div class="data-row hackathon-row">
+          <span class="data-title">hackathons attended</span>
+          <span class="data-num" id="hackathonCount">0</span>
+        </div>
+      </aside>
     </div>
   </div>
 
