@@ -252,8 +252,9 @@ html[data-panel="achievements"] #globeViz {
 /* Rail extra: roles & activities shown only on university tab */
 .rail-extra {
   display: none;
-  /* push the roles block to the bottom of the rail, below the globe */
+  /* centre the roles block in the space between the globe and the rail bottom */
   margin-top: auto;
+  margin-bottom: auto;
   width: 100%;
   padding-top: 1.5rem;
   overflow: hidden;
