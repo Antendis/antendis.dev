@@ -170,6 +170,13 @@ body {
   padding-bottom: 14%;
 }
 
+/* On the home tab, stop the footer from grabbing auto-margin space so the
+   intro centres between the top and the footer (instead of three auto margins
+   splitting the space and pulling it into the upper third). */
+html[data-panel="intro"] .footer {
+  margin-top: 0;
+}
+
 /* Achievements panel: wider to fill toward globe */
 #achievements {
   max-width: none;
