@@ -266,8 +266,9 @@ window.addEventListener('load', () => {
     if (!initialized) {
       initialized = true;
       initGlobe(container, width, height);
-    } else {
-      onGlobeResize(width, height);
     }
+    // Ongoing resizes (window resize, tab-switch globe transition) are applied
+    // inside the render loop so setSize and render happen in the same frame —
+    // resizing here, a frame before the redraw, caused a visible flash.
   }).observe(container);
 });
