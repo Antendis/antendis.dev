@@ -156,7 +156,7 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: clamp(3rem, 7vh, 5.25rem) clamp(2rem, 5vw, 4.5rem) clamp(2rem, 5vw, 4.5rem);
+  padding: clamp(3rem, 7vh, 5.25rem) clamp(2rem, 5vw, 4.5rem) 2.25rem;
 }
 
 .panel {
