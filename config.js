@@ -16,13 +16,16 @@ const config = {
       { subject: "Programming", grade: 93 },
       { subject: "Data Management", grade: 81 },
       { subject: "Computer Fundamentals", grade: 67 },
-      { subject: "Computing and Society", grade: 87 },
+      { subject: "Computing & Society", grade: 87 },
       { subject: "Computing in Business", grade: 70 }
     ],
     "Year 2": [
       { subject: "Software Engineering", grade: 77 },
-      { subject: "System Analysis and Design", grade: 67 },
-      { subject: "Machine Learning", grade: 86 }
+      { subject: "System Analysis & Design", grade: 67 },
+      { subject: "Machine Learning", grade: 86 },
+      { subject: "Data Structures & Algorithms", grade: 71 },
+      { subject: "Software Business", grade: 72 },
+      { subject: "Technical Innovations", grade: 69 }
     ],
     "Year 3": null
   },
