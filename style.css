@@ -48,6 +48,16 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Allow selection where copying is genuinely useful (contact details, CV). */
+.selectable,
+.copy-text,
+.contact-row a {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
 ::selection {
   background: rgba(47, 93, 67, 0.18);
 }
