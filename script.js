@@ -9,6 +9,10 @@
     skills: 'Skills | Rohail Sheikh',
     contact: 'Contact | Rohail Sheikh'
   };
+  // Below 1024px every panel renders stacked in normal document flow (see the
+  // mobile media query in style.css), so the tab-style behaviors below (reset
+  // scroll to top, swallow same-panel clicks) only make sense on desktop.
+  const isTabMode = () => window.matchMedia('(min-width: 1024px)').matches;
 
   function resolve(hash) {
     const id = (hash || '').replace(/^#/, '');
@@ -32,7 +36,9 @@
     // Expose active panel on <html> so CSS can drive rail-extra visibility
     // and any other panel-specific styles without extra JS.
     document.documentElement.dataset.panel = id;
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    if (isTabMode()) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
     if (moveFocus) {
       document.getElementById('main').focus({ preventScroll: true });
     }
@@ -46,14 +52,77 @@
 
   // Clicking a link to the already-active panel fires no hashchange, so the
   // browser's native fragment scroll would tuck the page top under the bar.
+  // Desktop-only: on mobile, panels are stacked in flow and the browser's
+  // native anchor scroll already lands on the right section.
   document.querySelectorAll('.side-link, .side-logo').forEach(a => {
     a.addEventListener('click', e => {
-      if (resolve(a.hash) === resolve(location.hash)) {
+      if (isTabMode() && resolve(a.hash) === resolve(location.hash)) {
         e.preventDefault();
         window.scrollTo({ top: 0, behavior: 'auto' });
       }
     });
   });
+})();
+
+// Mobile scrollspy: below 1024px all panels sit stacked in document flow, so
+// nav highlighting can't rely on the desktop tab router's hash-driven show().
+// An IntersectionObserver tracks which section is under a band near the top
+// of the viewport and mirrors the same .is-current/aria-current bookkeeping,
+// without touching location.hash or the desktop router's own state.
+(function () {
+  if (typeof IntersectionObserver === 'undefined') return;
+
+  const mq = window.matchMedia('(max-width: 1023px)');
+  let observer = null;
+
+  function setCurrent(id) {
+    document.querySelectorAll('.side-link').forEach(a => {
+      const current = a.dataset.panel === id;
+      a.classList.toggle('is-current', current);
+      if (current) {
+        a.setAttribute('aria-current', 'page');
+      } else {
+        a.removeAttribute('aria-current');
+      }
+    });
+  }
+
+  function start() {
+    if (observer) return;
+    const sections = Array.from(document.querySelectorAll('.panel'));
+    observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(e => e.isIntersecting);
+      if (!visible.length) return;
+      // Prefer whichever intersecting section sits closest to the top band.
+      visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      setCurrent(visible[0].target.id);
+    }, {
+      // A thin horizontal band near the top of the viewport decides "current".
+      rootMargin: '-45% 0px -50% 0px',
+      threshold: 0
+    });
+    sections.forEach(s => observer.observe(s));
+  }
+
+  function stop() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+  }
+
+  function sync() {
+    if (mq.matches) {
+      start();
+    } else {
+      stop();
+    }
+  }
+
+  sync();
+  if (typeof mq.addEventListener === 'function') {
+    mq.addEventListener('change', sync);
+  }
 })();
 
 // Dynamic age calculation

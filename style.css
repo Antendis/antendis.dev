@@ -828,6 +828,12 @@ a:hover {
 
   .footer {
     padding: 1.5rem 0 2rem;
+    /* All panels render stacked in normal flow on mobile, so anchor-jumping
+       to the last section (contact) needs enough scrollable room below it
+       for the browser to bring it flush under the sticky top bar. Without
+       this the scroll simply clamps at the document's natural end, landing
+       short of the target. */
+    margin-bottom: 10rem;
   }
 }
 
