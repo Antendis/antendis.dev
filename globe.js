@@ -12,11 +12,40 @@ let lastGlobeH = 0;
 const GLOBE_RADIUS = 100;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Palette (matches style.css tokens)
-const INK = 0x1A1813;
-const GREEN = 0x2F5D43;
+// Palette (matches style.css tokens). Resolved from the live CSS custom
+// properties at init so the globe follows the active light/dark theme
+// instead of hardcoding the light-mode hex values.
+let INK = 0x1A1813;
+let GREEN = 0x2F5D43;
+
+// For unregistered custom properties getComputedStyle returns the token as
+// authored (a hex string here, e.g. "#2F5D43"), not a normalized rgb() —
+// so handle #RGB/#RRGGBB explicitly and keep rgb()/rgba() as a second path.
+function cssColorToHex(value, fallback) {
+  if (!value) return fallback;
+  const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    let h = hex[1];
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    return parseInt(h, 16);
+  }
+  const rgb = value.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+  if (rgb) {
+    const [r, g, b] = rgb.slice(1).map(n => Math.max(0, Math.min(255, Math.round(parseFloat(n)))));
+    return (r << 16) | (g << 8) | b;
+  }
+  return fallback;
+}
+
+function readPalette() {
+  const style = getComputedStyle(document.documentElement);
+  INK = cssColorToHex(style.getPropertyValue('--ink').trim(), INK);
+  GREEN = cssColorToHex(style.getPropertyValue('--green').trim(), GREEN);
+}
 
 function initGlobe(container, width, height) {
+  readPalette();
+
   // Scene setup
   scene = new THREE.Scene();
   globeGroup = new THREE.Group();
