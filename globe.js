@@ -18,12 +18,23 @@ const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 let INK = 0x1A1813;
 let GREEN = 0x2F5D43;
 
+// For unregistered custom properties getComputedStyle returns the token as
+// authored (a hex string here, e.g. "#2F5D43"), not a normalized rgb() —
+// so handle #RGB/#RRGGBB explicitly and keep rgb()/rgba() as a second path.
 function cssColorToHex(value, fallback) {
   if (!value) return fallback;
-  const nums = value.match(/[\d.]+/g);
-  if (!nums || nums.length < 3) return fallback;
-  const [r, g, b] = nums.map(n => Math.max(0, Math.min(255, Math.round(parseFloat(n)))));
-  return (r << 16) | (g << 8) | b;
+  const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    let h = hex[1];
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    return parseInt(h, 16);
+  }
+  const rgb = value.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+  if (rgb) {
+    const [r, g, b] = rgb.slice(1).map(n => Math.max(0, Math.min(255, Math.round(parseFloat(n)))));
+    return (r << 16) | (g << 8) | b;
+  }
+  return fallback;
 }
 
 function readPalette() {
