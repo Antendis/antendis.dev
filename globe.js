@@ -12,11 +12,29 @@ let lastGlobeH = 0;
 const GLOBE_RADIUS = 100;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Palette (matches style.css tokens)
-const INK = 0x1A1813;
-const GREEN = 0x2F5D43;
+// Palette (matches style.css tokens). Resolved from the live CSS custom
+// properties at init so the globe follows the active light/dark theme
+// instead of hardcoding the light-mode hex values.
+let INK = 0x1A1813;
+let GREEN = 0x2F5D43;
+
+function cssColorToHex(value, fallback) {
+  if (!value) return fallback;
+  const nums = value.match(/[\d.]+/g);
+  if (!nums || nums.length < 3) return fallback;
+  const [r, g, b] = nums.map(n => Math.max(0, Math.min(255, Math.round(parseFloat(n)))));
+  return (r << 16) | (g << 8) | b;
+}
+
+function readPalette() {
+  const style = getComputedStyle(document.documentElement);
+  INK = cssColorToHex(style.getPropertyValue('--ink').trim(), INK);
+  GREEN = cssColorToHex(style.getPropertyValue('--green').trim(), GREEN);
+}
 
 function initGlobe(container, width, height) {
+  readPalette();
+
   // Scene setup
   scene = new THREE.Scene();
   globeGroup = new THREE.Group();

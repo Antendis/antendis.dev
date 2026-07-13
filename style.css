@@ -11,10 +11,30 @@
   --rule: rgba(26, 24, 19, 0.14);
   --rule-soft: rgba(26, 24, 19, 0.08);
   --green: #2F5D43;
+  --decoration: rgba(26, 24, 19, 0.32);
+  --accent-decoration: rgba(47, 93, 67, 0.4);
+  --selection-bg: rgba(47, 93, 67, 0.18);
   --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   --mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   --sidebar-w: 15rem;
   --globe-w: 34rem;
+}
+
+/* Inverted ink-on-dark-paper palette. Light mode is untouched; this only
+   applies when the OS/browser prefers a dark color scheme. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #16140F;
+    --ink: #F7F1E3;
+    --ink-2: #B8AE9C;
+    --ink-3: #85806F;
+    --rule: rgba(247, 241, 227, 0.14);
+    --rule-soft: rgba(247, 241, 227, 0.08);
+    --green: #63B584;
+    --decoration: rgba(247, 241, 227, 0.32);
+    --accent-decoration: rgba(99, 181, 132, 0.4);
+    --selection-bg: rgba(99, 181, 132, 0.18);
+  }
 }
 
 /* ---------- base ---------- */
@@ -59,7 +79,7 @@ body {
 }
 
 ::selection {
-  background: rgba(47, 93, 67, 0.18);
+  background: var(--selection-bg);
 }
 
 :focus-visible {
@@ -89,6 +109,8 @@ body {
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr) minmax(0, var(--globe-w));
   min-height: 100vh;
   min-height: 100dvh;
+  max-width: 1700px;
+  margin-inline: auto;
 }
 
 /* ---------- sidebar ---------- */
@@ -310,7 +332,7 @@ a {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.22em;
-  text-decoration-color: rgba(26, 24, 19, 0.32);
+  text-decoration-color: var(--decoration);
   transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
@@ -325,7 +347,7 @@ a:hover {
 
 .link-accent {
   color: var(--green);
-  text-decoration-color: rgba(47, 93, 67, 0.4);
+  text-decoration-color: var(--accent-decoration);
 }
 
 .mono-label {
@@ -664,7 +686,7 @@ a:hover {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.22em;
-  text-decoration-color: rgba(26, 24, 19, 0.32);
+  text-decoration-color: var(--decoration);
   transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
 
