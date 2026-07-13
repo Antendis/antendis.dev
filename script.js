@@ -136,11 +136,15 @@ function updateAge() {
   if (ageElement) {
     ageElement.textContent = `${ageInYears.toFixed(9)} years old`;
   }
-  requestAnimationFrame(updateAge);
 }
 
-// Start age animation
+// Start age ticker: render immediately, then update on a plain interval
+// (no need for per-frame requestAnimationFrame precision here). Respect
+// prefers-reduced-motion by rendering once, statically, and not ticking.
 updateAge();
+if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  setInterval(updateAge, 100);
+}
 
 // Load achievements and grades from config
 function loadAchievements() {
@@ -226,16 +230,6 @@ function loadTechStack() {
       const item = document.createElement('li');
       item.textContent = lang;
       langContainer.appendChild(item);
-    });
-  }
-
-  // AI/ML
-  const aimlContainer = document.getElementById('techAiml');
-  if (aimlContainer && config.tech.aiml) {
-    config.tech.aiml.forEach(tech => {
-      const item = document.createElement('li');
-      item.textContent = tech;
-      aimlContainer.appendChild(item);
     });
   }
 
