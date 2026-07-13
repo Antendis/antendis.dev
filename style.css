@@ -468,6 +468,10 @@ a:hover {
 
 .entry-side {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .entry-side a {
