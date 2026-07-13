@@ -518,6 +518,7 @@ a:hover {
 
 .grade-years {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
   gap: 1.75rem;
   align-items: start;
 }
@@ -728,7 +729,6 @@ a:hover {
   }
 
   .grade-years {
-    grid-template-columns: 1fr 1fr;
     gap: 1.25rem 2rem;
   }
 
@@ -745,7 +745,6 @@ a:hover {
 
 @media (min-width: 1100px) {
   .grade-years {
-    grid-template-columns: 1fr 1fr 1fr;
     gap: 1.1rem 1.75rem;
   }
 }
