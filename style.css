@@ -264,23 +264,19 @@ html[data-panel="intro"] .footer {
   width: 100%;
   aspect-ratio: 1;
   max-height: 70vh;
-  margin-left: clamp(-17rem, calc((1500px - 100vw) * 0.7), 0rem);
   flex-shrink: 0;
 }
 
 /* Shrink globe on university tab to make room for roles */
 html[data-panel="achievements"] #globeViz {
   max-height: 42vh;
-  /* Reduce the negative bleed so the globe doesn't overlap achievements content */
-  margin-left: clamp(-6rem, calc((1500px - 100vw) * 0.3), 0rem);
 }
 
 /* Animate the globe shrinking/growing as tabs switch (per-frame redraw is
    driven from the render loop in globe.js so the WebGL canvas tracks it). */
 @media (prefers-reduced-motion: no-preference) {
   #globeViz {
-    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
