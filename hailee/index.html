@@ -23,10 +23,6 @@
     background: #040507;
   }
 
-  .back-row {
-    filter: brightness(0.72) saturate(0.9);
-  }
-
   .sway, .head-sway {
     transform-origin: 0px 0px;
   }
@@ -92,26 +88,131 @@
 
   // ---------- palette ----------
   var palette = [
-    { main: "#FF4D5E", light: "#FF808C", dark: "#D62F45" },
-    { main: "#FF8A3D", light: "#FFB073", dark: "#DE6725" },
-    { main: "#FFC93C", light: "#FFE07A", dark: "#E3A81F" },
-    { main: "#FF6FA5", light: "#FF9BC1", dark: "#DE4A85" },
-    { main: "#A76CFF", light: "#C79BFF", dark: "#8449E0" },
-    { main: "#FF5C7A", light: "#FF8FA3", dark: "#DD3A5C" }
+    { main: "#FF4D5E", light: "#FF808C", dark: "#D62F45" }, // red
+    { main: "#FF8A3D", light: "#FFB073", dark: "#DE6725" }, // orange
+    { main: "#FFC93C", light: "#FFE07A", dark: "#E3A81F" }, // yellow
+    { main: "#FF6FA5", light: "#FF9BC1", dark: "#DE4A85" }, // pink
+    { main: "#A76CFF", light: "#C79BFF", dark: "#8449E0" }, // purple
+    { main: "#FFF1E0", light: "#FFFFFF", dark: "#E3CDB4" }  // cream
   ];
+  var CREAM_IDX = 5;
   var STEM_COLOR = "#2FA85C";
   var LEAF_COLOR = "#35BE68";
   var LEAF_HI_COLOR = "#4FD683";
+  var ATMOS = "#16202A";
 
-  function rowColors(n) {
-    var arr = [], prev = -1;
-    for (var i = 0; i < n; i++) {
-      var idx;
-      do { idx = Math.floor(Math.random() * palette.length); } while (idx === prev);
-      arr.push(palette[idx]);
-      prev = idx;
+  // blend hex toward toHex by amt (0..1), returns "#rrggbb"
+  function mix(hex, toHex, amt) {
+    function h2rgb(h) {
+      h = h.replace("#", "");
+      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
     }
-    return arr;
+    function ch(n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? "0" + s : s; }
+    var a = h2rgb(hex), b = h2rgb(toHex);
+    var r = a[0] + (b[0] - a[0]) * amt;
+    var g = a[1] + (b[1] - a[1]) * amt;
+    var bch = a[2] + (b[2] - a[2]) * amt;
+    return "#" + ch(r) + ch(g) + ch(bch);
+  }
+
+  function dimColor(c) {
+    return { main: mix(c.main, ATMOS, 0.30), light: mix(c.light, ATMOS, 0.30), dark: mix(c.dark, ATMOS, 0.30) };
+  }
+
+  var FRONT_GREENS = { stem: STEM_COLOR, leaf: LEAF_COLOR, leafHi: LEAF_HI_COLOR };
+  var BACK_GREENS = {
+    stem: mix(STEM_COLOR, ATMOS, 0.30),
+    leaf: mix(LEAF_COLOR, ATMOS, 0.30),
+    leafHi: mix(LEAF_HI_COLOR, ATMOS, 0.30)
+  };
+
+  // ---------- hue assignment across the whole cluster ----------
+  // slots: [{row, x}] in final (jittered) x order. Returns array of palette indices.
+  function assignHues(slots) {
+    var n = slots.length;
+    var adj = [];
+    for (var i = 0; i < n; i++) adj.push([]);
+    function link(i, j) { adj[i].push(j); adj[j].push(i); }
+
+    ["back", "front"].forEach(function (row) {
+      var idxs = [];
+      for (var i = 0; i < n; i++) if (slots[i].row === row) idxs.push(i);
+      idxs.sort(function (a, b) { return slots[a].x - slots[b].x; });
+      for (var k = 0; k < idxs.length - 1; k++) link(idxs[k], idxs[k + 1]);
+    });
+    for (var i = 0; i < n; i++) {
+      for (var j = 0; j < n; j++) {
+        if (i === j || slots[i].row === slots[j].row) continue;
+        if (Math.abs(slots[i].x - slots[j].x) < 45) link(i, j);
+      }
+    }
+
+    function tryOnce(strict) {
+      var hue = new Array(n).fill(-1);
+      var counts = new Array(palette.length).fill(0);
+      var order = [];
+      for (var i = 0; i < n; i++) order.push(i);
+      for (var i = order.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+      }
+      for (var oi = 0; oi < order.length; oi++) {
+        var s = order[oi];
+        var cands = [];
+        for (var h = 0; h < palette.length; h++) {
+          if (counts[h] >= 2) continue;
+          var conflict = false;
+          for (var k = 0; k < adj[s].length; k++) { if (hue[adj[s][k]] === h) { conflict = true; break; } }
+          if (conflict) continue;
+          cands.push(h);
+        }
+        if (cands.length === 0) return null;
+        var pick = cands[Math.floor(Math.random() * cands.length)];
+        hue[s] = pick;
+        counts[pick]++;
+      }
+      if (strict) {
+        var distinct = counts.filter(function (c) { return c > 0; }).length;
+        if (distinct < 5) return null;
+        if (counts[CREAM_IDX] < 1 || counts[CREAM_IDX] > 2) return null;
+        var creamInFront = false;
+        for (var i = 0; i < n; i++) if (hue[i] === CREAM_IDX && slots[i].row === "front") creamInFront = true;
+        if (!creamInFront) return null;
+      } else {
+        if (counts[CREAM_IDX] < 1 || counts[CREAM_IDX] > 2) return null;
+      }
+      return hue;
+    }
+
+    for (var attempt = 0; attempt < 4000; attempt++) {
+      var res = tryOnce(true);
+      if (res) return res;
+    }
+    for (var attempt2 = 0; attempt2 < 4000; attempt2++) {
+      var res2 = tryOnce(false);
+      if (res2) return res2;
+    }
+    // last-resort fallback: adjacency + cap only (should not be reached in practice)
+    for (var attempt3 = 0; attempt3 < 4000; attempt3++) {
+      var hue3 = new Array(n).fill(-1);
+      var counts3 = new Array(palette.length).fill(0);
+      var ok = true;
+      for (var i = 0; i < n; i++) {
+        var cands3 = [];
+        for (var h = 0; h < palette.length; h++) {
+          if (counts3[h] >= 2) continue;
+          var conflict3 = false;
+          for (var k = 0; k < adj[i].length; k++) { if (hue3[adj[i][k]] === h) { conflict3 = true; break; } }
+          if (!conflict3) cands3.push(h);
+        }
+        if (cands3.length === 0) { ok = false; break; }
+        var pick3 = cands3[Math.floor(Math.random() * cands3.length)];
+        hue3[i] = pick3;
+        counts3[pick3]++;
+      }
+      if (ok) return hue3;
+    }
+    return null;
   }
 
   // ---------- defs: vignette (only gradient in the whole page) ----------
@@ -156,9 +257,10 @@
   scene.appendChild(pollenGroup);
 
   // ---------- shape helpers ----------
-  var LEAF_D = "M0,0 C 18,-6 34,-26 30,-58 C 26,-34 12,-14 0,0 Z";
-  var LEAF_HI_D = "M4,-8 C 16,-14 27,-30 25,-50 C 20,-31 10,-17 4,-8 Z";
-  var CUP_D = "M0,0 C -13,-4 -14,-18 0,-22 C 14,-18 13,-4 0,0 Z";
+  var LEAF_D = "M0,0 C 12,-28 24,-62 29,-100 C 31,-114 28,-122 24,-124 C 18,-98 8,-56 0,-14 Z";
+  var LEAF_HI_D = "M4,-10 C 13,-34 22,-66 25,-98 C 26,-108 24,-113 22,-114 C 17,-90 9,-52 4,-10 Z";
+  var LEAF_NATURAL_LEN = 124;
+  var CUP_D = "M0,0 C -16.9,-5.2 -18.2,-23.4 0,-28.6 C 18.2,-23.4 16.9,-5.2 0,0 Z";
 
   function petalBaseD(W, L) {
     return "M0,0 C " + (-W) + "," + (-L * 0.28) + " " + (-W * 1.02) + "," + (-L * 0.72) + " 0," + (-L) +
@@ -172,7 +274,7 @@
 
   // ---------- build one tulip ----------
   function buildTulip(spec, rowGroup) {
-    var x = spec.x, y = spec.y, s = spec.scale, H = spec.H, color = spec.color;
+    var x = spec.x, y = spec.y, s = spec.scale, H = spec.H, color = spec.color, greens = spec.greens;
 
     var g = el("g", { transform: "translate(" + x + "," + y + ") scale(" + s + ")" });
     rowGroup.appendChild(g);
@@ -198,7 +300,7 @@
     var stem = el("path", {
       d: stemD,
       fill: "none",
-      stroke: STEM_COLOR,
+      stroke: greens.stem,
       "stroke-width": "5.5",
       "stroke-linecap": "round"
     });
@@ -206,22 +308,30 @@
 
     // measure the real curve now that it's in the live document
     var L = stem.getTotalLength();
-    var pA = stem.getPointAtLength(0.30 * L);
-    var pB = stem.getPointAtLength(0.52 * L);
+    var pA = stem.getPointAtLength(0.06 * L);
+    var pB = stem.getPointAtLength(0.20 * L);
     var pTip = stem.getPointAtLength(L);
 
-    function buildLeaf(pt, mirror) {
-      var rot = rand(-10, 10);
-      var wrap = el("g", { transform: "translate(" + pt.x + "," + pt.y + ") scale(" + mirror + ",1) rotate(" + rot + ")" });
+    // vary the two leaves' lengths noticeably so they aren't twins
+    var fracA = rand(0.42, 0.55);
+    var fracB = rand(0.42, 0.55);
+    if (Math.abs(fracA - fracB) < 0.05) fracB = fracA > 0.485 ? fracA - 0.08 : fracA + 0.08;
+
+    function buildLeaf(pt, mirror, frac) {
+      var rot = rand(4, 16);
+      var factor = (H * frac) / LEAF_NATURAL_LEN;
+      var wrap = el("g", {
+        transform: "translate(" + pt.x + "," + pt.y + ") scale(" + (mirror * factor) + "," + factor + ") rotate(" + rot + ")"
+      });
       var anim = el("g", { "class": "leaf-anim" });
-      anim.appendChild(el("path", { d: LEAF_D, fill: LEAF_COLOR }));
-      anim.appendChild(el("path", { d: LEAF_HI_D, fill: LEAF_HI_COLOR }));
+      anim.appendChild(el("path", { d: LEAF_D, fill: greens.leaf }));
+      anim.appendChild(el("path", { d: LEAF_HI_D, fill: greens.leafHi }));
       wrap.appendChild(anim);
       sway.appendChild(wrap);
       return anim;
     }
-    var leafA = buildLeaf(pA, 1);
-    var leafB = buildLeaf(pB, -1);
+    var leafA = buildLeaf(pA, 1, fracA);
+    var leafB = buildLeaf(pB, -1, fracB);
 
     // head
     var head = el("g", { transform: "translate(" + pTip.x + "," + pTip.y + ")" });
@@ -242,9 +352,9 @@
       headSway.appendChild(wrap);
       return { el: wrap, closed: closedAngle, open: openAngle };
     }
-    var petalL = buildPetal(15, 48, -5, -26);
-    var petalR = buildPetal(15, 48, 5, 26);
-    var petalC = buildPetal(16, 56, 0, 0); // drawn last -> on top
+    var petalL = buildPetal(19, 60, -5, -26);
+    var petalR = buildPetal(19, 60, 5, 26);
+    var petalC = buildPetal(21, 70, 0, 0); // drawn last -> on top
 
     return {
       g: g, seedG: seedG, puffG: puffG, stem: stem, L: L,
@@ -256,29 +366,34 @@
   }
 
   // ---------- generate placement ----------
-  var backBaseX = [332, 378, 428, 468];
-  var frontBaseX = [302, 350, 399, 448, 498];
-  var backColors = rowColors(backBaseX.length);
-  var frontColors = rowColors(frontBaseX.length);
+  var backBaseX = [322, 372, 428, 474];
+  var frontBaseX = [292, 344, 399, 452, 506];
 
   var configs = [];
-  backBaseX.forEach(function (bx, i) {
+  backBaseX.forEach(function (bx) {
     var x = bx + rand(-10, 10);
     configs.push({
       row: "back", rowGroup: backRow,
       x: x, y: backSurfaceY(x),
-      scale: rand(0.78, 0.90), H: rand(235, 265),
-      color: backColors[i]
+      scale: rand(0.85, 0.97), H: rand(215, 245),
+      greens: BACK_GREENS
     });
   });
-  frontBaseX.forEach(function (bx, i) {
+  frontBaseX.forEach(function (bx) {
     var x = bx + rand(-12, 12);
     configs.push({
       row: "front", rowGroup: frontRow,
       x: x, y: frontSurfaceY(x),
-      scale: rand(0.95, 1.15), H: rand(265, 305),
-      color: frontColors[i]
+      scale: rand(1.02, 1.20), H: rand(245, 280),
+      greens: FRONT_GREENS
     });
+  });
+
+  var hueIdx = assignHues(configs.map(function (c) { return { row: c.row, x: c.x }; }));
+  configs.forEach(function (c, i) {
+    var h = hueIdx ? hueIdx[i] : Math.floor(Math.random() * palette.length);
+    var base = palette[h];
+    c.color = c.row === "back" ? dimColor(base) : base;
   });
 
   // shuffled drop order so it doesn't read left-to-right
@@ -326,7 +441,7 @@
     var bloomEnd = petalCStart + bloomDuration;
 
     // 1. SEED DROP
-    var sx = rand(-30, 30);
+    var sx = rand(-60, 60);
     var sy = -(spec.y + 90) / spec.scale;
     var r = rand(-25, 25);
     var bx1 = rand(2, 7);
@@ -426,13 +541,13 @@
   });
 
   // ---------- pollen motes ----------
-  var POLLEN_N = 14;
+  var POLLEN_N = 10;
   for (var pn = 0; pn < POLLEN_N; pn++) {
     var cx = 400 + rand(-150, 150);
     var cy = 195 + rand(-100, 95);
-    var op = rand(0.10, 0.32);
+    var op = rand(0.35, 0.70);
     var mote = el("circle", {
-      cx: String(cx), cy: String(cy), r: String(rand(1.2, 2.6)),
+      cx: String(cx), cy: String(cy), r: String(rand(1.4, 2.8)),
       fill: "#FFE9A8", "class": "pollen"
     });
     pollenGroup.appendChild(mote);
