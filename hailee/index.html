@@ -5,29 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>hailee</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
-  @font-face {
-    font-family: 'Newsreader';
-    src: url('../assets/fonts/newsreader-latin-opsz-italic.woff2') format('woff2');
-    font-style: italic;
-    font-weight: 300 500;
-    font-display: swap;
-  }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
     height: 100%;
-    background: #030302;
+    background: #040507;
     overflow: hidden;
-  }
-
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Newsreader', Georgia, serif;
   }
 
   #scene {
@@ -35,269 +19,448 @@
     inset: 0;
     width: 100%;
     height: 100%;
+    display: block;
+    background: #040507;
   }
 
-  /* faint uneven ground shadow so the flowers don't float in a void */
-  .ground {
-    fill: #060a05;
+  .back-row {
+    filter: brightness(0.72) saturate(0.9);
   }
 
-  .tulip-sway {
+  .sway, .head-sway {
     transform-origin: 0px 0px;
-    animation-name: sway;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
   }
 
-  @keyframes sway {
-    from { transform: rotate(var(--sway-a)); }
-    to   { transform: rotate(var(--sway-b)); }
+  @keyframes tulip-sway {
+    from { transform: rotate(var(--sa)); }
+    to   { transform: rotate(var(--sb)); }
   }
 
-  .stem {
-    fill: none;
-    stroke: #2c4a22;
-    stroke-width: 3.4;
-    stroke-linecap: round;
-    stroke-dasharray: 1px;
-    stroke-dashoffset: 1px;
-    animation: grow 1.75s cubic-bezier(.22,.68,.32,1) forwards;
-    animation-delay: var(--d0);
-  }
-
-  @keyframes grow {
-    to { stroke-dashoffset: 0px; }
-  }
-
-  .leaf {
-    fill: #33531f;
+  .leaf-anim {
     opacity: 0;
-    transform: scale(0.15) rotate(var(--leaf-rot, 0deg));
     transform-box: fill-box;
-    transform-origin: 50% 100%;
-    animation: unfurl 1s cubic-bezier(.34,1.42,.4,1) forwards;
+    transform-origin: 0% 100%;
+    transform: scale(0.05);
   }
-
-  .leaf-a { animation-delay: calc(var(--d0) + 0.55s); }
-  .leaf-b { animation-delay: calc(var(--d0) + 0.85s); }
-
-  @keyframes unfurl {
-    to { opacity: 1; transform: scale(1) rotate(var(--leaf-rot, 0deg)); }
-  }
-
-  .bud {
-    opacity: 0;
-    transform: scale(0.2);
-    transform-box: fill-box;
-    transform-origin: 50% 100%;
-    animation: budin 0.6s ease-out forwards;
-    animation-delay: calc(var(--d0) + 1.35s);
-  }
-
-  @keyframes budin {
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .petals {
-    opacity: 0;
-    animation: fadeout-bud 0.01s linear forwards;
-    animation-delay: calc(var(--d0) + 1.95s);
-  }
-
-  @keyframes fadeout-bud { to { opacity: 1; } }
-
-  .flower .bud {
-    animation: budin 0.6s ease-out forwards, budout 0.01s linear forwards;
-    animation-delay: calc(var(--d0) + 1.35s), calc(var(--d0) + 1.95s);
-  }
-
-  @keyframes budout { to { opacity: 0; } }
 
   .petal {
+    opacity: 0;
     transform-box: fill-box;
     transform-origin: 50% 100%;
-    transform: scale(0.25);
+    transform: scale(0.12);
+  }
+
+  .cup-base {
     opacity: 0;
-    animation: bloom 1.05s cubic-bezier(.3,1.4,.45,1) forwards;
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transform: scale(0.2);
   }
 
-  .petal-l { animation-delay: calc(var(--d0) + 1.95s); }
-  .petal-c { animation-delay: calc(var(--d0) + 2.05s); }
-  .petal-r { animation-delay: calc(var(--d0) + 2.0s); }
-
-  @keyframes bloom {
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  .caption {
-    position: fixed;
-    bottom: 6.5%;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-style: italic;
-    font-weight: 300;
-    font-size: clamp(1rem, 2.6vw, 1.4rem);
-    letter-spacing: 0.02em;
-    color: #cfc6b3;
+  .pollen {
     opacity: 0;
-    animation: caption-in 2.4s ease-out forwards;
-    animation-delay: 3.4s;
-    pointer-events: none;
-    user-select: none;
   }
 
-  @keyframes caption-in {
-    to { opacity: 0.75; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .stem, .leaf, .bud, .petal, .caption { animation-duration: 0.01s !important; animation-delay: 0s !important; }
-    .tulip-sway { animation: none; }
+  @keyframes pollen-drift {
+    0%   { transform: translate(0px, 0px); }
+    50%  { transform: translate(var(--dx), var(--dy)); }
+    100% { transform: translate(0px, 0px); }
   }
 </style>
 </head>
 <body>
 
-<svg id="scene" preserveAspectRatio="xMidYMax slice"></svg>
-<div class="caption">for hailee</div>
+<svg id="scene" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet"></svg>
 
 <script>
 (function () {
+  "use strict";
   var svgNS = "http://www.w3.org/2000/svg";
   var scene = document.getElementById("scene");
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var W = window.innerWidth;
-  var H = window.innerHeight;
-  scene.setAttribute("viewBox", "0 0 " + W + " " + H);
-
-  // faint uneven ground line, drawn once as a soft irregular ribbon
-  var groundY = H - 34;
-  var gpath = "M0," + (groundY + 10);
-  var x = 0;
-  while (x < W) {
-    var step = 60 + Math.random() * 70;
-    var dy = (Math.random() - 0.5) * 14;
-    x += step;
-    gpath += " Q " + (x - step / 2) + "," + (groundY + dy) + " " + x + "," + (groundY + (Math.random() - 0.5) * 10);
-  }
-  gpath += " L " + W + "," + H + " L 0," + H + " Z";
-  var ground = document.createElementNS(svgNS, "path");
-  ground.setAttribute("d", gpath);
-  ground.setAttribute("class", "ground");
-  scene.appendChild(ground);
-
-  // seeded-ish random so the field feels planted, not procedurally uniform
   function rand(a, b) { return a + Math.random() * (b - a); }
-
-  var palette = ["#c0293c", "#d94f7c", "#e2664b", "#8b5a9e", "#e0a72e", "#a12f4f"];
-
-  function shade(hex, factor) {
-    var r = parseInt(hex.slice(1, 3), 16);
-    var g = parseInt(hex.slice(3, 5), 16);
-    var b = parseInt(hex.slice(5, 7), 16);
-    r = Math.round(r * factor); g = Math.round(g * factor); b = Math.round(b * factor);
-    return "rgb(" + r + "," + g + "," + b + ")";
+  function el(tag, attrs) {
+    var e = document.createElementNS(svgNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
   }
 
-  function buildTulip(x, y, scale, color, delay, swayDur, swaySkew) {
-    var g = document.createElementNS(svgNS, "g");
-    g.setAttribute("transform", "translate(" + x + "," + y + ") scale(" + scale + ")");
+  // ---------- ground surfaces ----------
+  function backSurfaceY(x) { var t = (x + 60) / 920; return 450 - 200 * t * (1 - t); }
+  function frontSurfaceY(x) { var t = (x + 60) / 920; return 500 - 192 * t * (1 - t); }
 
-    var sway = document.createElementNS(svgNS, "g");
-    sway.setAttribute("class", "tulip-sway");
-    sway.style.setProperty("--sway-a", (-1.2 - swaySkew) + "deg");
-    sway.style.setProperty("--sway-b", (1.6 + swaySkew) + "deg");
-    sway.style.animationDuration = swayDur + "s";
-    sway.style.animationDelay = (delay + 2.6) + "s";
+  // ---------- palette ----------
+  var palette = [
+    { main: "#FF4D5E", light: "#FF808C", dark: "#D62F45" },
+    { main: "#FF8A3D", light: "#FFB073", dark: "#DE6725" },
+    { main: "#FFC93C", light: "#FFE07A", dark: "#E3A81F" },
+    { main: "#FF6FA5", light: "#FF9BC1", dark: "#DE4A85" },
+    { main: "#A76CFF", light: "#C79BFF", dark: "#8449E0" },
+    { main: "#FF5C7A", light: "#FF8FA3", dark: "#DD3A5C" }
+  ];
+  var STEM_COLOR = "#2FA85C";
+  var LEAF_COLOR = "#35BE68";
+  var LEAF_HI_COLOR = "#4FD683";
 
-    var stemWobble = rand(-10, 10);
-    var stemPath = "M0,0 C " + (stemWobble * 0.4) + ",-40 " + (-stemWobble * 0.6) + ",-85 " +
-                    (stemWobble * 0.3) + ",-125 C " + (stemWobble * 0.1) + ",-142 " + (-stemWobble * 0.2) + ",-148 0,-152";
+  function rowColors(n) {
+    var arr = [], prev = -1;
+    for (var i = 0; i < n; i++) {
+      var idx;
+      do { idx = Math.floor(Math.random() * palette.length); } while (idx === prev);
+      arr.push(palette[idx]);
+      prev = idx;
+    }
+    return arr;
+  }
 
-    var stem = document.createElementNS(svgNS, "path");
-    stem.setAttribute("d", stemPath);
-    stem.setAttribute("class", "stem");
-    stem.setAttribute("pathLength", "1");
-    stem.style.setProperty("--d0", delay + "s");
+  // ---------- defs: vignette (only gradient in the whole page) ----------
+  var defs = el("defs", {});
+  var grad = el("radialGradient", { id: "vign", cx: "50%", cy: "50%", r: "50%" });
+  grad.appendChild(el("stop", { offset: "0%", "stop-color": "#0D2015", "stop-opacity": "0.06" }));
+  grad.appendChild(el("stop", { offset: "100%", "stop-color": "#0D2015", "stop-opacity": "0" }));
+  defs.appendChild(grad);
+  scene.appendChild(defs);
+
+  // 1. vignette
+  scene.appendChild(el("ellipse", { cx: "400", cy: "410", rx: "430", ry: "300", fill: "url(#vign)" }));
+
+  // 2. back mound
+  scene.appendChild(el("path", {
+    d: "M -60,450 Q 400,350 860,450 L 860,520 L -60,520 Z",
+    fill: "#12281B"
+  }));
+
+  // 3. back row group (holds back tulips, dimmer for depth)
+  var backRow = el("g", { "class": "back-row" });
+  scene.appendChild(backRow);
+
+  // 4. front mound + rim
+  scene.appendChild(el("path", {
+    d: "M -60,500 Q 400,404 860,500 L 860,520 L -60,520 Z",
+    fill: "#1A3A26"
+  }));
+  scene.appendChild(el("path", {
+    d: "M -60,500 Q 400,404 860,500",
+    stroke: "#23492F",
+    "stroke-width": "4",
+    fill: "none"
+  }));
+
+  // 5. front row group
+  var frontRow = el("g", {});
+  scene.appendChild(frontRow);
+
+  // 6. pollen group
+  var pollenGroup = el("g", {});
+  scene.appendChild(pollenGroup);
+
+  // ---------- shape helpers ----------
+  var LEAF_D = "M0,0 C 18,-6 34,-26 30,-58 C 26,-34 12,-14 0,0 Z";
+  var LEAF_HI_D = "M4,-8 C 16,-14 27,-30 25,-50 C 20,-31 10,-17 4,-8 Z";
+  var CUP_D = "M0,0 C -13,-4 -14,-18 0,-22 C 14,-18 13,-4 0,0 Z";
+
+  function petalBaseD(W, L) {
+    return "M0,0 C " + (-W) + "," + (-L * 0.28) + " " + (-W * 1.02) + "," + (-L * 0.72) + " 0," + (-L) +
+           " C " + (W * 1.02) + "," + (-L * 0.72) + " " + W + "," + (-L * 0.28) + " 0,0 Z";
+  }
+  function petalHiD(W, L) {
+    return "M" + (-W * 0.30) + "," + (-L * 0.14) +
+           " C " + (-W * 0.62) + "," + (-L * 0.34) + " " + (-W * 0.60) + "," + (-L * 0.66) + " " + (-W * 0.16) + "," + (-L * 0.86) +
+           " C " + (-W * 0.30) + "," + (-L * 0.60) + " " + (-W * 0.34) + "," + (-L * 0.36) + " " + (-W * 0.30) + "," + (-L * 0.14) + " Z";
+  }
+
+  // ---------- build one tulip ----------
+  function buildTulip(spec, rowGroup) {
+    var x = spec.x, y = spec.y, s = spec.scale, H = spec.H, color = spec.color;
+
+    var g = el("g", { transform: "translate(" + x + "," + y + ") scale(" + s + ")" });
+    rowGroup.appendChild(g);
+
+    // seed (static placement group; motion applied via inline style / WAAPI)
+    var seedG = el("g", { "class": "seed" });
+    seedG.appendChild(el("ellipse", { rx: "3.8", ry: "5.2", fill: "#C98A4B" }));
+    seedG.appendChild(el("ellipse", { cx: "-1.1", cy: "1.1", rx: "2.6", ry: "3.6", fill: "#9A6634" }));
+    g.appendChild(seedG);
+
+    // impact puff (built later at land time via a lazily-created group)
+    var puffG = el("g", {});
+    g.appendChild(puffG);
+
+    // sway wrapper
+    var sway = el("g", { "class": "sway" });
+    g.appendChild(sway);
+
+    // stem
+    var tipX = rand(-14, 14);
+    var b = rand(-16, 16);
+    var stemD = "M0,0 C " + b + "," + (-H * 0.30) + " " + (-b * 0.6) + "," + (-H * 0.62) + " " + tipX + "," + (-H);
+    var stem = el("path", {
+      d: stemD,
+      fill: "none",
+      stroke: STEM_COLOR,
+      "stroke-width": "5.5",
+      "stroke-linecap": "round"
+    });
     sway.appendChild(stem);
 
-    function leaf(y, dir, cls, rot) {
-      var l = document.createElementNS(svgNS, "path");
-      var sx = dir;
-      var d = "M0,0 C " + (18 * sx) + ",-8 " + (30 * sx) + ",-32 " + (14 * sx) + ",-62 " +
-              "C " + (6 * sx) + ",-40 " + (2 * sx) + ",-18 0,0 Z";
-      l.setAttribute("d", d);
-      l.setAttribute("transform", "translate(0," + y + ")");
-      l.setAttribute("class", "leaf " + cls);
-      l.style.setProperty("--d0", delay + "s");
-      l.style.setProperty("--leaf-rot", rot + "deg");
-      sway.appendChild(l);
+    // measure the real curve now that it's in the live document
+    var L = stem.getTotalLength();
+    var pA = stem.getPointAtLength(0.30 * L);
+    var pB = stem.getPointAtLength(0.52 * L);
+    var pTip = stem.getPointAtLength(L);
+
+    function buildLeaf(pt, mirror) {
+      var rot = rand(-10, 10);
+      var wrap = el("g", { transform: "translate(" + pt.x + "," + pt.y + ") scale(" + mirror + ",1) rotate(" + rot + ")" });
+      var anim = el("g", { "class": "leaf-anim" });
+      anim.appendChild(el("path", { d: LEAF_D, fill: LEAF_COLOR }));
+      anim.appendChild(el("path", { d: LEAF_HI_D, fill: LEAF_HI_COLOR }));
+      wrap.appendChild(anim);
+      sway.appendChild(wrap);
+      return anim;
     }
-    leaf(-38, 1, "leaf-a", rand(-6, 2));
-    leaf(-78, -1, "leaf-b", rand(-2, 6));
+    var leafA = buildLeaf(pA, 1);
+    var leafB = buildLeaf(pB, -1);
 
-    var flower = document.createElementNS(svgNS, "g");
-    flower.setAttribute("class", "flower");
-    flower.setAttribute("transform", "translate(0,-152)");
+    // head
+    var head = el("g", { transform: "translate(" + pTip.x + "," + pTip.y + ")" });
+    var headSway = el("g", { "class": "head-sway" });
+    head.appendChild(headSway);
+    sway.appendChild(head);
 
-    var bud = document.createElementNS(svgNS, "path");
-    bud.setAttribute("d", "M0,0 C -9,-6 -10,-24 0,-36 C 10,-24 9,-6 0,0 Z");
-    bud.setAttribute("fill", shade(color, 0.72));
-    bud.setAttribute("class", "bud");
-    bud.style.setProperty("--d0", delay + "s");
-    flower.appendChild(bud);
+    var cup = el("path", { d: CUP_D, fill: color.dark, "class": "cup-base" });
+    headSway.appendChild(cup);
 
-    var petals = document.createElementNS(svgNS, "g");
-    petals.setAttribute("class", "petals");
-
-    function petal(rotDeg, cls, w, len) {
-      var p = document.createElementNS(svgNS, "g");
-      p.setAttribute("transform", "rotate(" + rotDeg + ")");
-      var path = document.createElementNS(svgNS, "path");
-      path.setAttribute("d", "M0,0 C -" + w + ",-" + (len * 0.4) + " -" + (w * 0.7) + ",-" + (len * 0.85) + " 0,-" + len +
-                         " C " + (w * 0.7) + ",-" + (len * 0.85) + " " + w + ",-" + (len * 0.4) + " 0,0 Z");
-      path.setAttribute("fill", color);
-      path.setAttribute("class", "petal " + cls);
-      path.style.setProperty("--d0", delay + "s");
-      p.appendChild(path);
-      petals.appendChild(p);
+    function buildPetal(baseW, baseL, closedAngle, openAngleBase) {
+      var W = baseW * (1 + rand(-0.08, 0.08));
+      var Lp = baseL * (1 + rand(-0.08, 0.08));
+      var openAngle = openAngleBase + rand(-4, 4);
+      var wrap = el("g", { "class": "petal" });
+      wrap.appendChild(el("path", { d: petalBaseD(W, Lp), fill: color.main }));
+      wrap.appendChild(el("path", { d: petalHiD(W, Lp), fill: color.light }));
+      headSway.appendChild(wrap);
+      return { el: wrap, closed: closedAngle, open: openAngle };
     }
-    petal(-27, "petal-l", 11, 40);
-    petal(0, "petal-c", 12, 46);
-    petal(27, "petal-r", 11, 40);
+    var petalL = buildPetal(15, 48, -5, -26);
+    var petalR = buildPetal(15, 48, 5, 26);
+    var petalC = buildPetal(16, 56, 0, 0); // drawn last -> on top
 
-    flower.appendChild(petals);
-    sway.appendChild(flower);
-    g.appendChild(sway);
-    scene.appendChild(g);
+    return {
+      g: g, seedG: seedG, puffG: puffG, stem: stem, L: L,
+      leafA: leafA, leafB: leafB, cup: cup,
+      petalL: petalL, petalR: petalR, petalC: petalC,
+      swayEl: sway, headSwayEl: headSway,
+      scale: s, plantY: y
+    };
   }
 
-  var count = Math.max(7, Math.round(W / 130));
-  var margin = W * 0.06;
-  var slots = [];
-  for (var i = 0; i < count; i++) {
-    slots.push(margin + (i + 0.5) * ((W - margin * 2) / count));
+  // ---------- generate placement ----------
+  var backBaseX = [332, 378, 428, 468];
+  var frontBaseX = [302, 350, 399, 448, 498];
+  var backColors = rowColors(backBaseX.length);
+  var frontColors = rowColors(frontBaseX.length);
+
+  var configs = [];
+  backBaseX.forEach(function (bx, i) {
+    var x = bx + rand(-10, 10);
+    configs.push({
+      row: "back", rowGroup: backRow,
+      x: x, y: backSurfaceY(x),
+      scale: rand(0.78, 0.90), H: rand(235, 265),
+      color: backColors[i]
+    });
+  });
+  frontBaseX.forEach(function (bx, i) {
+    var x = bx + rand(-12, 12);
+    configs.push({
+      row: "front", rowGroup: frontRow,
+      x: x, y: frontSurfaceY(x),
+      scale: rand(0.95, 1.15), H: rand(265, 305),
+      color: frontColors[i]
+    });
+  });
+
+  // shuffled drop order so it doesn't read left-to-right
+  var order = configs.map(function (_, i) { return i; });
+  for (var i = order.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
   }
+  configs.forEach(function (c, i) { c.dropIndex = order[i]; });
 
-  var lastColor = -1;
-  slots.forEach(function (baseX, i) {
-    var x = baseX + rand(-34, 34);
-    var y = groundY + rand(-4, 12);
-    var scale = rand(0.68, 1.18);
-    var colorIdx = Math.floor(Math.random() * palette.length);
-    if (colorIdx === lastColor) colorIdx = (colorIdx + 1) % palette.length;
-    lastColor = colorIdx;
-    var delay = rand(0, 1.1) + i * 0.12;
-    var swayDur = rand(3.6, 5.4);
-    var swaySkew = rand(0, 1.2);
-    buildTulip(x, y, scale, palette[colorIdx], delay, swayDur, swaySkew);
+  // ---------- build DOM + choreograph ----------
+  configs.forEach(function (spec) {
+    var t = buildTulip(spec, spec.rowGroup);
+
+    if (reduced) {
+      // render finished state directly, no motion
+      t.seedG.style.display = "none";
+      t.stem.style.strokeDasharray = String(t.L);
+      t.stem.style.strokeDashoffset = "0";
+      [t.leafA, t.leafB].forEach(function (a) {
+        a.style.opacity = "1";
+        a.style.transform = "scale(1)";
+      });
+      t.cup.style.transform = "scale(1)";
+      t.cup.style.opacity = "1";
+      [t.petalL, t.petalR, t.petalC].forEach(function (p) {
+        p.el.style.opacity = "1";
+        p.el.style.transform = "scale(1) rotate(" + p.open + "deg)";
+      });
+      return;
+    }
+
+    var dropIndex = spec.dropIndex;
+    var dropDelay = dropIndex * 90 + rand(0, 120);
+    var dropDuration = 780 + rand(0, 120);
+    var landTime = dropDelay + dropDuration * 0.62;
+    var stemStart = landTime + 380;
+    var stemDuration = 1150;
+    var leafAStart = stemStart + 380;
+    var leafBStart = stemStart + 620;
+    var leafDuration = 700;
+    var bloomStart = stemStart + 880;
+    var bloomDuration = 1000;
+    var petalCStart = bloomStart + 60;
+    var bloomEnd = petalCStart + bloomDuration;
+
+    // 1. SEED DROP
+    var sx = rand(-30, 30);
+    var sy = -(spec.y + 90) / spec.scale;
+    var r = rand(-25, 25);
+    var bx1 = rand(2, 7);
+    var bx2 = rand(2, 7);
+    t.seedG.style.transform = "translate(" + sx + "px," + sy + "px) rotate(0deg)";
+    var dropKF = [
+      { transform: "translate(" + sx + "px," + sy + "px) rotate(0deg)", offset: 0, easing: "cubic-bezier(.5,0,.9,.35)" },
+      { transform: "translate(0px,0px) rotate(" + r + "deg)", offset: 0.62, easing: "cubic-bezier(.2,.6,.4,1)" },
+      { transform: "translate(" + bx1 + "px,-14px) rotate(" + (r + 8) + "deg)", offset: 0.76, easing: "cubic-bezier(.5,0,.9,.35)" },
+      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 12) + "deg)", offset: 0.87, easing: "cubic-bezier(.2,.6,.4,1)" },
+      { transform: "translate(" + bx2 + "px,-4.5px) rotate(" + (r + 14) + "deg)", offset: 0.94, easing: "cubic-bezier(.5,0,.9,.35)" },
+      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg)", offset: 1 }
+    ];
+    t.seedG.animate(dropKF, { duration: dropDuration, delay: dropDelay, fill: "forwards" });
+
+    // 2. IMPACT PUFF
+    for (var pi = 0; pi < 3; pi++) {
+      (function () {
+        var dx = rand(-14, 14);
+        var dy = rand(-16, -6);
+        var dot = el("circle", { cx: "0", cy: "0", r: String(rand(2, 3.5)), fill: "#2A4A32" });
+        dot.style.opacity = "0";
+        t.puffG.appendChild(dot);
+        var anim = dot.animate([
+          { transform: "translate(0px,0px) scale(0.6)", opacity: 0.85, offset: 0 },
+          { transform: "translate(" + dx + "px," + dy + "px) scale(1.3)", opacity: 0, offset: 1 }
+        ], { duration: 450, delay: landTime, easing: "ease-out", fill: "forwards" });
+        anim.onfinish = function () { if (dot.parentNode) dot.parentNode.removeChild(dot); };
+      })();
+    }
+
+    // 3. SEED SINKS
+    t.seedG.animate([
+      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg) scale(1)", opacity: 1, offset: 0 },
+      { transform: "translate(" + bx2 + "px,4px) rotate(" + (r + 15) + "deg) scale(0.6)", opacity: 0, offset: 1 }
+    ], { duration: 320, delay: landTime + 260, easing: "ease-in", fill: "forwards" });
+
+    // 4. STEM GROWS
+    t.stem.style.strokeDasharray = String(t.L);
+    t.stem.style.strokeDashoffset = String(t.L);
+    t.stem.animate([
+      { strokeDashoffset: String(t.L) },
+      { strokeDashoffset: "0" }
+    ], { duration: stemDuration, delay: stemStart, easing: "cubic-bezier(.16,.72,.30,1)", fill: "forwards" });
+
+    // 5. LEAVES UNFURL
+    [[t.leafA, leafAStart], [t.leafB, leafBStart]].forEach(function (pair) {
+      var leaf = pair[0], start = pair[1];
+      leaf.animate([
+        { transform: "scale(0.05)", opacity: 0, offset: 0 },
+        { opacity: 1, offset: 0.25 },
+        { transform: "scale(1)", opacity: 1, offset: 1 }
+      ], { duration: leafDuration, delay: start, easing: "cubic-bezier(.34,1.32,.42,1)", fill: "forwards" });
+    });
+
+    // 6. BUD FORMS THEN OPENS
+    function bloomPetal(p, start) {
+      p.el.animate([
+        { transform: "scale(0.12) rotate(" + p.closed + "deg)", opacity: 0, offset: 0, easing: "ease-out" },
+        { transform: "scale(0.50) rotate(" + p.closed + "deg)", opacity: 1, offset: 0.40, easing: "cubic-bezier(.3,1.25,.45,1)" },
+        { transform: "scale(1) rotate(" + p.open + "deg)", opacity: 1, offset: 1 }
+      ], { duration: bloomDuration, delay: start, fill: "forwards" });
+    }
+    bloomPetal(t.petalL, bloomStart);
+    bloomPetal(t.petalR, bloomStart);
+    bloomPetal(t.petalC, petalCStart);
+
+    t.cup.animate([
+      { transform: "scale(0.2)", opacity: 0 },
+      { transform: "scale(1)", opacity: 1 }
+    ], { duration: 600, delay: bloomStart, easing: "ease-out", fill: "forwards" });
+
+    // 7. SWAY (infinite, starts after bloom ends)
+    var swayA = -(1.0 + rand(0, 1.3));
+    var swayB = (1.2 + rand(0, 1.4));
+    var swayDur = rand(3.4, 5.2);
+    t.swayEl.style.setProperty("--sa", swayA + "deg");
+    t.swayEl.style.setProperty("--sb", swayB + "deg");
+    t.swayEl.style.animationName = "tulip-sway";
+    t.swayEl.style.animationDuration = swayDur + "s";
+    t.swayEl.style.animationDelay = bloomEnd + "ms";
+    t.swayEl.style.animationTimingFunction = "ease-in-out";
+    t.swayEl.style.animationIterationCount = "infinite";
+    t.swayEl.style.animationDirection = "alternate";
+
+    var hsA = -rand(0.2, 0.8);
+    var hsB = rand(0.2, 0.8);
+    var hsDur = swayDur * 1.18;
+    t.headSwayEl.style.setProperty("--sa", hsA + "deg");
+    t.headSwayEl.style.setProperty("--sb", hsB + "deg");
+    t.headSwayEl.style.animationName = "tulip-sway";
+    t.headSwayEl.style.animationDuration = hsDur + "s";
+    t.headSwayEl.style.animationDelay = bloomEnd + "ms";
+    t.headSwayEl.style.animationTimingFunction = "ease-in-out";
+    t.headSwayEl.style.animationIterationCount = "infinite";
+    t.headSwayEl.style.animationDirection = "alternate";
   });
 
-  window.addEventListener("resize", function () {
-    location.reload();
-  });
+  // ---------- pollen motes ----------
+  var POLLEN_N = 14;
+  for (var pn = 0; pn < POLLEN_N; pn++) {
+    var cx = 400 + rand(-150, 150);
+    var cy = 195 + rand(-100, 95);
+    var op = rand(0.10, 0.32);
+    var mote = el("circle", {
+      cx: String(cx), cy: String(cy), r: String(rand(1.2, 2.6)),
+      fill: "#FFE9A8", "class": "pollen"
+    });
+    pollenGroup.appendChild(mote);
+
+    if (reduced) {
+      mote.style.opacity = String(op);
+      continue;
+    }
+
+    var fadeDelay = 4500 + rand(0, 800);
+    mote.animate([
+      { opacity: 0 },
+      { opacity: op }
+    ], { duration: 1200, delay: fadeDelay, easing: "ease-out", fill: "forwards" });
+
+    var dx = rand(-6, 6);
+    var dy = rand(-7, 7);
+    var dur = rand(6, 11);
+    var driftDelay = fadeDelay + rand(0, 1200);
+    mote.style.setProperty("--dx", dx + "px");
+    mote.style.setProperty("--dy", dy + "px");
+    mote.style.animationName = "pollen-drift";
+    mote.style.animationDuration = dur + "s";
+    mote.style.animationDelay = driftDelay + "ms";
+    mote.style.animationTimingFunction = "ease-in-out";
+    mote.style.animationIterationCount = "infinite";
+    mote.style.animationDirection = "alternate";
+  }
 })();
 </script>
 </body>
