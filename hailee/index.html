@@ -28,8 +28,11 @@
   }
 
   @keyframes tulip-sway {
-    from { transform: rotate(var(--sa)); }
-    to   { transform: rotate(var(--sb)); }
+    0%   { transform: rotate(0deg); }
+    25%  { transform: rotate(var(--sb)); }
+    50%  { transform: rotate(0deg); }
+    75%  { transform: rotate(var(--sa)); }
+    100% { transform: rotate(0deg); }
   }
 
   .leaf-anim {
@@ -99,7 +102,6 @@
   var STEM_COLOR = "#2FA85C";
   var LEAF_COLOR = "#35BE68";
   var LEAF_HI_COLOR = "#4FD683";
-  var LEAF_SHADOW_COLOR = "#1F7A40";
   var ATMOS = "#16202A";
 
   // blend hex toward toHex by amt (0..1), returns "#rrggbb"
@@ -120,12 +122,11 @@
     return { main: mix(c.main, ATMOS, 0.30), light: mix(c.light, ATMOS, 0.30), dark: mix(c.dark, ATMOS, 0.30) };
   }
 
-  var FRONT_GREENS = { stem: STEM_COLOR, leaf: LEAF_COLOR, leafHi: LEAF_HI_COLOR, leafSh: LEAF_SHADOW_COLOR };
+  var FRONT_GREENS = { stem: STEM_COLOR, leaf: LEAF_COLOR, leafHi: LEAF_HI_COLOR };
   var BACK_GREENS = {
     stem: mix(STEM_COLOR, ATMOS, 0.30),
     leaf: mix(LEAF_COLOR, ATMOS, 0.30),
-    leafHi: mix(LEAF_HI_COLOR, ATMOS, 0.30),
-    leafSh: mix(LEAF_SHADOW_COLOR, ATMOS, 0.30)
+    leafHi: mix(LEAF_HI_COLOR, ATMOS, 0.30)
   };
 
   // ---------- hue assignment across the whole cluster ----------
@@ -217,74 +218,11 @@
     return null;
   }
 
-  // ---------- defs: vignette (only gradient in the whole page) ----------
-  var defs = el("defs", {});
-  var grad = el("radialGradient", { id: "vign", cx: "50%", cy: "50%", r: "50%" });
-  grad.appendChild(el("stop", { offset: "0%", "stop-color": "#123A4A", "stop-opacity": "0.11" }));
-  grad.appendChild(el("stop", { offset: "100%", "stop-color": "#123A4A", "stop-opacity": "0" }));
-  defs.appendChild(grad);
-  scene.appendChild(defs);
-
-  // 1. vignette (deep indigo/teal night glow behind the cluster)
-  scene.appendChild(el("ellipse", { cx: "400", cy: "380", rx: "440", ry: "320", fill: "url(#vign)" }));
-
-  // ---------- star field (static night sky, avoids the flower silhouette) ----------
-  var SKY_EXCLUDE = { x0: 230, x1: 580, y0: 70, y1: 330 };
-  function inSky(x, y) {
-    return !(x > SKY_EXCLUDE.x0 && x < SKY_EXCLUDE.x1 && y > SKY_EXCLUDE.y0 && y < SKY_EXCLUDE.y1);
-  }
-  var starGroup = el("g", {});
-  var STAR_N = 26;
-  var twinkleCandidates = [];
-  for (var si = 0; si < STAR_N; si++) {
-    var sx, sy, tries = 0;
-    do { sx = rand(10, 790); sy = rand(8, 312); tries++; } while (!inSky(sx, sy) && tries < 20);
-    var sop = rand(0.15, 0.50);
-    var star = el("circle", { cx: String(sx), cy: String(sy), r: String(rand(0.6, 1.6)), fill: "#FFFFFF" });
-    star.style.opacity = String(sop);
-    starGroup.appendChild(star);
-    if (Math.random() < 0.22) twinkleCandidates.push({ el: star, base: sop });
-  }
-  // sparkle (4-point star) shape, small set of varied sizes
-  var SPARKLE_D = "M0,-10 C1,-4 4,-1 10,0 C4,1 1,4 0,10 C-1,4 -4,1 -10,0 C-4,-1 -1,-4 0,-10 Z";
-  for (var sk = 0; sk < 3; sk++) {
-    var kx, ky, ktries = 0;
-    do { kx = rand(30, 770); ky = rand(20, 280); ktries++; } while (!inSky(kx, ky) && ktries < 20);
-    var ksize = rand(0.4, 0.9);
-    var sparkle = el("path", { d: SPARKLE_D, fill: "#FFFFFF", transform: "translate(" + kx + "," + ky + ") scale(" + ksize + ")" });
-    sparkle.style.opacity = "0.5";
-    starGroup.appendChild(sparkle);
-  }
-  scene.appendChild(starGroup);
-
-  if (!reduced) {
-    twinkleCandidates.forEach(function (tc) {
-      var lo = Math.max(0.05, tc.base - 0.15);
-      var hi = Math.min(0.7, tc.base + 0.15);
-      tc.el.animate([
-        { opacity: lo }, { opacity: hi }, { opacity: lo }
-      ], { duration: rand(2500, 5000), delay: rand(0, 3000), iterations: Infinity, easing: "ease-in-out" });
-    });
-  }
-
   // 2. back mound
   scene.appendChild(el("path", {
     d: "M -60,450 Q 400,350 860,450 L 860,520 L -60,520 Z",
     fill: "#12281B"
   }));
-
-  // flat rounded pebbles embedded in the back mound's visible band
-  var PEBBLE_D = "M0,0 C -9,-1 -11,-7 -6,-10 C -1,-12 8,-11 10,-6 C 12,-1 7,2 0,0 Z";
-  var BACK_PEBBLE_FILL = mix("#0E2116", ATMOS, 0.30);
-  var backPebbleGroup = el("g", {});
-  [130, 690].forEach(function (px) {
-    var py = backSurfaceY(px) + rand(10, 20);
-    backPebbleGroup.appendChild(el("path", {
-      d: PEBBLE_D, fill: BACK_PEBBLE_FILL,
-      transform: "translate(" + px + "," + py + ") rotate(" + rand(-20, 20) + ") scale(" + rand(0.7, 1.1) + ")"
-    }));
-  });
-  scene.appendChild(backPebbleGroup);
 
   // 3. back row group (holds back tulips, dimmer for depth)
   var backRow = el("g", { "class": "back-row" });
@@ -302,17 +240,6 @@
     fill: "none"
   }));
 
-  // flat rounded pebbles on the front mound
-  var frontPebbleGroup = el("g", {});
-  [90, 210, 600, 730].forEach(function (px) {
-    var py = frontSurfaceY(px) + rand(14, 26);
-    frontPebbleGroup.appendChild(el("path", {
-      d: PEBBLE_D, fill: "#0E2116",
-      transform: "translate(" + px + "," + py + ") rotate(" + rand(-20, 20) + ") scale(" + rand(0.8, 1.3) + ")"
-    }));
-  });
-  scene.appendChild(frontPebbleGroup);
-
   // 5. front row group
   var frontRow = el("g", {});
   scene.appendChild(frontRow);
@@ -324,8 +251,6 @@
   // ---------- shape helpers ----------
   // broad, short, curling blade (bbox x:0..~41, y:-100..0; bottom-left is the attach point)
   var LEAF_D = "M0,0 C 14,-22 34,-46 40,-74 C 43,-88 38,-98 30,-100 C 30,-76 18,-40 0,-12 Z";
-  var LEAF_LIT_D = "M10,-14 C 22,-32 35,-52 39,-74 C 41,-86 37,-95 31,-97 C 32,-78 22,-46 10,-14 Z";
-  var LEAF_SHADOW_D = "M0,0 C 10,-18 22,-38 28,-58 C 22,-34 10,-14 0,-8 Z";
   var LEAF_NATURAL_LEN = 100;
   var CUP_D = "M0,0 C -16.9,-5.2 -18.2,-23.4 0,-28.6 C 18.2,-23.4 16.9,-5.2 0,0 Z";
 
@@ -408,12 +333,7 @@
         transform: "translate(" + pt.x + "," + pt.y + ") scale(" + (mirror * factor) + "," + factor + ") rotate(" + rot + ")"
       });
       var anim = el("g", { "class": "leaf-anim" });
-      anim.appendChild(el("path", {
-        d: LEAF_D, fill: greens.leaf,
-        stroke: greens.leafHi, "stroke-width": "1.6", "stroke-opacity": "0.35"
-      }));
-      anim.appendChild(el("path", { d: LEAF_SHADOW_D, fill: greens.leafSh }));
-      anim.appendChild(el("path", { d: LEAF_LIT_D, fill: greens.leafHi }));
+      anim.appendChild(el("path", { d: LEAF_D, fill: greens.leaf }));
       wrap.appendChild(anim);
       sway.appendChild(wrap);
       return anim;
@@ -468,7 +388,7 @@
     configs.push({
       row: "back", rowGroup: backRow,
       x: x, y: backSurfaceY(x),
-      scale: rand(0.85, 0.97), H: rand(215, 245),
+      scale: rand(0.62, 0.72), H: rand(215, 245),
       greens: BACK_GREENS
     });
   });
@@ -477,7 +397,7 @@
     configs.push({
       row: "front", rowGroup: frontRow,
       x: x, y: frontSurfaceY(x),
-      scale: rand(1.02, 1.20), H: rand(245, 280),
+      scale: rand(0.75, 0.88), H: rand(245, 280),
       greens: FRONT_GREENS
     });
   });
@@ -522,16 +442,16 @@
     }
 
     var dropIndex = spec.dropIndex;
-    var dropDelay = dropIndex * 90 + rand(0, 120);
-    var dropDuration = 780 + rand(0, 120);
+    var dropDelay = dropIndex * 140 + rand(0, 180);
+    var dropDuration = 850 + rand(0, 100);
     var landTime = dropDelay + dropDuration * 0.62;
-    var stemStart = landTime + 380;
-    var stemDuration = 1150;
-    var leafAStart = stemStart + 380;
-    var leafBStart = stemStart + 620;
-    var leafDuration = 700;
-    var bloomStart = stemStart + 880;
-    var bloomDuration = 1000;
+    var stemStart = landTime + 500;
+    var stemDuration = 4200;
+    var leafAStart = stemStart + 1400;
+    var leafBStart = stemStart + 2200;
+    var leafDuration = 1600;
+    var bloomStart = stemStart + 3200;
+    var bloomDuration = 2600;
     var petalCStart = bloomStart + 60;
     var bloomEnd = petalCStart + bloomDuration;
 
@@ -627,7 +547,6 @@
     t.swayEl.style.animationDelay = bloomEnd + "ms";
     t.swayEl.style.animationTimingFunction = "ease-in-out";
     t.swayEl.style.animationIterationCount = "infinite";
-    t.swayEl.style.animationDirection = "alternate";
 
     var hsA = -rand(0.2, 0.8);
     var hsB = rand(0.2, 0.8);
@@ -639,7 +558,6 @@
     t.headSwayEl.style.animationDelay = bloomEnd + "ms";
     t.headSwayEl.style.animationTimingFunction = "ease-in-out";
     t.headSwayEl.style.animationIterationCount = "infinite";
-    t.headSwayEl.style.animationDirection = "alternate";
   });
 
   // ---------- pollen motes ----------
