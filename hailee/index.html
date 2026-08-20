@@ -42,18 +42,19 @@
     transform: scale(0.05);
   }
 
-  .petal {
+  .head-bloom {
     opacity: 0;
     transform-box: fill-box;
     transform-origin: 50% 100%;
-    transform: scale(0.12);
+    transform: scale(0.30, 0.42);
   }
 
-  .cup-base {
+  .head-front, .head-rim {
     opacity: 0;
-    transform-box: fill-box;
-    transform-origin: 50% 100%;
-    transform: scale(0.2);
+  }
+
+  .contact-shadow {
+    opacity: 0;
   }
 
   .pollen {
@@ -85,18 +86,17 @@
     return e;
   }
 
-  // ---------- ground surfaces ----------
-  function backSurfaceY(x) { var t = (x + 60) / 920; return 450 - 200 * t * (1 - t); }
-  function frontSurfaceY(x) { var t = (x + 60) / 920; return 500 - 192 * t * (1 - t); }
+  // ---------- ground surface (single, barely-curved plane) ----------
+  function groundY(x) { var t = (x + 60) / 920; return 470 - 48 * t * (1 - t); }
 
-  // ---------- palette ----------
+  // ---------- palette (each entry: main / top / light / dark) ----------
   var palette = [
-    { main: "#FF4D5E", light: "#FF808C", dark: "#D62F45" }, // red
-    { main: "#FF8A3D", light: "#FFB073", dark: "#DE6725" }, // orange
-    { main: "#FFC93C", light: "#FFE07A", dark: "#E3A81F" }, // yellow
-    { main: "#FF6FA5", light: "#FF9BC1", dark: "#DE4A85" }, // pink
-    { main: "#A76CFF", light: "#C79BFF", dark: "#8449E0" }, // purple
-    { main: "#FFF1E0", light: "#FFFFFF", dark: "#E3CDB4" }  // cream
+    { main: "#FF4D5E", top: "#FF7D5A", light: "#FF9E8C", dark: "#C9293F" }, // red
+    { main: "#FF8A3D", top: "#FFBE4E", light: "#FFD489", dark: "#D65E1E" }, // orange
+    { main: "#FFC93C", top: "#FFE97F", light: "#FFF3AE", dark: "#DE9C16" }, // yellow
+    { main: "#FF6FA5", top: "#FF9ECB", light: "#FFC2DD", dark: "#D4457F" }, // pink
+    { main: "#A76CFF", top: "#CF8CFF", light: "#E0B4FF", dark: "#7B41D6" }, // purple
+    { main: "#FFF1E0", top: "#FFFFFF", light: "#FFFFFF", dark: "#DCC3A8" }  // cream
   ];
   var CREAM_IDX = 5;
   var STEM_COLOR = "#2FA85C";
@@ -119,7 +119,12 @@
   }
 
   function dimColor(c) {
-    return { main: mix(c.main, ATMOS, 0.30), light: mix(c.light, ATMOS, 0.30), dark: mix(c.dark, ATMOS, 0.30) };
+    return {
+      main: mix(c.main, ATMOS, 0.30),
+      top: mix(c.top, ATMOS, 0.30),
+      light: mix(c.light, ATMOS, 0.30),
+      dark: mix(c.dark, ATMOS, 0.30)
+    };
   }
 
   var FRONT_GREENS = { stem: STEM_COLOR, leaf: LEAF_COLOR, leafHi: LEAF_HI_COLOR };
@@ -218,33 +223,40 @@
     return null;
   }
 
-  // 2. back mound
-  scene.appendChild(el("path", {
-    d: "M -60,450 Q 400,350 860,450 L 860,520 L -60,520 Z",
-    fill: "#12281B"
-  }));
+  // ---------- gradient defs (one linearGradient per tulip, hue-shifted) ----------
+  var gradDefs = el("defs", {});
+  scene.appendChild(gradDefs);
+  var gradCounter = 0;
+  function buildGradient(color) {
+    var id = "grad" + (gradCounter++);
+    var g = el("linearGradient", { id: id, x1: "100%", y1: "100%", x2: "0%", y2: "0%" });
+    g.appendChild(el("stop", { offset: "0%", "stop-color": color.main }));
+    g.appendChild(el("stop", { offset: "100%", "stop-color": color.top }));
+    gradDefs.appendChild(g);
+    return id;
+  }
 
-  // 3. back row group (holds back tulips, dimmer for depth)
-  var backRow = el("g", { "class": "back-row" });
-  scene.appendChild(backRow);
-
-  // 4. front mound + rim
+  // 1. ground (single layer, barely curved) + crest line
   scene.appendChild(el("path", {
-    d: "M -60,500 Q 400,404 860,500 L 860,520 L -60,520 Z",
+    d: "M -60,470 Q 400,446 860,470 L 860,520 L -60,520 Z",
     fill: "#1A3A26"
   }));
   scene.appendChild(el("path", {
-    d: "M -60,500 Q 400,404 860,500",
+    d: "M -60,470 Q 400,446 860,470",
     stroke: "#23492F",
-    "stroke-width": "4",
+    "stroke-width": "3",
     fill: "none"
   }));
 
-  // 5. front row group
+  // 2. back row group (holds back tulips, dimmer for depth)
+  var backRow = el("g", { "class": "back-row" });
+  scene.appendChild(backRow);
+
+  // 3. front row group
   var frontRow = el("g", {});
   scene.appendChild(frontRow);
 
-  // 6. pollen group
+  // 4. pollen group
   var pollenGroup = el("g", {});
   scene.appendChild(pollenGroup);
 
@@ -252,21 +264,36 @@
   // broad, short, curling blade (bbox x:0..~41, y:-100..0; bottom-left is the attach point)
   var LEAF_D = "M0,0 C 14,-22 34,-46 40,-74 C 43,-88 38,-98 30,-100 C 30,-76 18,-40 0,-12 Z";
   var LEAF_NATURAL_LEN = 100;
-  var CUP_D = "M0,0 C -16.9,-5.2 -18.2,-23.4 0,-28.6 C 18.2,-23.4 16.9,-5.2 0,0 Z";
 
-  function petalBaseD(W, L) {
-    return "M0,0 C " + (-W) + "," + (-L * 0.28) + " " + (-W * 1.02) + "," + (-L * 0.72) + " 0," + (-L) +
-           " C " + (W * 1.02) + "," + (-L * 0.72) + " " + W + "," + (-L * 0.28) + " 0,0 Z";
+  // seed: almond/teardrop, origin at its landing point
+  var SEED_BASE_D = "M 0,-1 C -4.6,-1 -6,-5.4 -3.4,-9.2 C -1.8,-11.4 1.8,-11.4 3.4,-9.2 C 6,-5.4 4.6,-1 0,-1 Z";
+  var SEED_LIT_D = "M -3.0,-3.0 C -4.4,-6.0 -2.8,-9.4 -0.6,-10.4 C -2.0,-8.2 -2.6,-5.4 -3.0,-3.0 Z";
+
+  // one-silhouette tulip head: base ovoid with three lobes, plus carved internal shapes
+  function headBaseD(cw, ch) {
+    return "M 0,0 " +
+      "C " + (-cw * 0.95) + "," + (-ch * 0.10) + " " + (-cw) + "," + (-ch * 0.45) + " " + (-cw * 0.86) + "," + (-ch * 0.72) + " " +
+      "C " + (-cw * 0.80) + "," + (-ch * 0.95) + " " + (-cw * 0.50) + "," + (-ch * 1.02) + " " + (-cw * 0.42) + "," + (-ch * 0.80) + " " +
+      "C " + (-cw * 0.30) + "," + (-ch * 1.00) + " " + (-cw * 0.14) + "," + (-ch * 1.06) + " 0," + (-ch * 1.08) + " " +
+      "C " + (cw * 0.14) + "," + (-ch * 1.06) + " " + (cw * 0.30) + "," + (-ch * 1.00) + " " + (cw * 0.42) + "," + (-ch * 0.80) + " " +
+      "C " + (cw * 0.50) + "," + (-ch * 1.02) + " " + (cw * 0.80) + "," + (-ch * 0.95) + " " + (cw * 0.86) + "," + (-ch * 0.72) + " " +
+      "C " + cw + "," + (-ch * 0.45) + " " + (cw * 0.95) + "," + (-ch * 0.10) + " 0,0 Z";
   }
-  function petalHiD(W, L) {
-    return "M" + (-W * 0.30) + "," + (-L * 0.14) +
-           " C " + (-W * 0.62) + "," + (-L * 0.34) + " " + (-W * 0.60) + "," + (-L * 0.66) + " " + (-W * 0.16) + "," + (-L * 0.86) +
-           " C " + (-W * 0.30) + "," + (-L * 0.60) + " " + (-W * 0.34) + "," + (-L * 0.36) + " " + (-W * 0.30) + "," + (-L * 0.14) + " Z";
+  function headShadowD(cw, ch) {
+    return "M 0,0 " +
+      "C " + (cw * 0.95) + "," + (-ch * 0.10) + " " + cw + "," + (-ch * 0.45) + " " + (cw * 0.86) + "," + (-ch * 0.72) + " " +
+      "C " + (cw * 0.60) + "," + (-ch * 0.86) + " " + (cw * 0.30) + "," + (-ch * 0.70) + " " + (cw * 0.34) + "," + (-ch * 0.40) + " " +
+      "C " + (cw * 0.36) + "," + (-ch * 0.20) + " " + (cw * 0.20) + "," + (-ch * 0.06) + " 0,0 Z";
   }
-  function petalShadowD(W, L) {
-    return "M" + (W * 0.30) + "," + (-L * 0.14) +
-           " C " + (W * 0.62) + "," + (-L * 0.34) + " " + (W * 0.60) + "," + (-L * 0.66) + " " + (W * 0.16) + "," + (-L * 0.86) +
-           " C " + (W * 0.30) + "," + (-L * 0.60) + " " + (W * 0.34) + "," + (-L * 0.36) + " " + (W * 0.30) + "," + (-L * 0.14) + " Z";
+  function headFrontD(cw, ch) {
+    return "M 0,0 " +
+      "C " + (-cw * 0.52) + "," + (-ch * 0.14) + " " + (-cw * 0.56) + "," + (-ch * 0.60) + " " + (-cw * 0.30) + "," + (-ch * 0.88) + " " +
+      "C " + (-cw * 0.16) + "," + (-ch * 1.00) + " " + (cw * 0.16) + "," + (-ch * 1.00) + " " + (cw * 0.30) + "," + (-ch * 0.88) + " " +
+      "C " + (cw * 0.56) + "," + (-ch * 0.60) + " " + (cw * 0.52) + "," + (-ch * 0.14) + " 0,0 Z";
+  }
+  function headRimD(cw, ch) {
+    return "M " + (-cw * 0.97) + "," + (-ch * 0.34) +
+      " C " + (-cw * 1.0) + "," + (-ch * 0.52) + " " + (-cw * 0.90) + "," + (-ch * 0.68) + " " + (-cw * 0.80) + "," + (-ch * 0.86);
   }
 
   // ---------- build one tulip ----------
@@ -276,10 +303,15 @@
     var g = el("g", { transform: "translate(" + x + "," + y + ") scale(" + s + ")" });
     rowGroup.appendChild(g);
 
+    // contact shadow (drawn behind everything else belonging to this plant)
+    var shadow = el("ellipse", { cx: "0", cy: "0", rx: "7", ry: "2.2", fill: "#0A1A10", "class": "contact-shadow" });
+    g.appendChild(shadow);
+
     // seed (static placement group; motion applied via inline style / WAAPI)
     var seedG = el("g", { "class": "seed" });
-    seedG.appendChild(el("ellipse", { rx: "3.8", ry: "5.2", fill: "#C98A4B" }));
-    seedG.appendChild(el("ellipse", { cx: "-1.1", cy: "1.1", rx: "2.6", ry: "3.6", fill: "#9A6634" }));
+    seedG.appendChild(el("path", { d: SEED_BASE_D, fill: "#B87A42" }));
+    seedG.appendChild(el("path", { d: SEED_LIT_D, fill: "#D9A163" }));
+    seedG.appendChild(el("ellipse", { cx: "-1.4", cy: "-7.6", rx: "0.9", ry: "1.3", fill: "#FFE3C0", opacity: "0.65" }));
     g.appendChild(seedG);
 
     // impact puff (built later at land time via a lazily-created group)
@@ -342,37 +374,39 @@
     var leafA = buildLeaf(pA, leafCount === 1 ? backLeafMirror : 1, fracA);
     var leafB = leafCount === 2 ? buildLeaf(pB, -1, fracB) : null;
 
-    // head
+    // head: static tip placement -> infinite lag sway -> one-shot bloom scale/opacity -> carved silhouette
     var head = el("g", { transform: "translate(" + pTip.x + "," + pTip.y + ")" });
     var headSway = el("g", { "class": "head-sway" });
     head.appendChild(headSway);
     sway.appendChild(head);
 
-    var cup = el("path", { d: CUP_D, fill: color.dark, "class": "cup-base" });
-    headSway.appendChild(cup);
+    var headBloom = el("g", { "class": "head-bloom" });
+    headSway.appendChild(headBloom);
 
-    function buildPetal(baseW, baseL, closedAngle, openAngleBase) {
-      var W = baseW * (1 + rand(-0.08, 0.08));
-      var Lp = baseL * (1 + rand(-0.08, 0.08));
-      var openAngle = openAngleBase + rand(-4, 4);
-      var wrap = el("g", { "class": "petal" });
-      wrap.appendChild(el("path", {
-        d: petalBaseD(W, Lp), fill: color.main,
-        stroke: color.light, "stroke-width": "1.6", "stroke-opacity": "0.35"
-      }));
-      wrap.appendChild(el("path", { d: petalShadowD(W, Lp), fill: color.dark }));
-      wrap.appendChild(el("path", { d: petalHiD(W, Lp), fill: color.light }));
-      headSway.appendChild(wrap);
-      return { el: wrap, closed: closedAngle, open: openAngle };
-    }
-    var petalL = buildPetal(19, 60, -5, -26);
-    var petalR = buildPetal(19, 60, 5, 26);
-    var petalC = buildPetal(21, 70, 0, 0); // drawn last -> on top
+    var cw = 22 * (1 + rand(-0.08, 0.08));
+    var ch = 52 * (1 + rand(-0.08, 0.08));
+    var gradId = buildGradient(color);
+
+    var headBase = el("path", { d: headBaseD(cw, ch), fill: "url(#" + gradId + ")" });
+    var headShadow = el("path", { d: headShadowD(cw, ch), fill: color.dark, opacity: "0.85" });
+    var headFront = el("path", { d: headFrontD(cw, ch), fill: color.main, "class": "head-front" });
+    var headRim = el("path", {
+      d: headRimD(cw, ch), fill: "none", stroke: color.light,
+      "stroke-width": "2", "stroke-linecap": "round", "stroke-opacity": "0.5", "class": "head-rim"
+    });
+    var headOcclusion = el("ellipse", {
+      cx: "0", cy: String(-ch * 0.04), rx: String(cw * 0.42), ry: String(ch * 0.05), fill: color.dark, opacity: "0.6"
+    });
+    headBloom.appendChild(headBase);
+    headBloom.appendChild(headShadow);
+    headBloom.appendChild(headFront);
+    headBloom.appendChild(headRim);
+    headBloom.appendChild(headOcclusion);
 
     return {
-      g: g, seedG: seedG, puffG: puffG, stem: stem, stemHi: stemHi, L: L,
-      leafA: leafA, leafB: leafB, cup: cup,
-      petalL: petalL, petalR: petalR, petalC: petalC,
+      g: g, shadow: shadow, seedG: seedG, puffG: puffG, stem: stem, stemHi: stemHi, L: L,
+      leafA: leafA, leafB: leafB,
+      headBloom: headBloom, headFront: headFront, headRim: headRim,
       swayEl: sway, headSwayEl: headSway,
       scale: s, plantY: y
     };
@@ -387,7 +421,7 @@
     var x = bx + rand(-10, 10);
     configs.push({
       row: "back", rowGroup: backRow,
-      x: x, y: backSurfaceY(x),
+      x: x, y: groundY(x) - 14,
       scale: rand(0.62, 0.72), H: rand(215, 245),
       greens: BACK_GREENS
     });
@@ -396,7 +430,7 @@
     var x = bx + rand(-12, 12);
     configs.push({
       row: "front", rowGroup: frontRow,
-      x: x, y: frontSurfaceY(x),
+      x: x, y: groundY(x) + 2,
       scale: rand(0.75, 0.88), H: rand(245, 280),
       greens: FRONT_GREENS
     });
@@ -423,6 +457,7 @@
 
     if (reduced) {
       // render finished state directly, no motion
+      t.shadow.style.opacity = "0.55";
       t.seedG.style.display = "none";
       t.stem.style.strokeDasharray = String(t.L);
       t.stem.style.strokeDashoffset = "0";
@@ -432,12 +467,10 @@
         a.style.opacity = "1";
         a.style.transform = "scale(1)";
       });
-      t.cup.style.transform = "scale(1)";
-      t.cup.style.opacity = "1";
-      [t.petalL, t.petalR, t.petalC].forEach(function (p) {
-        p.el.style.opacity = "1";
-        p.el.style.transform = "scale(1) rotate(" + p.open + "deg)";
-      });
+      t.headBloom.style.opacity = "1";
+      t.headBloom.style.transform = "scale(1,1)";
+      t.headFront.style.opacity = "1";
+      t.headRim.style.opacity = "1";
       return;
     }
 
@@ -452,8 +485,7 @@
     var leafDuration = 1600;
     var bloomStart = stemStart + 3200;
     var bloomDuration = 2600;
-    var petalCStart = bloomStart + 60;
-    var bloomEnd = petalCStart + bloomDuration;
+    var bloomEnd = bloomStart + bloomDuration;
 
     // 1. SEED DROP
     var sx = rand(-60, 60);
@@ -494,6 +526,12 @@
       { transform: "translate(" + bx2 + "px,4px) rotate(" + (r + 15) + "deg) scale(0.6)", opacity: 0, offset: 1 }
     ], { duration: 320, delay: landTime + 260, easing: "ease-in", fill: "forwards" });
 
+    // CONTACT SHADOW fades in as the stem starts growing
+    t.shadow.animate([
+      { opacity: 0 },
+      { opacity: 0.55 }
+    ], { duration: 600, delay: stemStart, easing: "ease-out", fill: "forwards" });
+
     // 4. STEM GROWS (highlight rides in lockstep with the main stem)
     t.stem.style.strokeDasharray = String(t.L);
     t.stem.style.strokeDashoffset = String(t.L);
@@ -519,22 +557,20 @@
       ], { duration: leafDuration, delay: start, easing: "cubic-bezier(.34,1.32,.42,1)", fill: "forwards" });
     });
 
-    // 6. BUD FORMS THEN OPENS
-    function bloomPetal(p, start) {
-      p.el.animate([
-        { transform: "scale(0.12) rotate(" + p.closed + "deg)", opacity: 0, offset: 0, easing: "ease-out" },
-        { transform: "scale(0.50) rotate(" + p.closed + "deg)", opacity: 1, offset: 0.40, easing: "cubic-bezier(.3,1.25,.45,1)" },
-        { transform: "scale(1) rotate(" + p.open + "deg)", opacity: 1, offset: 1 }
-      ], { duration: bloomDuration, delay: start, fill: "forwards" });
-    }
-    bloomPetal(t.petalL, bloomStart);
-    bloomPetal(t.petalR, bloomStart);
-    bloomPetal(t.petalC, petalCStart);
+    // 6. BUD FORMS THEN SWELLS OPEN (single silhouette, petals carved in)
+    t.headBloom.animate([
+      { transform: "scale(0.30,0.42)", opacity: 0, offset: 0, easing: "ease-out" },
+      { transform: "scale(0.42,0.72)", opacity: 1, offset: 0.45, easing: "cubic-bezier(.3,1.22,.45,1)" },
+      { transform: "scale(1,1)", opacity: 1, offset: 1 }
+    ], { duration: bloomDuration, delay: bloomStart, fill: "forwards" });
 
-    t.cup.animate([
-      { transform: "scale(0.2)", opacity: 0 },
-      { transform: "scale(1)", opacity: 1 }
-    ], { duration: 600, delay: bloomStart, easing: "ease-out", fill: "forwards" });
+    // front petal + rim light reveal over the last 45% of the bloom
+    var detailDelay = bloomStart + bloomDuration * 0.55;
+    var detailDuration = bloomDuration * 0.45;
+    var detailKF = [{ opacity: 0 }, { opacity: 1 }];
+    var detailOpts = { duration: detailDuration, delay: detailDelay, easing: "ease-out", fill: "forwards" };
+    t.headFront.animate(detailKF, detailOpts);
+    t.headRim.animate(detailKF, detailOpts);
 
     // 7. SWAY (infinite, starts after bloom ends)
     var swayA = -(1.0 + rand(0, 1.3));
@@ -596,6 +632,20 @@
     mote.style.animationIterationCount = "infinite";
     mote.style.animationDirection = "alternate";
   }
+
+  // ---------- grain overlay (last element, above everything) ----------
+  var grainDefs = el("defs", {});
+  var grainFilter = el("filter", { id: "grain", x: "0", y: "0", width: "100%", height: "100%" });
+  grainFilter.appendChild(el("feTurbulence", { type: "fractalNoise", baseFrequency: "0.9", numOctaves: "3", stitchTiles: "stitch" }));
+  grainFilter.appendChild(el("feColorMatrix", { type: "saturate", values: "0" }));
+  grainDefs.appendChild(grainFilter);
+  scene.appendChild(grainDefs);
+  var grainRect = el("rect", {
+    x: "0", y: "0", width: "800", height: "520",
+    filter: "url(#grain)", opacity: "0.05",
+    style: "mix-blend-mode:normal", "pointer-events": "none"
+  });
+  scene.appendChild(grainRect);
 })();
 </script>
 </body>
