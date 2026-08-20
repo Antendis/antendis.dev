@@ -87,7 +87,7 @@
   }
 
   // ---------- ground surface (single, barely-curved plane) ----------
-  function groundY(x) { var t = (x + 60) / 920; return 470 - 48 * t * (1 - t); }
+  function groundY(x) { var t = (x + 60) / 920; return 448 - 48 * t * (1 - t); }
 
   // ---------- palette (each entry: main / top / light / dark) ----------
   var palette = [
@@ -235,14 +235,33 @@
     gradDefs.appendChild(g);
     return id;
   }
+  var clipCounter = 0;
+  // clips the occlusion shade to the actual head silhouette so it can never spill past the edge
+  function buildHeadClip(cw, ch) {
+    var id = "headclip" + (clipCounter++);
+    var cp = el("clipPath", { id: id });
+    cp.appendChild(el("path", { d: headBaseD(cw, ch) }));
+    gradDefs.appendChild(cp);
+    return id;
+  }
+  // clips the rim-light stroke to just the upper-left quadrant of the head
+  function buildRimClip(cw, ch) {
+    var id = "rimclip" + (clipCounter++);
+    var cp = el("clipPath", { id: id });
+    cp.appendChild(el("rect", {
+      x: String(-cw * 1.2), y: String(-ch * 1.25), width: String(cw * 1.05), height: String(ch * 1.0)
+    }));
+    gradDefs.appendChild(cp);
+    return id;
+  }
 
   // 1. ground (single layer, barely curved) + crest line
   scene.appendChild(el("path", {
-    d: "M -60,470 Q 400,446 860,470 L 860,520 L -60,520 Z",
+    d: "M -60,448 Q 400,424 860,448 L 860,520 L -60,520 Z",
     fill: "#1A3A26"
   }));
   scene.appendChild(el("path", {
-    d: "M -60,470 Q 400,446 860,470",
+    d: "M -60,448 Q 400,424 860,448",
     stroke: "#23492F",
     "stroke-width": "3",
     fill: "none"
@@ -291,10 +310,6 @@
       "C " + (-cw * 0.16) + "," + (-ch * 1.00) + " " + (cw * 0.16) + "," + (-ch * 1.00) + " " + (cw * 0.30) + "," + (-ch * 0.88) + " " +
       "C " + (cw * 0.56) + "," + (-ch * 0.60) + " " + (cw * 0.52) + "," + (-ch * 0.14) + " 0,0 Z";
   }
-  function headRimD(cw, ch) {
-    return "M " + (-cw * 0.97) + "," + (-ch * 0.34) +
-      " C " + (-cw * 1.0) + "," + (-ch * 0.52) + " " + (-cw * 0.90) + "," + (-ch * 0.68) + " " + (-cw * 0.80) + "," + (-ch * 0.86);
-  }
 
   // ---------- build one tulip ----------
   function buildTulip(spec, rowGroup) {
@@ -304,7 +319,7 @@
     rowGroup.appendChild(g);
 
     // contact shadow (drawn behind everything else belonging to this plant)
-    var shadow = el("ellipse", { cx: "0", cy: "0", rx: "7", ry: "2.2", fill: "#0A1A10", "class": "contact-shadow" });
+    var shadow = el("ellipse", { cx: "0", cy: "0", rx: "9", ry: "2.4", fill: "#0A1A10", "class": "contact-shadow" });
     g.appendChild(shadow);
 
     // seed (static placement group; motion applied via inline style / WAAPI)
@@ -348,15 +363,15 @@
 
     // measure the real curve now that it's in the live document
     var L = stem.getTotalLength();
-    var pA = stem.getPointAtLength(0.06 * L);
-    var pB = stem.getPointAtLength(0.20 * L);
+    var pA = stem.getPointAtLength(0.10 * L);
+    var pB = stem.getPointAtLength(0.30 * L);
     var pTip = stem.getPointAtLength(L);
 
     // fewer, broader leaves: front row gets 2, back row gets 1
     var leafCount = spec.row === "back" ? 1 : 2;
-    var fracA = rand(0.28, 0.38);
-    var fracB = rand(0.28, 0.38);
-    if (leafCount === 2 && Math.abs(fracA - fracB) < 0.04) fracB = fracA > 0.33 ? fracA - 0.06 : fracA + 0.06;
+    var fracA = rand(0.55, 0.70);
+    var fracB = rand(0.55, 0.70);
+    if (leafCount === 2 && Math.abs(fracA - fracB) < 0.05) fracB = fracA > 0.625 ? fracA - 0.08 : fracA + 0.08;
 
     function buildLeaf(pt, mirror, frac) {
       var rot = rand(2, 9);
@@ -383,25 +398,31 @@
     var headBloom = el("g", { "class": "head-bloom" });
     headSway.appendChild(headBloom);
 
-    var cw = 22 * (1 + rand(-0.08, 0.08));
-    var ch = 52 * (1 + rand(-0.08, 0.08));
+    var cw = 26 * (1 + rand(-0.08, 0.08));
+    var ch = 60 * (1 + rand(-0.08, 0.08));
     var gradId = buildGradient(color);
+    var headClipId = buildHeadClip(cw, ch);
+    var rimClipId = buildRimClip(cw, ch);
 
     var headBase = el("path", { d: headBaseD(cw, ch), fill: "url(#" + gradId + ")" });
     var headShadow = el("path", { d: headShadowD(cw, ch), fill: color.dark, opacity: "0.85" });
-    var headFront = el("path", { d: headFrontD(cw, ch), fill: color.main, "class": "head-front" });
-    var headRim = el("path", {
-      d: headRimD(cw, ch), fill: "none", stroke: color.light,
-      "stroke-width": "2", "stroke-linecap": "round", "stroke-opacity": "0.5", "class": "head-rim"
-    });
+    // occlusion: small dark ellipse clipped to the silhouette so it can never spill past the base
     var headOcclusion = el("ellipse", {
-      cx: "0", cy: String(-ch * 0.04), rx: String(cw * 0.42), ry: String(ch * 0.05), fill: color.dark, opacity: "0.6"
+      cx: "0", cy: String(-ch * 0.07), rx: String(cw * 0.28), ry: String(ch * 0.035),
+      fill: color.dark, opacity: "0.45", "clip-path": "url(#" + headClipId + ")"
+    });
+    var headFront = el("path", { d: headFrontD(cw, ch), fill: color.main, "class": "head-front" });
+    // rim light: a stroked copy of the silhouette itself, clipped to the upper-left edge only
+    var headRim = el("path", {
+      d: headBaseD(cw, ch), fill: "none", stroke: color.light,
+      "stroke-width": "2.5", "stroke-linecap": "round", "stroke-opacity": "0.55",
+      "clip-path": "url(#" + rimClipId + ")", "class": "head-rim"
     });
     headBloom.appendChild(headBase);
     headBloom.appendChild(headShadow);
+    headBloom.appendChild(headOcclusion);
     headBloom.appendChild(headFront);
     headBloom.appendChild(headRim);
-    headBloom.appendChild(headOcclusion);
 
     return {
       g: g, shadow: shadow, seedG: seedG, puffG: puffG, stem: stem, stemHi: stemHi, L: L,
@@ -422,7 +443,7 @@
     configs.push({
       row: "back", rowGroup: backRow,
       x: x, y: groundY(x) - 14,
-      scale: rand(0.62, 0.72), H: rand(215, 245),
+      scale: rand(0.78, 0.90), H: rand(130, 155),
       greens: BACK_GREENS
     });
   });
@@ -431,7 +452,7 @@
     configs.push({
       row: "front", rowGroup: frontRow,
       x: x, y: groundY(x) + 2,
-      scale: rand(0.75, 0.88), H: rand(245, 280),
+      scale: rand(0.95, 1.12), H: rand(155, 185),
       greens: FRONT_GREENS
     });
   });
@@ -457,7 +478,7 @@
 
     if (reduced) {
       // render finished state directly, no motion
-      t.shadow.style.opacity = "0.55";
+      t.shadow.style.opacity = "0.6";
       t.seedG.style.display = "none";
       t.stem.style.strokeDasharray = String(t.L);
       t.stem.style.strokeDashoffset = "0";
@@ -529,7 +550,7 @@
     // CONTACT SHADOW fades in as the stem starts growing
     t.shadow.animate([
       { opacity: 0 },
-      { opacity: 0.55 }
+      { opacity: 0.6 }
     ], { duration: 600, delay: stemStart, easing: "ease-out", fill: "forwards" });
 
     // 4. STEM GROWS (highlight rides in lockstep with the main stem)
