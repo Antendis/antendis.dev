@@ -437,6 +437,14 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* Every other panel opens with a .section-kicker above its heading; intro
+   had none, so it started abruptly with no framing. Kept as its own class
+   (rather than folding into .section-kicker itself) so this one line of
+   spacing can be tuned or dropped independently of the shared kicker style. */
+.intro-kicker {
+  margin-bottom: 0.85rem;
+}
+
 .hero-title {
   font-size: clamp(2.5rem, 4.5vw, 3.4rem);
   font-weight: 400;
@@ -968,6 +976,21 @@ a:hover {
 
   .content {
     padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* Panels stack in flow on mobile, so with no height of its own the intro
+     panel is only as tall as its (short) text, leaving the next section's
+     kicker dangling at the bottom edge of the first screenful. Give intro
+     roughly a full screenful and centre its content within it (echoing the
+     desktop centering below) so it reads as a deliberate opening beat
+     instead of a short block trailing into empty space, and "work" starts
+     cleanly below the fold. */
+  #intro {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   /* The desktop three-column grade-row (subject / bar / percentage) leaves
