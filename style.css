@@ -362,9 +362,19 @@ html[data-panel="intro"] .footer {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  max-height: 70vh; /* static safety cap for short viewports, not animated */
+  max-width: 70vh; /* static safety cap for short viewports, not animated -- a
+    max-width (not max-height) so width stays the one dimension anything
+    ever constrains directly; aspect-ratio derives height from it, which
+    keeps the box square instead of two axes being capped independently */
   margin-inline: auto;
   flex-shrink: 0;
+  /* Without this, the WebGL <canvas> (sized in JS via the render loop
+     below) can carry a taller inline height from a previous, larger frame
+     than the current width implies. A non-replaced box with height:auto
+     grows to fit such content even when aspect-ratio says otherwise, which
+     desyncs the box from its own aspect-ratio and un-squares the globe
+     mid-transition. overflow:hidden makes aspect-ratio authoritative. */
+  overflow: hidden;
 }
 
 /* Shrink globe on university tab to make room for roles. Width (not
@@ -373,7 +383,7 @@ html[data-panel="intro"] .footer {
    (the natural box is far smaller than 70vh), so most of the transition
    was a dead zone. aspect-ratio keeps the globe square as it narrows. */
 html[data-panel="achievements"] #globeViz {
-  width: 88%;
+  width: 75%;
 }
 
 /* Animate the globe shrinking/growing as tabs switch (per-frame redraw is
