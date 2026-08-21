@@ -915,14 +915,7 @@ a:hover {
     font-size: 0.9375rem;
   }
 
-  /* Drop the text links (github/linkedin/cv) from the mobile top bar to save
-     space, but keep the theme toggle reachable — it's a control, not a link. */
   .side-foot {
-    margin-top: 0;
-    flex-direction: row;
-  }
-
-  .side-foot a {
     display: none;
   }
 
