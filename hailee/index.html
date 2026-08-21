@@ -129,18 +129,18 @@
 
   function dimColor(c) {
     return {
-      main: mix(c.main, ATMOS, 0.30),
-      top: mix(c.top, ATMOS, 0.30),
-      light: mix(c.light, ATMOS, 0.30),
-      dark: mix(c.dark, ATMOS, 0.30)
+      main: mix(c.main, ATMOS, 0.18),
+      top: mix(c.top, ATMOS, 0.18),
+      light: mix(c.light, ATMOS, 0.18),
+      dark: mix(c.dark, ATMOS, 0.18)
     };
   }
 
   var FRONT_GREENS = { stem: STEM_COLOR, leaf: LEAF_COLOR, leafHi: LEAF_HI_COLOR };
   var BACK_GREENS = {
-    stem: mix(STEM_COLOR, ATMOS, 0.30),
-    leaf: mix(LEAF_COLOR, ATMOS, 0.30),
-    leafHi: mix(LEAF_HI_COLOR, ATMOS, 0.30)
+    stem: mix(STEM_COLOR, ATMOS, 0.18),
+    leaf: mix(LEAF_COLOR, ATMOS, 0.18),
+    leafHi: mix(LEAF_HI_COLOR, ATMOS, 0.18)
   };
 
   // ---------- hue assignment across the whole cluster ----------
@@ -291,9 +291,8 @@
   var SEED_BASE_D = "M 0,-1 C -4.6,-1 -6,-5.4 -3.4,-9.2 C -1.8,-11.4 1.8,-11.4 3.4,-9.2 C 6,-5.4 4.6,-1 0,-1 Z";
   var SEED_LIT_D = "M -3.0,-3.0 C -4.4,-6.0 -2.8,-9.4 -0.6,-10.4 C -2.0,-8.2 -2.6,-5.4 -3.0,-3.0 Z";
 
-  // hand + forearm: one silhouette, origin at the pinch point, arm extending up off-frame
-  var HAND_D = "M 0,0 C -5,-4 -9,-10 -10,-16 C -13,-22 -14,-30 -12,-38 C -11,-46 -13,-52 -13,-60 L -13,-300 L 15,-300 L 15,-60 C 15,-52 20,-44 19,-36 C 18,-26 14,-16 8,-8 C 5,-4 2,-1 0,0 Z";
-  var HAND_SHADOW_D = "M 8,-8 C 14,-16 18,-26 19,-36 C 20,-44 15,-52 15,-60 L 15,-300 L 4,-300 L 4,-60 C 4,-50 8,-40 7,-30 C 6,-20 3,-10 0,0 C 3,-2 6,-5 8,-8 Z";
+  // hand is built from blocked primitives (rects + ellipses) in buildHand() below;
+  // all coordinates there are in hand-local space with the pinch point at (0,0).
 
   // one-silhouette tulip head: base ovoid with three lobes, plus carved internal shapes
   function headBaseD(cw, ch) {
@@ -433,6 +432,9 @@
   }
 
   // ---------- hand that drops the seeds ----------
+  // built from blocked primitives (rects + ellipses), the way a flat cartoon hand
+  // is actually constructed. All coordinates below are hand-local, pinch at (0,0).
+  var SKIN = "#E8B08A";
   function buildHand(container) {
     var motion = el("g", {});
     motion.style.transform = "translateY(-320px)";
@@ -440,19 +442,46 @@
     var root = el("g", { transform: "translate(400,150)" });
     var idle = el("g", { "class": "hand-idle" });
 
-    idle.appendChild(el("path", { d: HAND_D, fill: "#E8B08A" }));
-    idle.appendChild(el("path", { d: HAND_SHADOW_D, fill: "#C98C68", opacity: "0.9" }));
+    // static reach-in angle + size, pivoting about the pinch point (0,0);
+    // kept on its own element so it composes cleanly with the CSS idle-sway on `idle`
+    var orient = el("g", { transform: "scale(1.15) rotate(-12)" });
 
-    var cuffClip = el("clipPath", { id: "cuffclip" });
-    cuffClip.appendChild(el("rect", { x: "-15", y: "-108", width: "32", height: "32", rx: "6" }));
-    gradDefs.appendChild(cuffClip);
+    var parts = el("g", { "class": "hand-parts" });
+    var forearm = el("rect", { x: "-14", y: "-300", width: "28", height: "232", rx: "14", fill: SKIN });
+    var cuff = el("rect", { x: "-17", y: "-112", width: "34", height: "30", rx: "8", fill: "#3D6E8C" });
+    var palm = el("ellipse", { cx: "1", cy: "-50", rx: "20", ry: "21", fill: SKIN });
+    var knuckle1 = el("ellipse", { cx: "17", cy: "-44", rx: "7", ry: "6", fill: SKIN });
+    var knuckle2 = el("ellipse", { cx: "19", cy: "-34", rx: "7.5", ry: "6", fill: SKIN });
+    var knuckle3 = el("ellipse", { cx: "16", cy: "-24", rx: "6.5", ry: "5.5", fill: SKIN });
+    var index = el("rect", { x: "-5", y: "-46", width: "10", height: "46", rx: "5", transform: "rotate(-6 0 0)", fill: SKIN });
+    var thumb = el("rect", { x: "-5.5", y: "-40", width: "11", height: "40", rx: "5.5", transform: "translate(-3,0) rotate(18 0 0)", fill: SKIN });
 
-    idle.appendChild(el("rect", { x: "-15", y: "-108", width: "32", height: "32", rx: "6", fill: "#3D6E8C" }));
-    idle.appendChild(el("rect", {
-      x: String(17 - 32 / 3), y: "-108", width: String(32 / 3), height: "32",
-      fill: "#2E5670", "clip-path": "url(#cuffclip)"
-    }));
+    parts.appendChild(forearm);
+    parts.appendChild(cuff);
+    parts.appendChild(palm);
+    parts.appendChild(knuckle1);
+    parts.appendChild(knuckle2);
+    parts.appendChild(knuckle3);
+    parts.appendChild(index);
+    parts.appendChild(thumb);
 
+    // two-tone shading: hard-edged shadow down the right side, clipped to the union
+    // of every skin shape (cuff excluded) so it never spills off the silhouette
+    var handClip = el("clipPath", { id: "handclip" });
+    handClip.appendChild(el("rect", { x: "-14", y: "-300", width: "28", height: "232", rx: "14" }));
+    handClip.appendChild(el("ellipse", { cx: "1", cy: "-50", rx: "20", ry: "21" }));
+    handClip.appendChild(el("ellipse", { cx: "17", cy: "-44", rx: "7", ry: "6" }));
+    handClip.appendChild(el("ellipse", { cx: "19", cy: "-34", rx: "7.5", ry: "6" }));
+    handClip.appendChild(el("ellipse", { cx: "16", cy: "-24", rx: "6.5", ry: "5.5" }));
+    handClip.appendChild(el("rect", { x: "-5", y: "-46", width: "10", height: "46", rx: "5", transform: "rotate(-6 0 0)" }));
+    handClip.appendChild(el("rect", { x: "-5.5", y: "-40", width: "11", height: "40", rx: "5.5", transform: "translate(-3,0) rotate(18 0 0)" }));
+    gradDefs.appendChild(handClip);
+
+    var shadow = el("rect", { x: "4", y: "-320", width: "60", height: "330", fill: "#C98C68", opacity: "0.9", "clip-path": "url(#handclip)" });
+
+    orient.appendChild(parts);
+    orient.appendChild(shadow);
+    idle.appendChild(orient);
     root.appendChild(idle);
     motion.appendChild(root);
     container.appendChild(motion);
