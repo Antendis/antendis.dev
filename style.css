@@ -186,12 +186,18 @@ body {
   margin-top: auto;
   display: flex;
   flex-direction: column;
+  gap: 0.65rem;
+}
+
+.side-foot-links {
+  display: flex;
+  flex-direction: column;
   gap: 0.4rem;
 }
 
 .side-foot a {
   font-family: var(--mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.06em;
   color: var(--ink-3);
   text-decoration: none;
@@ -199,6 +205,11 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+}
+
+.side-foot a .icon {
+  width: 13px;
+  height: 13px;
 }
 
 .side-foot a:hover {
