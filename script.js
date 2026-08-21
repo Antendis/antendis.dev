@@ -330,27 +330,33 @@ if (typeof config !== 'undefined') {
   loadTechStack();
 }
 
-// Copy to clipboard function
+// Copy to clipboard, then open the mail client -- the mailto: trigger waits
+// for the copy attempt to settle (not race ahead of it), but runs whether
+// that attempt succeeded or failed, so a clipboard error never blocks the
+// mail app from opening.
 function copyToClipboard(text, button) {
   const textSpan = button.querySelector('.copy-text');
   const originalText = textSpan.textContent;
-  
+
   // Reserve the button's footprint so the shorter "copied" state does not
   // shift layout; ceil avoids a fractional-px squeeze that wrapped the hint.
   if (!button.style.minWidth) {
     button.style.minWidth = Math.ceil(button.getBoundingClientRect().width) + 'px';
   }
-  
+
   // Try modern clipboard API first
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      showCopied(textSpan, originalText, button);
-    }).catch(err => {
-      fallbackCopy(text, textSpan, originalText, button);
-    });
-  } else {
-    fallbackCopy(text, textSpan, originalText, button);
-  }
+  const attempt = (navigator.clipboard && navigator.clipboard.writeText)
+    ? navigator.clipboard.writeText(text).then(
+        () => showCopied(textSpan, originalText, button),
+        () => fallbackCopy(text, textSpan, originalText, button)
+      )
+    : Promise.resolve(fallbackCopy(text, textSpan, originalText, button));
+
+  Promise.resolve(attempt).finally(() => openMailClient(text));
+}
+
+function openMailClient(address) {
+  window.location.href = 'mailto:' + address;
 }
 
 function fallbackCopy(text, textSpan, originalText, button) {
