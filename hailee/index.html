@@ -83,7 +83,7 @@
 </head>
 <body>
 
-<svg id="scene" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet"></svg>
+<svg id="scene" preserveAspectRatio="xMidYMid meet"></svg>
 
 <script>
 (function () {
@@ -99,8 +99,13 @@
     return e;
   }
 
-  // ---------- ground surface (single, barely-curved plane) ----------
-  function groundY(x) { var t = (x + 60) / 920; return 492 - 48 * t * (1 - t); }
+  // ---------- animation registry, so a rebuild can cancel everything in flight ----------
+  var liveAnimations = [];
+  function A(target, kf, opts) {
+    var a = target.animate(kf, opts);
+    liveAnimations.push(a);
+    return a;
+  }
 
   // ---------- palette (each entry: main / top / light / dark) ----------
   var palette = [
@@ -238,10 +243,12 @@
     return null;
   }
 
-  // ---------- gradient defs (one linearGradient per tulip, hue-shifted) ----------
-  var gradDefs = el("defs", {});
-  scene.appendChild(gradDefs);
+  // ---------- mutable per-build defs/counters (reset at the top of every buildScene) ----------
+  var gradDefs = null;
   var gradCounter = 0;
+  var clipCounter = 0;
+  var handClipCounter = 0;
+
   function buildGradient(color) {
     var id = "grad" + (gradCounter++);
     var g = el("linearGradient", { id: id, x1: "100%", y1: "100%", x2: "0%", y2: "0%" });
@@ -250,7 +257,6 @@
     gradDefs.appendChild(g);
     return id;
   }
-  var clipCounter = 0;
   // clips the occlusion shade to the actual head silhouette so it can never spill past the edge
   function buildHeadClip(cw, ch) {
     var id = "headclip" + (clipCounter++);
@@ -260,34 +266,6 @@
     return id;
   }
 
-  // 1. ground (single layer, barely curved) + crest line
-  scene.appendChild(el("path", {
-    d: "M -60,492 Q 400,468 860,492 L 860,520 L -60,520 Z",
-    fill: "#1A3A26"
-  }));
-  scene.appendChild(el("path", {
-    d: "M -60,492 Q 400,468 860,492",
-    stroke: "#23492F",
-    "stroke-width": "3",
-    fill: "none"
-  }));
-
-  // 2. back row group (holds back tulips, dimmer for depth)
-  var backRow = el("g", { "class": "back-row" });
-  scene.appendChild(backRow);
-
-  // 3. front row group
-  var frontRow = el("g", {});
-  scene.appendChild(frontRow);
-
-  // 4. pollen group
-  var pollenGroup = el("g", {});
-  scene.appendChild(pollenGroup);
-
-  // 5. hand group (appended now to lock in z-order; populated after plant timings are known)
-  var handGroup = el("g", {});
-  if (!reduced) scene.appendChild(handGroup);
-
   // ---------- shape helpers ----------
   // broad, short, curling blade (bbox x:0..~41, y:-100..0; bottom-left is the attach point)
   var LEAF_D = "M0,0 C 14,-22 34,-46 40,-74 C 43,-88 38,-98 30,-100 C 30,-76 18,-40 0,-12 Z";
@@ -296,9 +274,6 @@
   // seed: almond/teardrop, origin at its landing point
   var SEED_BASE_D = "M 0,-1 C -4.6,-1 -6,-5.4 -3.4,-9.2 C -1.8,-11.4 1.8,-11.4 3.4,-9.2 C 6,-5.4 4.6,-1 0,-1 Z";
   var SEED_LIT_D = "M -3.0,-3.0 C -4.4,-6.0 -2.8,-9.4 -0.6,-10.4 C -2.0,-8.2 -2.6,-5.4 -3.0,-3.0 Z";
-
-  // hand is built from blocked primitives (rects + ellipses) in buildHand() below;
-  // all coordinates there are in hand-local space with the pinch point at (0,0).
 
   // one-silhouette tulip head: base ovoid with three lobes, plus carved internal shapes
   function headBaseD(cw, ch) {
@@ -437,14 +412,13 @@
     };
   }
 
-  // ---------- hand that drops the seeds ----------
+  // ---------- hand that drops the seeds (landscape layout only) ----------
   // built from blocked primitives (rects + ellipses), the way a flat cartoon hand
   // is actually constructed. All coordinates below are hand-local, pinch/release point at (0,0).
   // The hand has two complete, self-contained states (fist / open) swapped on a key rather
   // than morphed, exactly the way traditional 2D animation swaps a cel.
   var SKIN = "#E8B08A";
   var SKIN_SHADOW = "#C98C68";
-  var handClipCounter = 0;
 
   function buildHandVariant(specificParts, specificClipShapes) {
     var g = el("g", {});
@@ -454,15 +428,17 @@
     g.appendChild(cuff);
     specificParts.forEach(function (p) { g.appendChild(p); });
 
-    // two-tone shading: hard-edged shadow down the right side, clipped to the union
-    // of every skin shape (cuff excluded) so it never spills off this state's silhouette
+    // two-tone shading: hard-edged shadow, clipped to the union of every skin shape
+    // (cuff excluded) so it never spills off this state's silhouette. Pulled well to
+    // the right so it only catches roughly the right third of the arm/palm/fingers,
+    // never runs down the centre seam of the forearm or palm.
     var clipId = "handclip" + (handClipCounter++);
     var clip = el("clipPath", { id: clipId });
     clip.appendChild(el("rect", { x: "-16", y: "-300", width: "32", height: "232", rx: "16" }));
     specificClipShapes.forEach(function (s) { clip.appendChild(s); });
     gradDefs.appendChild(clip);
 
-    var shadow = el("rect", { x: "6", y: "-320", width: "60", height: "330", fill: SKIN_SHADOW, opacity: "0.9", "clip-path": "url(#" + clipId + ")" });
+    var shadow = el("rect", { x: "16", y: "-320", width: "60", height: "330", fill: SKIN_SHADOW, opacity: "0.9", "clip-path": "url(#" + clipId + ")" });
     g.appendChild(shadow);
 
     return g;
@@ -523,11 +499,11 @@
     );
   }
 
-  function buildHand(container) {
+  function buildHand(container, cx, cy) {
     var motion = el("g", {});
     motion.style.transform = "translateY(-320px)";
 
-    var root = el("g", { transform: "translate(400,150)" });
+    var root = el("g", { transform: "translate(" + cx + "," + cy + ")" });
     var idle = el("g", { "class": "hand-idle" });
 
     // one-shot gesture rotate (fist -> open) kept on its own element so it composes
@@ -549,15 +525,15 @@
     motion.appendChild(root);
     container.appendChild(motion);
 
-    motion.animate([
+    A(motion, [
       { transform: "translateY(-320px)" },
       { transform: "translateY(0px)" }
     ], { duration: 1000, delay: 0, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" });
 
     // 1250ms: swap fist -> open over ~120ms, plus a tiny -4deg rotate as it opens
-    fist.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: 1250, fill: "forwards" });
-    open.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, delay: 1250, fill: "forwards" });
-    gesture.animate([
+    A(fist, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: 1250, fill: "forwards" });
+    A(open, [{ opacity: 0 }, { opacity: 1 }], { duration: 120, delay: 1250, fill: "forwards" });
+    A(gesture, [
       { transform: "rotate(0deg)" },
       { transform: "rotate(-4deg)" }
     ], { duration: 120, delay: 1250, easing: "ease-out", fill: "forwards" });
@@ -565,7 +541,6 @@
     return { motion: motion, idle: idle };
   }
 
-  // ---------- generate placement ----------
   // random cluster size per page load; spread scales with N so it widens rather than densifies
   function evenSpread(count, lo, hi) {
     var arr = [];
@@ -574,273 +549,437 @@
     return arr;
   }
 
-  var N = Math.floor(rand(9, 14)); // 9..13 inclusive
-  var backCount = Math.max(1, Math.min(N - 1, Math.floor(N * 0.45)));
-  var frontCount = N - backCount; // structurally exact: back + front always sums to N
-  var spanHalf = 40 + N * 12;
-  var xMin = 400 - spanHalf, xMax = 400 + spanHalf;
-
-  var frontBaseX = evenSpread(frontCount, xMin, xMax);
-  var backBaseXRaw = evenSpread(backCount, xMin, xMax);
-  // offset the back row by roughly half a gap so the two rows interleave, not line up in columns
-  var interleave = frontCount > 1 ? (xMax - xMin) / (frontCount - 1) / 2 : (xMax - xMin) / 4;
-  var backBaseX = backBaseXRaw.map(function (x) { return x + interleave; });
-
-  var configs = [];
-  backBaseX.forEach(function (bx) {
-    var x = bx + rand(-12, 12);
-    configs.push({
-      row: "back", rowGroup: backRow,
-      x: x, y: groundY(x),
-      scale: rand(0.78, 0.90), H: rand(130, 155),
-      greens: BACK_GREENS
-    });
-  });
-  frontBaseX.forEach(function (bx) {
-    var x = bx + rand(-12, 12);
-    configs.push({
-      row: "front", rowGroup: frontRow,
-      x: x, y: groundY(x) + 3,
-      scale: rand(0.95, 1.12), H: rand(155, 185),
-      greens: FRONT_GREENS
-    });
-  });
-
-  // runtime assertion: flower count must exactly equal the chosen cluster size N
-  if (configs.length !== N) {
-    throw new Error("tulip config count (" + configs.length + ") does not match N (" + N + ")");
+  // ---------- viewport / responsive ----------
+  function computeViewport() {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var portrait = (vh / vw) > 1.25;
+    var VB_W = portrait ? 420 : 800;
+    var VB_H = Math.round(VB_W * (vh / vw));
+    return { VB_W: VB_W, VB_H: VB_H, portrait: portrait };
   }
 
-  var hueIdx = assignHues(configs.map(function (c) { return { row: c.row, x: c.x }; }));
-  configs.forEach(function (c, i) {
-    var h = hueIdx ? hueIdx[i] : Math.floor(Math.random() * palette.length);
-    var base = palette[h];
-    c.color = c.row === "back" ? dimColor(base) : base;
-  });
+  var currentVBW = null, currentVBH = null, currentPortrait = null;
 
-  // shuffled drop order so it doesn't read left-to-right
-  var order = configs.map(function (_, i) { return i; });
-  for (var i = order.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+  function teardownScene() {
+    for (var i = 0; i < liveAnimations.length; i++) {
+      try { liveAnimations[i].cancel(); } catch (e) { /* already finished/gone */ }
+    }
+    liveAnimations.length = 0;
+    while (scene.firstChild) scene.removeChild(scene.firstChild);
   }
-  configs.forEach(function (c, i) { c.dropIndex = order[i]; });
 
-  // ---------- build DOM + choreograph ----------
-  var hand = reduced ? null : buildHand(handGroup);
+  function buildScene() {
+    teardownScene();
 
-  configs.forEach(function (spec) {
-    var t = buildTulip(spec, spec.rowGroup);
+    var vp = computeViewport();
+    var VB_W = vp.VB_W, VB_H = vp.VB_H, portrait = vp.portrait;
+    currentVBW = VB_W; currentVBH = VB_H; currentPortrait = portrait;
+    scene.setAttribute("viewBox", "0 0 " + VB_W + " " + VB_H);
 
-    if (reduced) {
-      // render finished state directly, no motion
-      t.shadow.style.opacity = "0.6";
-      t.seedG.style.display = "none";
-      t.stem.style.strokeDasharray = String(t.L);
-      t.stem.style.strokeDashoffset = "0";
-      t.stemHi.style.strokeDasharray = String(t.L);
-      t.stemHi.style.strokeDashoffset = "0";
-      [t.leafA, t.leafB].filter(Boolean).forEach(function (a) {
-        a.style.opacity = "1";
-        a.style.transform = "scale(1)";
+    gradDefs = el("defs", {});
+    gradCounter = 0; clipCounter = 0; handClipCounter = 0;
+    scene.appendChild(gradDefs);
+
+    var CENTER_X = VB_W / 2;
+    var groundBase = VB_H - 28;
+    function groundY(x) { var t = (x + 60) / (VB_W + 120); return groundBase - 48 * t * (1 - t); }
+
+    // 1. ground (single layer, barely curved) + crest line, anchored to the actual bottom of frame
+    scene.appendChild(el("path", {
+      d: "M -60," + groundBase + " Q " + CENTER_X + "," + (groundBase - 24) + " " + (VB_W + 60) + "," + groundBase +
+         " L " + (VB_W + 60) + "," + VB_H + " L -60," + VB_H + " Z",
+      fill: "#1A3A26"
+    }));
+    scene.appendChild(el("path", {
+      d: "M -60," + groundBase + " Q " + CENTER_X + "," + (groundBase - 24) + " " + (VB_W + 60) + "," + groundBase,
+      stroke: "#23492F",
+      "stroke-width": "3",
+      fill: "none"
+    }));
+
+    // 2. rain layer BEHIND the plants (also hosts splashes: above the ground, below the plants)
+    var rainBackGroup = el("g", {});
+    scene.appendChild(rainBackGroup);
+
+    // 3. back row group (holds back tulips, dimmer for depth)
+    var backRow = el("g", { "class": "back-row" });
+    scene.appendChild(backRow);
+
+    // 4. front row group
+    var frontRow = el("g", {});
+    scene.appendChild(frontRow);
+
+    // 5. rain layer IN FRONT of the plants
+    var rainFrontGroup = el("g", {});
+    scene.appendChild(rainFrontGroup);
+
+    // 6. pollen group
+    var pollenGroup = el("g", {});
+    scene.appendChild(pollenGroup);
+
+    // 7. hand group (landscape only; appended now to lock in z-order, populated once timings are known)
+    var handGroup = el("g", {});
+    if (!reduced && !portrait) scene.appendChild(handGroup);
+
+    // ---------- cluster sizing ----------
+    var N = portrait ? Math.floor(rand(5, 8)) : Math.floor(rand(9, 14));
+    var backCount = Math.max(1, Math.min(N - 1, Math.floor(N * 0.45)));
+    var frontCount = N - backCount; // structurally exact: back + front always sums to N
+    var spanHalf = portrait ? (30 + N * 10) : (40 + N * 12);
+    var xMin = CENTER_X - spanHalf, xMax = CENTER_X + spanHalf;
+    var SCALE_MULT = portrait ? 1.45 : 1;
+
+    var frontBaseX = evenSpread(frontCount, xMin, xMax);
+    var backBaseXRaw = evenSpread(backCount, xMin, xMax);
+    // offset the back row by roughly half a gap so the two rows interleave, not line up in columns
+    var interleave = frontCount > 1 ? (xMax - xMin) / (frontCount - 1) / 2 : (xMax - xMin) / 4;
+    var backBaseX = backBaseXRaw.map(function (x) { return x + interleave; });
+
+    var configs = [];
+    backBaseX.forEach(function (bx) {
+      var x = bx + rand(-12, 12);
+      configs.push({
+        row: "back", rowGroup: backRow,
+        x: x, y: groundY(x),
+        scale: rand(0.78 * SCALE_MULT, 0.90 * SCALE_MULT), H: rand(130, 155),
+        greens: BACK_GREENS
       });
-      t.headBloom.style.opacity = "1";
-      t.headBloom.style.transform = "scale(1,1)";
-      t.headFront.style.opacity = "1";
-      return;
-    }
-
-    // all seeds release together at 1350ms (fist opens at 1250ms) with only a tiny
-    // jitter so it reads as one release, not a staggered sprinkle
-    var dropDelay = 1350 + rand(0, 120);
-    var dropDuration = rand(780, 980);
-    var landTime = dropDelay + dropDuration * 0.62;
-    var stemStart = landTime + 500;
-    var stemDuration = 4200;
-    var leafAStart = stemStart + 1400;
-    var leafBStart = stemStart + 2200;
-    var leafDuration = 1600;
-    var bloomStart = stemStart + 3200;
-    var bloomDuration = 2600;
-    var bloomEnd = bloomStart + bloomDuration;
-
-    // 1. SEED DROP (originates at the hand's fingertip, scene (400,150))
-    var sx = (400 - spec.x) / spec.scale;
-    var sy = (150 - spec.y) / spec.scale;
-    var r = rand(-25, 25);
-    var bx1 = rand(2, 7);
-    var bx2 = rand(2, 7);
-    t.seedG.style.transform = "translate(" + sx + "px," + sy + "px) rotate(0deg)";
-    var fadeInOffset = Math.min(0.18, 80 / dropDuration);
-    var dropKF = [
-      { transform: "translate(" + sx + "px," + sy + "px) rotate(0deg)", opacity: 0, offset: 0, easing: "cubic-bezier(.5,0,.9,.35)" },
-      { opacity: 1, offset: fadeInOffset, easing: "cubic-bezier(.5,0,.9,.35)" },
-      { transform: "translate(0px,0px) rotate(" + r + "deg)", offset: 0.62, easing: "cubic-bezier(.2,.6,.4,1)" },
-      { transform: "translate(" + bx1 + "px,-14px) rotate(" + (r + 8) + "deg)", offset: 0.76, easing: "cubic-bezier(.5,0,.9,.35)" },
-      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 12) + "deg)", offset: 0.87, easing: "cubic-bezier(.2,.6,.4,1)" },
-      { transform: "translate(" + bx2 + "px,-4.5px) rotate(" + (r + 14) + "deg)", offset: 0.94, easing: "cubic-bezier(.5,0,.9,.35)" },
-      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg)", opacity: 1, offset: 1 }
-    ];
-    t.seedG.animate(dropKF, { duration: dropDuration, delay: dropDelay, fill: "forwards" });
-
-    // 2. IMPACT PUFF
-    for (var pi = 0; pi < 3; pi++) {
-      (function () {
-        var dx = rand(-14, 14);
-        var dy = rand(-16, -6);
-        var dot = el("circle", { cx: "0", cy: "0", r: String(rand(2, 3.5)), fill: "#2A4A32" });
-        dot.style.opacity = "0";
-        t.puffG.appendChild(dot);
-        var anim = dot.animate([
-          { transform: "translate(0px,0px) scale(0.6)", opacity: 0.85, offset: 0 },
-          { transform: "translate(" + dx + "px," + dy + "px) scale(1.3)", opacity: 0, offset: 1 }
-        ], { duration: 450, delay: landTime, easing: "ease-out", fill: "forwards" });
-        anim.onfinish = function () { if (dot.parentNode) dot.parentNode.removeChild(dot); };
-      })();
-    }
-
-    // 3. SEED SINKS
-    t.seedG.animate([
-      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg) scale(1)", opacity: 1, offset: 0 },
-      { transform: "translate(" + bx2 + "px,4px) rotate(" + (r + 15) + "deg) scale(0.6)", opacity: 0, offset: 1 }
-    ], { duration: 320, delay: landTime + 260, easing: "ease-in", fill: "forwards" });
-
-    // CONTACT SHADOW fades in as the stem starts growing
-    t.shadow.animate([
-      { opacity: 0 },
-      { opacity: 0.6 }
-    ], { duration: 600, delay: stemStart, easing: "ease-out", fill: "forwards" });
-
-    // 4. STEM GROWS (highlight rides in lockstep with the main stem)
-    t.stem.style.strokeDasharray = String(t.L);
-    t.stem.style.strokeDashoffset = String(t.L);
-    t.stemHi.style.strokeDasharray = String(t.L);
-    t.stemHi.style.strokeDashoffset = String(t.L);
-    var stemGrowKF = [
-      { strokeDashoffset: String(t.L) },
-      { strokeDashoffset: "0" }
-    ];
-    var stemGrowOpts = { duration: stemDuration, delay: stemStart, easing: "cubic-bezier(.16,.72,.30,1)", fill: "forwards" };
-    t.stem.animate(stemGrowKF, stemGrowOpts);
-    t.stemHi.animate(stemGrowKF, stemGrowOpts);
-
-    // 5. LEAVES UNFURL
-    var leafPairs = [[t.leafA, leafAStart]];
-    if (t.leafB) leafPairs.push([t.leafB, leafBStart]);
-    leafPairs.forEach(function (pair) {
-      var leaf = pair[0], start = pair[1];
-      leaf.animate([
-        { transform: "scale(0.05)", opacity: 0, offset: 0 },
-        { opacity: 1, offset: 0.25 },
-        { transform: "scale(1)", opacity: 1, offset: 1 }
-      ], { duration: leafDuration, delay: start, easing: "cubic-bezier(.34,1.32,.42,1)", fill: "forwards" });
+    });
+    frontBaseX.forEach(function (bx) {
+      var x = bx + rand(-12, 12);
+      configs.push({
+        row: "front", rowGroup: frontRow,
+        x: x, y: groundY(x) + 3,
+        scale: rand(0.95 * SCALE_MULT, 1.12 * SCALE_MULT), H: rand(155, 185),
+        greens: FRONT_GREENS
+      });
     });
 
-    // 6. BUD FORMS THEN SWELLS OPEN (single silhouette, petals carved in)
-    t.headBloom.animate([
-      { transform: "scale(0.30,0.42)", opacity: 0, offset: 0, easing: "ease-out" },
-      { transform: "scale(0.42,0.72)", opacity: 1, offset: 0.45, easing: "cubic-bezier(.3,1.22,.45,1)" },
-      { transform: "scale(1,1)", opacity: 1, offset: 1 }
-    ], { duration: bloomDuration, delay: bloomStart, fill: "forwards" });
-
-    // front petal reveal over the last 45% of the bloom
-    var detailDelay = bloomStart + bloomDuration * 0.55;
-    var detailDuration = bloomDuration * 0.45;
-    var detailKF = [{ opacity: 0 }, { opacity: 1 }];
-    var detailOpts = { duration: detailDuration, delay: detailDelay, easing: "ease-out", fill: "forwards" };
-    t.headFront.animate(detailKF, detailOpts);
-
-    // 7. SWAY (infinite, starts after bloom ends)
-    var swayA = -(1.0 + rand(0, 1.3));
-    var swayB = (1.2 + rand(0, 1.4));
-    var swayDur = rand(3.4, 5.2);
-    t.swayEl.style.setProperty("--sa", swayA + "deg");
-    t.swayEl.style.setProperty("--sb", swayB + "deg");
-    t.swayEl.style.animationName = "tulip-sway";
-    t.swayEl.style.animationDuration = swayDur + "s";
-    t.swayEl.style.animationDelay = bloomEnd + "ms";
-    t.swayEl.style.animationTimingFunction = "ease-in-out";
-    t.swayEl.style.animationIterationCount = "infinite";
-
-    var hsA = -rand(0.2, 0.8);
-    var hsB = rand(0.2, 0.8);
-    var hsDur = swayDur * 1.18;
-    t.headSwayEl.style.setProperty("--sa", hsA + "deg");
-    t.headSwayEl.style.setProperty("--sb", hsB + "deg");
-    t.headSwayEl.style.animationName = "tulip-sway";
-    t.headSwayEl.style.animationDuration = hsDur + "s";
-    t.headSwayEl.style.animationDelay = bloomEnd + "ms";
-    t.headSwayEl.style.animationTimingFunction = "ease-in-out";
-    t.headSwayEl.style.animationIterationCount = "infinite";
-  });
-
-  // runtime assertion: exactly one seed element must exist per flower (N total)
-  var seedCount = scene.querySelectorAll(".seed").length;
-  if (seedCount !== N) {
-    throw new Error("seed element count (" + seedCount + ") does not match flower count N (" + N + ")");
-  }
-
-  // hand exit: fixed beat, 1900ms -> 2800ms, well after the single all-at-once release at 1350ms
-  if (hand) {
-    var handExit = hand.motion.animate([
-      { transform: "translateY(0px)" },
-      { transform: "translateY(-320px)" }
-    ], { duration: 900, delay: 1900, easing: "cubic-bezier(.5,0,.9,.35)", fill: "forwards" });
-    handExit.onfinish = function () {
-      if (handGroup.parentNode) handGroup.parentNode.removeChild(handGroup);
-    };
-  }
-
-  // ---------- pollen motes ----------
-  var POLLEN_N = 10;
-  for (var pn = 0; pn < POLLEN_N; pn++) {
-    var cx = 400 + rand(-150, 150);
-    var cy = 195 + rand(-100, 95);
-    var op = rand(0.35, 0.70);
-    var mote = el("circle", {
-      cx: String(cx), cy: String(cy), r: String(rand(1.4, 2.8)),
-      fill: "#FFE9A8", "class": "pollen"
-    });
-    pollenGroup.appendChild(mote);
-
-    if (reduced) {
-      mote.style.opacity = String(op);
-      continue;
+    // runtime assertion: flower count must exactly equal the chosen cluster size N
+    if (configs.length !== N) {
+      throw new Error("tulip config count (" + configs.length + ") does not match N (" + N + ")");
     }
 
-    var fadeDelay = 4500 + rand(0, 800);
-    mote.animate([
-      { opacity: 0 },
-      { opacity: op }
-    ], { duration: 1200, delay: fadeDelay, easing: "ease-out", fill: "forwards" });
+    var hueIdx = assignHues(configs.map(function (c) { return { row: c.row, x: c.x }; }));
+    configs.forEach(function (c, i) {
+      var h = hueIdx ? hueIdx[i] : Math.floor(Math.random() * palette.length);
+      var base = palette[h];
+      c.color = c.row === "back" ? dimColor(base) : base;
+    });
 
-    var dx = rand(-6, 6);
-    var dy = rand(-7, 7);
-    var dur = rand(6, 11);
-    var driftDelay = fadeDelay + rand(0, 1200);
-    mote.style.setProperty("--dx", dx + "px");
-    mote.style.setProperty("--dy", dy + "px");
-    mote.style.animationName = "pollen-drift";
-    mote.style.animationDuration = dur + "s";
-    mote.style.animationDelay = driftDelay + "ms";
-    mote.style.animationTimingFunction = "ease-in-out";
-    mote.style.animationIterationCount = "infinite";
-    mote.style.animationDirection = "alternate";
+    // shuffled drop order so it doesn't read left-to-right; also used to stagger sprouting
+    var order = configs.map(function (_, i) { return i; });
+    for (var oi = order.length - 1; oi > 0; oi--) {
+      var oj = Math.floor(Math.random() * (oi + 1));
+      var tmp = order[oi]; order[oi] = order[oj]; order[oj] = tmp;
+    }
+    configs.forEach(function (c, i) { c.dropIndex = order[i]; });
+
+    // ---------- build DOM + choreograph ----------
+    var useHand = !reduced && !portrait;
+    var hand = useHand ? buildHand(handGroup, CENTER_X, 150) : null;
+    var dropBaseDelay = useHand ? 1350 : 400; // no hand to wait for in portrait -> shorter lead-in
+
+    // pass 1: drop timing up front, so the rain shower knows when the last seed lands
+    var maxLandTime = 0;
+    if (!reduced) {
+      configs.forEach(function (spec) {
+        spec.dropDelay = dropBaseDelay + rand(0, 120);
+        spec.dropDuration = rand(780, 980);
+        spec.landTime = spec.dropDelay + spec.dropDuration * 0.62;
+        if (spec.landTime > maxLandTime) maxLandTime = spec.landTime;
+
+        if (useHand) {
+          // originates at the hand's fingertip, scene (CENTER_X,150)
+          spec.sx = (CENTER_X - spec.x) / spec.scale;
+          spec.sy = (150 - spec.y) / spec.scale;
+        } else {
+          // no hand: seeds simply fall from the sky, near the cluster centre
+          var skyX = CENTER_X + rand(-40, 40);
+          var skyY = -20;
+          spec.sx = (skyX - spec.x) / spec.scale;
+          spec.sy = (skyY - spec.y) / spec.scale;
+        }
+      });
+    }
+    var rainStart = maxLandTime + 200;
+
+    // ---------- fast rain shower between seeds landing and stems sprouting ----------
+    function spawnSplash(x, y) {
+      var s = el("ellipse", { cx: String(x), cy: String(y), rx: "3", ry: "1.2", fill: "#8FC7E8" });
+      s.style.opacity = "0.4";
+      s.style.transformBox = "fill-box";
+      s.style.transformOrigin = "50% 50%";
+      s.style.transform = "scaleX(0.3)";
+      rainBackGroup.appendChild(s);
+      var anim = A(s, [
+        { transform: "scaleX(0.3)", opacity: 0.4 },
+        { transform: "scaleX(1.6)", opacity: 0 }
+      ], { duration: 260, easing: "ease-out", fill: "forwards" });
+      anim.onfinish = function () { if (s.parentNode) s.parentNode.removeChild(s); };
+    }
+
+    function spawnRainDrop(container) {
+      var dropX = rand(-30, VB_W + 30);
+      var startY = -30;
+      var endY = groundY(dropX);
+      var rect = el("rect", { x: "-1.2", y: "0", width: "2.4", height: "16", rx: "1.2", fill: "#8FC7E8" });
+      rect.style.opacity = String(rand(0.25, 0.55));
+      rect.style.transform = "translate(" + dropX + "px," + startY + "px) rotate(8deg)";
+      container.appendChild(rect);
+      var fallDelay = rainStart + rand(0, 900);
+      var fallDur = rand(420, 620);
+      var anim = A(rect, [
+        { transform: "translate(" + dropX + "px," + startY + "px) rotate(8deg)" },
+        { transform: "translate(" + dropX + "px," + endY + "px) rotate(8deg)" }
+      ], { duration: fallDur, delay: fallDelay, easing: "linear", fill: "forwards" });
+      anim.onfinish = function () {
+        if (rect.parentNode) rect.parentNode.removeChild(rect);
+        spawnSplash(dropX, endY);
+      };
+    }
+
+    if (!reduced) {
+      for (var rb = 0; rb < 40; rb++) spawnRainDrop(rainBackGroup);
+      for (var rf = 0; rf < 12; rf++) spawnRainDrop(rainFrontGroup);
+    }
+
+    // pass 2: build each tulip and choreograph it
+    configs.forEach(function (spec) {
+      var t = buildTulip(spec, spec.rowGroup);
+
+      if (reduced) {
+        // render finished state directly, no motion, no rain
+        t.shadow.style.opacity = "0.6";
+        t.seedG.style.display = "none";
+        t.stem.style.strokeDasharray = String(t.L);
+        t.stem.style.strokeDashoffset = "0";
+        t.stemHi.style.strokeDasharray = String(t.L);
+        t.stemHi.style.strokeDashoffset = "0";
+        [t.leafA, t.leafB].filter(Boolean).forEach(function (a) {
+          a.style.opacity = "1";
+          a.style.transform = "scale(1)";
+        });
+        t.headBloom.style.opacity = "1";
+        t.headBloom.style.transform = "scale(1,1)";
+        t.headFront.style.opacity = "1";
+        return;
+      }
+
+      var dropDelay = spec.dropDelay, dropDuration = spec.dropDuration, landTime = spec.landTime;
+
+      // growth follows the rain shower, keeping a per-tulip stagger via the shuffled dropIndex
+      var stemStart = rainStart + 700 + spec.dropIndex * 120 + rand(0, 200);
+      var stemDuration = 4200;
+      var leafAStart = stemStart + 1400;
+      var leafBStart = stemStart + 2200;
+      var leafDuration = 1600;
+      var bloomStart = stemStart + 3200;
+      var bloomDuration = 2600;
+      var bloomEnd = bloomStart + bloomDuration;
+
+      // 1. SEED DROP
+      var sx = spec.sx, sy = spec.sy;
+      var r = rand(-25, 25);
+      var bx1 = rand(2, 7);
+      var bx2 = rand(2, 7);
+      t.seedG.style.transform = "translate(" + sx + "px," + sy + "px) rotate(0deg)";
+      var fadeInOffset = Math.min(0.18, 80 / dropDuration);
+      var dropKF = [
+        { transform: "translate(" + sx + "px," + sy + "px) rotate(0deg)", opacity: 0, offset: 0, easing: "cubic-bezier(.5,0,.9,.35)" },
+        { opacity: 1, offset: fadeInOffset, easing: "cubic-bezier(.5,0,.9,.35)" },
+        { transform: "translate(0px,0px) rotate(" + r + "deg)", offset: 0.62, easing: "cubic-bezier(.2,.6,.4,1)" },
+        { transform: "translate(" + bx1 + "px,-14px) rotate(" + (r + 8) + "deg)", offset: 0.76, easing: "cubic-bezier(.5,0,.9,.35)" },
+        { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 12) + "deg)", offset: 0.87, easing: "cubic-bezier(.2,.6,.4,1)" },
+        { transform: "translate(" + bx2 + "px,-4.5px) rotate(" + (r + 14) + "deg)", offset: 0.94, easing: "cubic-bezier(.5,0,.9,.35)" },
+        { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg)", opacity: 1, offset: 1 }
+      ];
+      A(t.seedG, dropKF, { duration: dropDuration, delay: dropDelay, fill: "forwards" });
+
+      // tiny recoil flick of the hand at the moment this seed is released
+      if (hand) {
+        A(hand.idle, [
+          { transform: "rotate(0deg)", offset: 0 },
+          { transform: "rotate(3deg)", offset: 0.4 },
+          { transform: "rotate(0deg)", offset: 1 }
+        ], { duration: 220, delay: dropDelay, fill: "none" });
+      }
+
+      // 2. IMPACT PUFF
+      for (var pi = 0; pi < 3; pi++) {
+        (function () {
+          var dx = rand(-14, 14);
+          var dy = rand(-16, -6);
+          var dot = el("circle", { cx: "0", cy: "0", r: String(rand(2, 3.5)), fill: "#2A4A32" });
+          dot.style.opacity = "0";
+          t.puffG.appendChild(dot);
+          var anim = A(dot, [
+            { transform: "translate(0px,0px) scale(0.6)", opacity: 0.85, offset: 0 },
+            { transform: "translate(" + dx + "px," + dy + "px) scale(1.3)", opacity: 0, offset: 1 }
+          ], { duration: 450, delay: landTime, easing: "ease-out", fill: "forwards" });
+          anim.onfinish = function () { if (dot.parentNode) dot.parentNode.removeChild(dot); };
+        })();
+      }
+
+      // 3. SEED SINKS
+      A(t.seedG, [
+        { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg) scale(1)", opacity: 1, offset: 0 },
+        { transform: "translate(" + bx2 + "px,4px) rotate(" + (r + 15) + "deg) scale(0.6)", opacity: 0, offset: 1 }
+      ], { duration: 320, delay: landTime + 260, easing: "ease-in", fill: "forwards" });
+
+      // CONTACT SHADOW fades in as the stem starts growing
+      A(t.shadow, [
+        { opacity: 0 },
+        { opacity: 0.6 }
+      ], { duration: 600, delay: stemStart, easing: "ease-out", fill: "forwards" });
+
+      // 4. STEM GROWS (highlight rides in lockstep with the main stem)
+      t.stem.style.strokeDasharray = String(t.L);
+      t.stem.style.strokeDashoffset = String(t.L);
+      t.stemHi.style.strokeDasharray = String(t.L);
+      t.stemHi.style.strokeDashoffset = String(t.L);
+      var stemGrowKF = [
+        { strokeDashoffset: String(t.L) },
+        { strokeDashoffset: "0" }
+      ];
+      var stemGrowOpts = { duration: stemDuration, delay: stemStart, easing: "cubic-bezier(.16,.72,.30,1)", fill: "forwards" };
+      A(t.stem, stemGrowKF, stemGrowOpts);
+      A(t.stemHi, stemGrowKF, stemGrowOpts);
+
+      // 5. LEAVES UNFURL
+      var leafPairs = [[t.leafA, leafAStart]];
+      if (t.leafB) leafPairs.push([t.leafB, leafBStart]);
+      leafPairs.forEach(function (pair) {
+        var leaf = pair[0], start = pair[1];
+        A(leaf, [
+          { transform: "scale(0.05)", opacity: 0, offset: 0 },
+          { opacity: 1, offset: 0.25 },
+          { transform: "scale(1)", opacity: 1, offset: 1 }
+        ], { duration: leafDuration, delay: start, easing: "cubic-bezier(.34,1.32,.42,1)", fill: "forwards" });
+      });
+
+      // 6. BUD FORMS THEN SWELLS OPEN (single silhouette, petals carved in)
+      A(t.headBloom, [
+        { transform: "scale(0.30,0.42)", opacity: 0, offset: 0, easing: "ease-out" },
+        { transform: "scale(0.42,0.72)", opacity: 1, offset: 0.45, easing: "cubic-bezier(.3,1.22,.45,1)" },
+        { transform: "scale(1,1)", opacity: 1, offset: 1 }
+      ], { duration: bloomDuration, delay: bloomStart, fill: "forwards" });
+
+      // front petal reveal over the last 45% of the bloom
+      var detailDelay = bloomStart + bloomDuration * 0.55;
+      var detailDuration = bloomDuration * 0.45;
+      var detailKF = [{ opacity: 0 }, { opacity: 1 }];
+      var detailOpts = { duration: detailDuration, delay: detailDelay, easing: "ease-out", fill: "forwards" };
+      A(t.headFront, detailKF, detailOpts);
+
+      // 7. SWAY (infinite, starts after bloom ends)
+      var swayA = -(1.0 + rand(0, 1.3));
+      var swayB = (1.2 + rand(0, 1.4));
+      var swayDur = rand(3.4, 5.2);
+      t.swayEl.style.setProperty("--sa", swayA + "deg");
+      t.swayEl.style.setProperty("--sb", swayB + "deg");
+      t.swayEl.style.animationName = "tulip-sway";
+      t.swayEl.style.animationDuration = swayDur + "s";
+      t.swayEl.style.animationDelay = bloomEnd + "ms";
+      t.swayEl.style.animationTimingFunction = "ease-in-out";
+      t.swayEl.style.animationIterationCount = "infinite";
+
+      var hsA = -rand(0.2, 0.8);
+      var hsB = rand(0.2, 0.8);
+      var hsDur = swayDur * 1.18;
+      t.headSwayEl.style.setProperty("--sa", hsA + "deg");
+      t.headSwayEl.style.setProperty("--sb", hsB + "deg");
+      t.headSwayEl.style.animationName = "tulip-sway";
+      t.headSwayEl.style.animationDuration = hsDur + "s";
+      t.headSwayEl.style.animationDelay = bloomEnd + "ms";
+      t.headSwayEl.style.animationTimingFunction = "ease-in-out";
+      t.headSwayEl.style.animationIterationCount = "infinite";
+    });
+
+    // runtime assertion: exactly one seed element must exist per flower (N total)
+    var seedCount = scene.querySelectorAll(".seed").length;
+    if (seedCount !== N) {
+      throw new Error("seed element count (" + seedCount + ") does not match flower count N (" + N + ")");
+    }
+
+    // hand exit: after the last seed has landed (+ a beat), withdraw and remove
+    if (hand) {
+      var handExitStart = maxLandTime + 250;
+      var handExit = A(hand.motion, [
+        { transform: "translateY(0px)" },
+        { transform: "translateY(-320px)" }
+      ], { duration: 900, delay: handExitStart, easing: "cubic-bezier(.5,0,.9,.35)", fill: "forwards" });
+      handExit.onfinish = function () {
+        if (handGroup.parentNode) handGroup.parentNode.removeChild(handGroup);
+      };
+    }
+
+    // ---------- pollen motes ----------
+    var POLLEN_N = 10;
+    for (var pn = 0; pn < POLLEN_N; pn++) {
+      var cx = CENTER_X + rand(-VB_W * 0.19, VB_W * 0.19);
+      var cy = VB_H * 0.375 + rand(-VB_H * 0.19, VB_H * 0.18);
+      var op = rand(0.35, 0.70);
+      var mote = el("circle", {
+        cx: String(cx), cy: String(cy), r: String(rand(1.4, 2.8)),
+        fill: "#FFE9A8", "class": "pollen"
+      });
+      pollenGroup.appendChild(mote);
+
+      if (reduced) {
+        mote.style.opacity = String(op);
+        continue;
+      }
+
+      var fadeDelay = 4500 + rand(0, 800);
+      A(mote, [
+        { opacity: 0 },
+        { opacity: op }
+      ], { duration: 1200, delay: fadeDelay, easing: "ease-out", fill: "forwards" });
+
+      var dx = rand(-6, 6);
+      var dy = rand(-7, 7);
+      var dur = rand(6, 11);
+      var driftDelay = fadeDelay + rand(0, 1200);
+      mote.style.setProperty("--dx", dx + "px");
+      mote.style.setProperty("--dy", dy + "px");
+      mote.style.animationName = "pollen-drift";
+      mote.style.animationDuration = dur + "s";
+      mote.style.animationDelay = driftDelay + "ms";
+      mote.style.animationTimingFunction = "ease-in-out";
+      mote.style.animationIterationCount = "infinite";
+      mote.style.animationDirection = "alternate";
+    }
+
+    // ---------- grain overlay (last element, above everything) ----------
+    var grainDefs = el("defs", {});
+    var grainFilter = el("filter", { id: "grain", x: "0", y: "0", width: "100%", height: "100%" });
+    grainFilter.appendChild(el("feTurbulence", { type: "fractalNoise", baseFrequency: "0.9", numOctaves: "3", stitchTiles: "stitch" }));
+    grainFilter.appendChild(el("feColorMatrix", { type: "saturate", values: "0" }));
+    grainDefs.appendChild(grainFilter);
+    scene.appendChild(grainDefs);
+    var grainRect = el("rect", {
+      x: "0", y: "0", width: String(VB_W), height: String(VB_H),
+      filter: "url(#grain)", opacity: "0.05",
+      style: "mix-blend-mode:normal", "pointer-events": "none"
+    });
+    scene.appendChild(grainRect);
   }
 
-  // ---------- grain overlay (last element, above everything) ----------
-  var grainDefs = el("defs", {});
-  var grainFilter = el("filter", { id: "grain", x: "0", y: "0", width: "100%", height: "100%" });
-  grainFilter.appendChild(el("feTurbulence", { type: "fractalNoise", baseFrequency: "0.9", numOctaves: "3", stitchTiles: "stitch" }));
-  grainFilter.appendChild(el("feColorMatrix", { type: "saturate", values: "0" }));
-  grainDefs.appendChild(grainFilter);
-  scene.appendChild(grainDefs);
-  var grainRect = el("rect", {
-    x: "0", y: "0", width: "800", height: "520",
-    filter: "url(#grain)", opacity: "0.05",
-    style: "mix-blend-mode:normal", "pointer-events": "none"
+  buildScene();
+
+  // debounced resize: only rebuild when the layout mode actually flips or the
+  // aspect changes meaningfully, so ordinary browser-chrome jitter is a no-op
+  var resizeTimer = null;
+  window.addEventListener("resize", function () {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      var vp = computeViewport();
+      var flipped = vp.portrait !== currentPortrait;
+      var hChanged = currentVBH ? (Math.abs(vp.VB_H - currentVBH) / currentVBH > 0.08) : true;
+      if (flipped || hChanged) buildScene();
+    }, 300);
   });
-  scene.appendChild(grainRect);
 })();
 </script>
 </body>
