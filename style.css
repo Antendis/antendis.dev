@@ -344,7 +344,7 @@ html[data-panel="intro"] .footer {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: clamp(2.5rem, 11vh, 5rem) 3rem 2rem 1.5rem;
+  padding: clamp(3rem, 15vh, 11rem) 3rem 2rem 1.5rem;
 }
 
 #globeViz {
