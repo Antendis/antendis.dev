@@ -49,7 +49,7 @@
     transform: scale(0.30, 0.42);
   }
 
-  .head-front, .head-rim {
+  .head-front {
     opacity: 0;
   }
 
@@ -65,6 +65,15 @@
     0%   { transform: translate(0px, 0px); }
     50%  { transform: translate(var(--dx), var(--dy)); }
     100% { transform: translate(0px, 0px); }
+  }
+
+  .hand-idle {
+    transform-origin: 0px 0px;
+    animation: hand-idle 1.4s ease-in-out 1000ms infinite alternate;
+  }
+  @keyframes hand-idle {
+    0%   { transform: rotate(-1.5deg); }
+    100% { transform: rotate(1.5deg); }
   }
 </style>
 </head>
@@ -87,7 +96,7 @@
   }
 
   // ---------- ground surface (single, barely-curved plane) ----------
-  function groundY(x) { var t = (x + 60) / 920; return 448 - 48 * t * (1 - t); }
+  function groundY(x) { var t = (x + 60) / 920; return 492 - 48 * t * (1 - t); }
 
   // ---------- palette (each entry: main / top / light / dark) ----------
   var palette = [
@@ -244,24 +253,14 @@
     gradDefs.appendChild(cp);
     return id;
   }
-  // clips the rim-light stroke to just the upper-left quadrant of the head
-  function buildRimClip(cw, ch) {
-    var id = "rimclip" + (clipCounter++);
-    var cp = el("clipPath", { id: id });
-    cp.appendChild(el("rect", {
-      x: String(-cw * 1.2), y: String(-ch * 1.25), width: String(cw * 1.05), height: String(ch * 1.0)
-    }));
-    gradDefs.appendChild(cp);
-    return id;
-  }
 
   // 1. ground (single layer, barely curved) + crest line
   scene.appendChild(el("path", {
-    d: "M -60,448 Q 400,424 860,448 L 860,520 L -60,520 Z",
+    d: "M -60,492 Q 400,468 860,492 L 860,520 L -60,520 Z",
     fill: "#1A3A26"
   }));
   scene.appendChild(el("path", {
-    d: "M -60,448 Q 400,424 860,448",
+    d: "M -60,492 Q 400,468 860,492",
     stroke: "#23492F",
     "stroke-width": "3",
     fill: "none"
@@ -279,6 +278,10 @@
   var pollenGroup = el("g", {});
   scene.appendChild(pollenGroup);
 
+  // 5. hand group (appended now to lock in z-order; populated after plant timings are known)
+  var handGroup = el("g", {});
+  if (!reduced) scene.appendChild(handGroup);
+
   // ---------- shape helpers ----------
   // broad, short, curling blade (bbox x:0..~41, y:-100..0; bottom-left is the attach point)
   var LEAF_D = "M0,0 C 14,-22 34,-46 40,-74 C 43,-88 38,-98 30,-100 C 30,-76 18,-40 0,-12 Z";
@@ -287,6 +290,10 @@
   // seed: almond/teardrop, origin at its landing point
   var SEED_BASE_D = "M 0,-1 C -4.6,-1 -6,-5.4 -3.4,-9.2 C -1.8,-11.4 1.8,-11.4 3.4,-9.2 C 6,-5.4 4.6,-1 0,-1 Z";
   var SEED_LIT_D = "M -3.0,-3.0 C -4.4,-6.0 -2.8,-9.4 -0.6,-10.4 C -2.0,-8.2 -2.6,-5.4 -3.0,-3.0 Z";
+
+  // hand + forearm: one silhouette, origin at the pinch point, arm extending up off-frame
+  var HAND_D = "M 0,0 C -5,-4 -9,-10 -10,-16 C -13,-22 -14,-30 -12,-38 C -11,-46 -13,-52 -13,-60 L -13,-300 L 15,-300 L 15,-60 C 15,-52 20,-44 19,-36 C 18,-26 14,-16 8,-8 C 5,-4 2,-1 0,0 Z";
+  var HAND_SHADOW_D = "M 8,-8 C 14,-16 18,-26 19,-36 C 20,-44 15,-52 15,-60 L 15,-300 L 4,-300 L 4,-60 C 4,-50 8,-40 7,-30 C 6,-20 3,-10 0,0 C 3,-2 6,-5 8,-8 Z";
 
   // one-silhouette tulip head: base ovoid with three lobes, plus carved internal shapes
   function headBaseD(cw, ch) {
@@ -375,7 +382,7 @@
 
     function buildLeaf(pt, mirror, frac) {
       var rot = rand(2, 9);
-      var factor = (H * frac) / LEAF_NATURAL_LEN;
+      var factor = (H * frac * 0.85) / LEAF_NATURAL_LEN;
       var wrap = el("g", {
         transform: "translate(" + pt.x + "," + pt.y + ") scale(" + (mirror * factor) + "," + factor + ") rotate(" + rot + ")"
       });
@@ -402,7 +409,6 @@
     var ch = 60 * (1 + rand(-0.08, 0.08));
     var gradId = buildGradient(color);
     var headClipId = buildHeadClip(cw, ch);
-    var rimClipId = buildRimClip(cw, ch);
 
     var headBase = el("path", { d: headBaseD(cw, ch), fill: "url(#" + gradId + ")" });
     var headShadow = el("path", { d: headShadowD(cw, ch), fill: color.dark, opacity: "0.85" });
@@ -412,25 +418,51 @@
       fill: color.dark, opacity: "0.45", "clip-path": "url(#" + headClipId + ")"
     });
     var headFront = el("path", { d: headFrontD(cw, ch), fill: color.main, "class": "head-front" });
-    // rim light: a stroked copy of the silhouette itself, clipped to the upper-left edge only
-    var headRim = el("path", {
-      d: headBaseD(cw, ch), fill: "none", stroke: color.light,
-      "stroke-width": "2.5", "stroke-linecap": "round", "stroke-opacity": "0.55",
-      "clip-path": "url(#" + rimClipId + ")", "class": "head-rim"
-    });
     headBloom.appendChild(headBase);
     headBloom.appendChild(headShadow);
     headBloom.appendChild(headOcclusion);
     headBloom.appendChild(headFront);
-    headBloom.appendChild(headRim);
 
     return {
       g: g, shadow: shadow, seedG: seedG, puffG: puffG, stem: stem, stemHi: stemHi, L: L,
       leafA: leafA, leafB: leafB,
-      headBloom: headBloom, headFront: headFront, headRim: headRim,
+      headBloom: headBloom, headFront: headFront,
       swayEl: sway, headSwayEl: headSway,
       scale: s, plantY: y
     };
+  }
+
+  // ---------- hand that drops the seeds ----------
+  function buildHand(container) {
+    var motion = el("g", {});
+    motion.style.transform = "translateY(-320px)";
+
+    var root = el("g", { transform: "translate(400,150)" });
+    var idle = el("g", { "class": "hand-idle" });
+
+    idle.appendChild(el("path", { d: HAND_D, fill: "#E8B08A" }));
+    idle.appendChild(el("path", { d: HAND_SHADOW_D, fill: "#C98C68", opacity: "0.9" }));
+
+    var cuffClip = el("clipPath", { id: "cuffclip" });
+    cuffClip.appendChild(el("rect", { x: "-15", y: "-108", width: "32", height: "32", rx: "6" }));
+    gradDefs.appendChild(cuffClip);
+
+    idle.appendChild(el("rect", { x: "-15", y: "-108", width: "32", height: "32", rx: "6", fill: "#3D6E8C" }));
+    idle.appendChild(el("rect", {
+      x: String(17 - 32 / 3), y: "-108", width: String(32 / 3), height: "32",
+      fill: "#2E5670", "clip-path": "url(#cuffclip)"
+    }));
+
+    root.appendChild(idle);
+    motion.appendChild(root);
+    container.appendChild(motion);
+
+    motion.animate([
+      { transform: "translateY(-320px)" },
+      { transform: "translateY(0px)" }
+    ], { duration: 1000, delay: 0, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" });
+
+    return { motion: motion, idle: idle };
   }
 
   // ---------- generate placement ----------
@@ -442,7 +474,7 @@
     var x = bx + rand(-10, 10);
     configs.push({
       row: "back", rowGroup: backRow,
-      x: x, y: groundY(x) - 14,
+      x: x, y: groundY(x),
       scale: rand(0.78, 0.90), H: rand(130, 155),
       greens: BACK_GREENS
     });
@@ -451,7 +483,7 @@
     var x = bx + rand(-12, 12);
     configs.push({
       row: "front", rowGroup: frontRow,
-      x: x, y: groundY(x) + 2,
+      x: x, y: groundY(x) + 3,
       scale: rand(0.95, 1.12), H: rand(155, 185),
       greens: FRONT_GREENS
     });
@@ -473,6 +505,9 @@
   configs.forEach(function (c, i) { c.dropIndex = order[i]; });
 
   // ---------- build DOM + choreograph ----------
+  var hand = reduced ? null : buildHand(handGroup);
+  var maxDropDelay = 0;
+
   configs.forEach(function (spec) {
     var t = buildTulip(spec, spec.rowGroup);
 
@@ -491,12 +526,12 @@
       t.headBloom.style.opacity = "1";
       t.headBloom.style.transform = "scale(1,1)";
       t.headFront.style.opacity = "1";
-      t.headRim.style.opacity = "1";
       return;
     }
 
     var dropIndex = spec.dropIndex;
-    var dropDelay = dropIndex * 140 + rand(0, 180);
+    var dropDelay = dropIndex * 140 + rand(0, 180) + 1100; // +1100ms: wait for the hand to arrive
+    if (dropDelay > maxDropDelay) maxDropDelay = dropDelay;
     var dropDuration = 850 + rand(0, 100);
     var landTime = dropDelay + dropDuration * 0.62;
     var stemStart = landTime + 500;
@@ -508,9 +543,9 @@
     var bloomDuration = 2600;
     var bloomEnd = bloomStart + bloomDuration;
 
-    // 1. SEED DROP
-    var sx = rand(-60, 60);
-    var sy = -(spec.y + 90) / spec.scale;
+    // 1. SEED DROP (originates at the hand's fingertip, scene (400,150))
+    var sx = (400 - spec.x) / spec.scale;
+    var sy = (150 - spec.y) / spec.scale;
     var r = rand(-25, 25);
     var bx1 = rand(2, 7);
     var bx2 = rand(2, 7);
@@ -524,6 +559,15 @@
       { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg)", offset: 1 }
     ];
     t.seedG.animate(dropKF, { duration: dropDuration, delay: dropDelay, fill: "forwards" });
+
+    // tiny recoil flick of the hand at the moment this seed is released
+    if (hand) {
+      hand.idle.animate([
+        { transform: "rotate(0deg)", offset: 0 },
+        { transform: "rotate(3deg)", offset: 0.4 },
+        { transform: "rotate(0deg)", offset: 1 }
+      ], { duration: 220, delay: dropDelay, fill: "none" });
+    }
 
     // 2. IMPACT PUFF
     for (var pi = 0; pi < 3; pi++) {
@@ -585,13 +629,12 @@
       { transform: "scale(1,1)", opacity: 1, offset: 1 }
     ], { duration: bloomDuration, delay: bloomStart, fill: "forwards" });
 
-    // front petal + rim light reveal over the last 45% of the bloom
+    // front petal reveal over the last 45% of the bloom
     var detailDelay = bloomStart + bloomDuration * 0.55;
     var detailDuration = bloomDuration * 0.45;
     var detailKF = [{ opacity: 0 }, { opacity: 1 }];
     var detailOpts = { duration: detailDuration, delay: detailDelay, easing: "ease-out", fill: "forwards" };
     t.headFront.animate(detailKF, detailOpts);
-    t.headRim.animate(detailKF, detailOpts);
 
     // 7. SWAY (infinite, starts after bloom ends)
     var swayA = -(1.0 + rand(0, 1.3));
@@ -616,6 +659,18 @@
     t.headSwayEl.style.animationTimingFunction = "ease-in-out";
     t.headSwayEl.style.animationIterationCount = "infinite";
   });
+
+  // hand exit: after the last seed has left the fingertip (+ its recoil settles), withdraw and remove
+  if (hand) {
+    var handExitStart = maxDropDelay + 220 + 200;
+    var handExit = hand.motion.animate([
+      { transform: "translateY(0px)" },
+      { transform: "translateY(-320px)" }
+    ], { duration: 900, delay: handExitStart, easing: "cubic-bezier(.5,0,.9,.35)", fill: "forwards" });
+    handExit.onfinish = function () {
+      if (handGroup.parentNode) handGroup.parentNode.removeChild(handGroup);
+    };
+  }
 
   // ---------- pollen motes ----------
   var POLLEN_N = 10;
