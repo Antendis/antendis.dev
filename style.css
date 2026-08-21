@@ -351,20 +351,25 @@ html[data-panel="intro"] .footer {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  max-height: 70vh;
+  max-height: 70vh; /* static safety cap for short viewports, not animated */
+  margin-inline: auto;
   flex-shrink: 0;
 }
 
-/* Shrink globe on university tab to make room for roles */
+/* Shrink globe on university tab to make room for roles. Width (not
+   max-height) is what's animated below, since it maps 1:1 to rendered
+   size across its whole range -- max-height was frequently non-binding
+   (the natural box is far smaller than 70vh), so most of the transition
+   was a dead zone. aspect-ratio keeps the globe square as it narrows. */
 html[data-panel="achievements"] #globeViz {
-  max-height: 42vh;
+  width: 88%;
 }
 
 /* Animate the globe shrinking/growing as tabs switch (per-frame redraw is
    driven from the render loop in globe.js so the WebGL canvas tracks it). */
 @media (prefers-reduced-motion: no-preference) {
   #globeViz {
-    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
