@@ -444,17 +444,17 @@
 
     // static reach-in angle + size, pivoting about the pinch point (0,0);
     // kept on its own element so it composes cleanly with the CSS idle-sway on `idle`
-    var orient = el("g", { transform: "scale(1.15) rotate(-12)" });
+    var orient = el("g", { transform: "scale(1.15) rotate(-22)" });
 
     var parts = el("g", { "class": "hand-parts" });
-    var forearm = el("rect", { x: "-14", y: "-300", width: "28", height: "232", rx: "14", fill: SKIN });
+    var forearm = el("rect", { x: "-13", y: "-300", width: "26", height: "222", rx: "13", fill: SKIN });
     var cuff = el("rect", { x: "-17", y: "-112", width: "34", height: "30", rx: "8", fill: "#3D6E8C" });
-    var palm = el("ellipse", { cx: "1", cy: "-50", rx: "20", ry: "21", fill: SKIN });
-    var knuckle1 = el("ellipse", { cx: "17", cy: "-44", rx: "7", ry: "6", fill: SKIN });
-    var knuckle2 = el("ellipse", { cx: "19", cy: "-34", rx: "7.5", ry: "6", fill: SKIN });
-    var knuckle3 = el("ellipse", { cx: "16", cy: "-24", rx: "6.5", ry: "5.5", fill: SKIN });
-    var index = el("rect", { x: "-5", y: "-46", width: "10", height: "46", rx: "5", transform: "rotate(-6 0 0)", fill: SKIN });
-    var thumb = el("rect", { x: "-5.5", y: "-40", width: "11", height: "40", rx: "5.5", transform: "translate(-3,0) rotate(18 0 0)", fill: SKIN });
+    var palm = el("ellipse", { cx: "0", cy: "-50", rx: "23", ry: "22", fill: SKIN });
+    var knuckle1 = el("ellipse", { cx: "18", cy: "-46", rx: "7", ry: "6", fill: SKIN });
+    var knuckle2 = el("ellipse", { cx: "21", cy: "-36", rx: "7.5", ry: "6", fill: SKIN });
+    var knuckle3 = el("ellipse", { cx: "18", cy: "-26", rx: "6.5", ry: "5.5", fill: SKIN });
+    var index = el("rect", { x: "-5.5", y: "-42", width: "11", height: "42", rx: "5.5", transform: "rotate(-14 0 0)", fill: SKIN });
+    var thumb = el("rect", { x: "-6", y: "-34", width: "12", height: "34", rx: "6", transform: "rotate(26 0 0)", fill: SKIN });
 
     parts.appendChild(forearm);
     parts.appendChild(cuff);
@@ -468,16 +468,16 @@
     // two-tone shading: hard-edged shadow down the right side, clipped to the union
     // of every skin shape (cuff excluded) so it never spills off the silhouette
     var handClip = el("clipPath", { id: "handclip" });
-    handClip.appendChild(el("rect", { x: "-14", y: "-300", width: "28", height: "232", rx: "14" }));
-    handClip.appendChild(el("ellipse", { cx: "1", cy: "-50", rx: "20", ry: "21" }));
-    handClip.appendChild(el("ellipse", { cx: "17", cy: "-44", rx: "7", ry: "6" }));
-    handClip.appendChild(el("ellipse", { cx: "19", cy: "-34", rx: "7.5", ry: "6" }));
-    handClip.appendChild(el("ellipse", { cx: "16", cy: "-24", rx: "6.5", ry: "5.5" }));
-    handClip.appendChild(el("rect", { x: "-5", y: "-46", width: "10", height: "46", rx: "5", transform: "rotate(-6 0 0)" }));
-    handClip.appendChild(el("rect", { x: "-5.5", y: "-40", width: "11", height: "40", rx: "5.5", transform: "translate(-3,0) rotate(18 0 0)" }));
+    handClip.appendChild(el("rect", { x: "-13", y: "-300", width: "26", height: "222", rx: "13" }));
+    handClip.appendChild(el("ellipse", { cx: "0", cy: "-50", rx: "23", ry: "22" }));
+    handClip.appendChild(el("ellipse", { cx: "18", cy: "-46", rx: "7", ry: "6" }));
+    handClip.appendChild(el("ellipse", { cx: "21", cy: "-36", rx: "7.5", ry: "6" }));
+    handClip.appendChild(el("ellipse", { cx: "18", cy: "-26", rx: "6.5", ry: "5.5" }));
+    handClip.appendChild(el("rect", { x: "-5.5", y: "-42", width: "11", height: "42", rx: "5.5", transform: "rotate(-14 0 0)" }));
+    handClip.appendChild(el("rect", { x: "-6", y: "-34", width: "12", height: "34", rx: "6", transform: "rotate(26 0 0)" }));
     gradDefs.appendChild(handClip);
 
-    var shadow = el("rect", { x: "4", y: "-320", width: "60", height: "330", fill: "#C98C68", opacity: "0.9", "clip-path": "url(#handclip)" });
+    var shadow = el("rect", { x: "8", y: "-320", width: "60", height: "330", fill: "#C98C68", opacity: "0.9", "clip-path": "url(#handclip)" });
 
     orient.appendChild(parts);
     orient.appendChild(shadow);
