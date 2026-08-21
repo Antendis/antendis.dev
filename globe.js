@@ -13,8 +13,9 @@ const GLOBE_RADIUS = 100;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Palette (matches style.css tokens). Resolved from the live CSS custom
-// properties at init so the globe follows the active light/dark theme
-// instead of hardcoding the light-mode hex values.
+// properties at init, and again on refreshTheme(), so the globe follows
+// the active light/dark theme instead of hardcoding the light-mode hex
+// values.
 let INK = 0x1A1813;
 let GREEN = 0x2F5D43;
 
@@ -42,6 +43,46 @@ function readPalette() {
   INK = cssColorToHex(style.getPropertyValue('--ink').trim(), INK);
   GREEN = cssColorToHex(style.getPropertyValue('--green').trim(), GREEN);
 }
+
+// Three.js bakes `color` into a material at construction time, so flipping
+// the CSS theme later never touches materials already built from it. Every
+// themed material is created through themedMaterial() instead of `new
+// THREE.XMaterial(...)` directly, so it's registered here by role ('ink' |
+// 'green') and can't be forgotten at a call site; refreshTheme() then walks
+// the registry and repaints each one in place. Entries must be dropped when
+// their mesh is torn down (see disposeMarker) or this grows for as long as
+// the tab stays open.
+const themedMaterials = [];
+
+function themedMaterial(Ctor, role, params) {
+  const material = new Ctor(Object.assign({ color: role === 'green' ? GREEN : INK }, params));
+  themedMaterials.push({ material, role });
+  return material;
+}
+
+function untrackThemedMaterial(material) {
+  const i = themedMaterials.findIndex(entry => entry.material === material);
+  if (i !== -1) themedMaterials.splice(i, 1);
+}
+
+function refreshTheme() {
+  readPalette();
+  themedMaterials.forEach(({ material, role }) => {
+    material.color.setHex(role === 'green' ? GREEN : INK);
+  });
+  syncGlobeDebugHooks();
+}
+
+// Test hook: material colors live inside WebGL and are otherwise
+// unobservable from outside (mirrors the marker-count hooks below).
+function syncGlobeDebugHooks() {
+  window.__globeMaterialColors = themedMaterials.map(({ material, role }) => ({ role, hex: material.color.getHex() }));
+}
+
+// Handed to script.js's theme toggle so it can repaint the already-built
+// globe after a light/dark switch, the same way visitorTracking is handed
+// the other way for globe.js to pull visitor data from.
+window.globe = { refreshTheme };
 
 function initGlobe(container, width, height) {
   readPalette();
@@ -99,8 +140,7 @@ function latLonToVector3(lat, lon, radius) {
 }
 
 function createGlobeFromGeoJSON(geojson) {
-  const lineMaterial = new THREE.LineBasicMaterial({
-    color: INK,
+  const lineMaterial = themedMaterial(THREE.LineBasicMaterial, 'ink', {
     opacity: 0.5,
     transparent: true,
     linewidth: 1
@@ -143,8 +183,7 @@ function createLineFromCoordinates(coordinates, material) {
 }
 
 function createGridLines() {
-  const gridMaterial = new THREE.LineBasicMaterial({
-    color: INK,
+  const gridMaterial = themedMaterial(THREE.LineBasicMaterial, 'ink', {
     opacity: 0.08,
     transparent: true
   });
@@ -177,8 +216,21 @@ function createSimpleGlobe() {
   console.log('Simple globe created');
 }
 
+// Markers are rebuilt from scratch on every visitor-list update, so their
+// materials must drop out of the theme registry here (and release their
+// GPU resources) or both leak for as long as the tab stays open.
+function disposeMarker(marker) {
+  globeGroup.remove(marker);
+  untrackThemedMaterial(marker.material);
+  marker.material.dispose();
+  if (marker.userData.glow) {
+    untrackThemedMaterial(marker.userData.glow.material);
+    marker.userData.glow.material.dispose();
+  }
+}
+
 function updateVisitorMarkers() {
-  visitorMarkers.forEach(m => globeGroup.remove(m));
+  visitorMarkers.forEach(disposeMarker);
   visitorMarkers = [];
 
   const visitors = window.visitorTracking ? window.visitorTracking.getAllVisitors() : [];
@@ -193,6 +245,7 @@ function updateVisitorMarkers() {
   // Test hooks: markers live inside WebGL and are otherwise unobservable.
   window.__globeMarkerCount = visitorMarkers.length;
   window.__globeHasCurrent = visitorMarkers.some(m => m.userData.isCurrent);
+  syncGlobeDebugHooks();
 }
 
 function createVisitorMarker(lat, lon, isCurrent = false) {
@@ -204,8 +257,7 @@ function createVisitorMarker(lat, lon, isCurrent = false) {
   const z = GLOBE_RADIUS * Math.sin(phi) * Math.sin(theta);
 
   const geometry = new THREE.SphereGeometry(isCurrent ? 3 : 2, 16, 16);
-  const material = new THREE.MeshBasicMaterial({
-    color: isCurrent ? GREEN : INK,
+  const material = themedMaterial(THREE.MeshBasicMaterial, isCurrent ? 'green' : 'ink', {
     transparent: true,
     opacity: isCurrent ? 1 : 0.45
   });
@@ -215,8 +267,7 @@ function createVisitorMarker(lat, lon, isCurrent = false) {
 
   if (isCurrent) {
     const glowGeometry = new THREE.SphereGeometry(5, 16, 16);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      color: GREEN,
+    const glowMaterial = themedMaterial(THREE.MeshBasicMaterial, 'green', {
       transparent: true,
       opacity: 0.3
     });

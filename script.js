@@ -88,11 +88,21 @@
     }
   }
 
-  reflect(effectiveTheme());
+  // Single seam for both ways the effective theme can change (manual click,
+  // and OS-level change while no manual override is stored) so the globe's
+  // baked-in colors get repainted from both, not just one. globe.js loads
+  // with `defer` and may not have initialised yet, and the globe rail is
+  // hidden below 1200px, so the call is optional-chained throughout.
+  function applyTheme(theme) {
+    reflect(theme);
+    window.globe?.refreshTheme?.();
+  }
+
+  applyTheme(effectiveTheme());
 
   media.addEventListener('change', e => {
     if (!localStorage.getItem('theme')) {
-      reflect(e.matches ? 'dark' : 'light');
+      applyTheme(e.matches ? 'dark' : 'light');
     }
   });
 
@@ -100,7 +110,7 @@
     const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
     localStorage.setItem('theme', next);
-    reflect(next);
+    applyTheme(next);
   });
 })();
 
