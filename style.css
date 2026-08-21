@@ -865,8 +865,12 @@ a:hover {
 
 /* ---------- layout breakpoints ---------- */
 
-/* hide globe rail below 1200px */
-@media (max-width: 1199px) {
+/* Below 1440px there isn't room for both two grade-year columns and a
+   credible globe -- shrinking the rail to fit (as the band below used to,
+   down to 1200px) leaves it a marooned dot around 1280px. Dropping the
+   rail is the honest resolution, so it goes below the same width the
+   fluid shrink below now starts easing back in from. */
+@media (max-width: 1439px) {
   .layout {
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
   }
@@ -876,32 +880,26 @@ a:hover {
   }
 }
 
-/* Once the globe rail reappears at 1200px it claims up to var(--globe-w)
+/* Once the globe rail reappears at 1440px it claims up to var(--globe-w)
    of width before the content column gets anything, which is tight for
    two grade-year columns of subject + bar + percentage on one line. Rather
    than reflowing the row (stacking doubles every row's height and pushes
    the panel past the viewport), shrink the rail itself -- the globe just
    renders smaller through this band and hands the width back to the main
-   column. The two formulas below solve for the largest --globe-w that still
-   leaves the two grade-year columns enough room for the longest module
-   title on one line, given the content padding is 5vw up to 1440px and a
-   flat 4.5rem beyond it; min() means neither formula ever asks for more
-   than the full var(--globe-w), so the rail reclaims its normal size on
-   its own as soon as there's room (in practice a little before 1680px). */
-@media (min-width: 1200px) and (max-width: 1439px) {
-  :root {
-    --globe-w: min(34rem, calc(90vw - 968px));
-  }
-}
-
+   column. This solves for the largest --globe-w that still leaves the two
+   grade-year columns enough room for the longest module title on one line,
+   given the content padding is a flat 4.5rem at this width; min() means it
+   never asks for more than the full var(--globe-w), so the rail reclaims
+   its normal size on its own as soon as there's room (in practice a little
+   before 1680px). */
 @media (min-width: 1440px) and (max-width: 1679px) {
   :root {
     --globe-w: min(34rem, calc(100vw - 1112px));
   }
 }
 
-/* hide globe rail on short desktops even at >=1200px wide */
-@media (min-width: 1200px) and (max-height: 560px) {
+/* hide globe rail on short desktops even at >=1440px wide */
+@media (min-width: 1440px) and (max-height: 560px) {
   .globe-rail {
     display: none;
   }
