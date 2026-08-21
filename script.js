@@ -267,7 +267,7 @@ function loadAchievements() {
         // Explicit null = placement year placeholder
         const placeholder = document.createElement('p');
         placeholder.className = 'grade-empty grade-placement';
-        placeholder.textContent = 'on placement currently, year 3 soon…';
+        placeholder.textContent = 'currently on placement, year 3 soon…';
         yearSection.appendChild(placeholder);
       } else if (!grades || grades.length === 0) {
         const emptyState = document.createElement('p');
