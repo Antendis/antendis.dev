@@ -630,8 +630,9 @@ a:hover {
 }
 
 .grade-row {
+  --grade-num-w: 2.8rem;
   display: grid;
-  grid-template-columns: 1fr minmax(40px, 80px) 2.8rem;
+  grid-template-columns: 1fr minmax(40px, 80px) var(--grade-num-w);
   grid-template-areas: "subject bar num";
   gap: 0.75rem;
   align-items: center;
@@ -951,6 +952,24 @@ a:hover {
 
   .content {
     padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* The desktop three-column grade-row (subject / bar / percentage) leaves
+     the subject almost no room at phone widths -- stack the bar and
+     percentage onto a second line instead of crushing them onto the first.
+     Desktop keeps the one-line layout deliberately, so this is scoped to
+     the same mobile band that stacks the panels themselves. */
+  .grade-row {
+    grid-template-columns: minmax(0, 1fr) var(--grade-num-w);
+    grid-template-areas:
+      "subject subject"
+      "bar num";
+    row-gap: 0.4rem;
+    padding: 0.7rem 0;
+  }
+
+  .grade-subject {
+    font-size: 0.9375rem;
   }
 
   .js .panel {
