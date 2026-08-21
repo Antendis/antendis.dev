@@ -64,6 +64,46 @@
   });
 })();
 
+// Theme toggle: manual light/dark override on top of the OS default. The
+// inline head script already applied any saved choice before first paint;
+// this wires up the button and keeps things in sync with live OS changes.
+(function () {
+  const toggle = document.getElementById('themeToggle');
+  if (!toggle) return;
+
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const colorMeta = document.getElementById('themeColorMeta');
+  const DARK_COLOR = '#16140F';
+  const LIGHT_COLOR = '#F7F1E3';
+
+  function effectiveTheme() {
+    return document.documentElement.dataset.theme || (media.matches ? 'dark' : 'light');
+  }
+
+  function reflect(theme) {
+    toggle.setAttribute('aria-pressed', theme === 'dark');
+    toggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    if (colorMeta) {
+      colorMeta.setAttribute('content', theme === 'dark' ? DARK_COLOR : LIGHT_COLOR);
+    }
+  }
+
+  reflect(effectiveTheme());
+
+  media.addEventListener('change', e => {
+    if (!localStorage.getItem('theme')) {
+      reflect(e.matches ? 'dark' : 'light');
+    }
+  });
+
+  toggle.addEventListener('click', () => {
+    const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+    reflect(next);
+  });
+})();
+
 // Mobile scrollspy: below 1024px all panels sit stacked in document flow, so
 // nav highlighting can't rely on the desktop tab router's hash-driven show().
 // An IntersectionObserver tracks which section is under a band near the top
