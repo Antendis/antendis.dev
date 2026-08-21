@@ -10,10 +10,10 @@
   --ink-3: #8A857B;
   --rule: rgba(26, 24, 19, 0.14);
   --rule-soft: rgba(26, 24, 19, 0.08);
-  --green: #2F5D43;
+  --green: #187645;
   --decoration: rgba(26, 24, 19, 0.32);
-  --accent-decoration: rgba(47, 93, 67, 0.4);
-  --selection-bg: rgba(47, 93, 67, 0.18);
+  --accent-decoration: rgba(24, 118, 69, 0.4);
+  --selection-bg: rgba(24, 118, 69, 0.18);
   --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   --mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   --sidebar-w: 15rem;
