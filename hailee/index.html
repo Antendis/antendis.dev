@@ -444,40 +444,41 @@
 
     // static reach-in angle + size, pivoting about the pinch point (0,0);
     // kept on its own element so it composes cleanly with the CSS idle-sway on `idle`
-    var orient = el("g", { transform: "scale(1.15) rotate(-22)" });
+    var orient = el("g", { transform: "scale(1.2) rotate(-18)" });
 
     var parts = el("g", { "class": "hand-parts" });
-    var forearm = el("rect", { x: "-13", y: "-300", width: "26", height: "222", rx: "13", fill: SKIN });
-    var cuff = el("rect", { x: "-17", y: "-112", width: "34", height: "30", rx: "8", fill: "#3D6E8C" });
-    var palm = el("ellipse", { cx: "0", cy: "-50", rx: "23", ry: "22", fill: SKIN });
-    var knuckle1 = el("ellipse", { cx: "18", cy: "-46", rx: "7", ry: "6", fill: SKIN });
-    var knuckle2 = el("ellipse", { cx: "21", cy: "-36", rx: "7.5", ry: "6", fill: SKIN });
-    var knuckle3 = el("ellipse", { cx: "18", cy: "-26", rx: "6.5", ry: "5.5", fill: SKIN });
-    var index = el("rect", { x: "-5.5", y: "-42", width: "11", height: "42", rx: "5.5", transform: "rotate(-14 0 0)", fill: SKIN });
-    var thumb = el("rect", { x: "-6", y: "-34", width: "12", height: "34", rx: "6", transform: "rotate(26 0 0)", fill: SKIN });
+    // mitten construction: arm -> cuff -> elongated oblong palm -> tapered fingers -> thumb nub.
+    // forearm deliberately overlaps the palm (ends at y=-48, palm starts at y=-58) so they read
+    // as one continuous limb instead of two separate objects.
+    var forearm = el("rect", { x: "-13", y: "-300", width: "26", height: "252", rx: "13", fill: SKIN });
+    var cuff = el("rect", { x: "-16", y: "-108", width: "32", height: "28", rx: "8", fill: "#3D6E8C" });
+    var palm = el("rect", { x: "-17", y: "-58", width: "34", height: "42", rx: "15", fill: SKIN });
+    var fingers = el("path", { d: "M -12,-30 C -13,-18 -8,-6 0,0 C 8,-6 13,-18 12,-30 Z", fill: SKIN });
+    // the thumb bump is the key silhouette cue that reads "hand" instead of "ball on a stick"
+    var thumb = el("rect", {
+      x: "-10", y: "-16", width: "20", height: "16", rx: "8",
+      transform: "translate(-20,-40) rotate(-35)", fill: SKIN
+    });
 
     parts.appendChild(forearm);
     parts.appendChild(cuff);
     parts.appendChild(palm);
-    parts.appendChild(knuckle1);
-    parts.appendChild(knuckle2);
-    parts.appendChild(knuckle3);
-    parts.appendChild(index);
+    parts.appendChild(fingers);
     parts.appendChild(thumb);
 
     // two-tone shading: hard-edged shadow down the right side, clipped to the union
     // of every skin shape (cuff excluded) so it never spills off the silhouette
     var handClip = el("clipPath", { id: "handclip" });
-    handClip.appendChild(el("rect", { x: "-13", y: "-300", width: "26", height: "222", rx: "13" }));
-    handClip.appendChild(el("ellipse", { cx: "0", cy: "-50", rx: "23", ry: "22" }));
-    handClip.appendChild(el("ellipse", { cx: "18", cy: "-46", rx: "7", ry: "6" }));
-    handClip.appendChild(el("ellipse", { cx: "21", cy: "-36", rx: "7.5", ry: "6" }));
-    handClip.appendChild(el("ellipse", { cx: "18", cy: "-26", rx: "6.5", ry: "5.5" }));
-    handClip.appendChild(el("rect", { x: "-5.5", y: "-42", width: "11", height: "42", rx: "5.5", transform: "rotate(-14 0 0)" }));
-    handClip.appendChild(el("rect", { x: "-6", y: "-34", width: "12", height: "34", rx: "6", transform: "rotate(26 0 0)" }));
+    handClip.appendChild(el("rect", { x: "-13", y: "-300", width: "26", height: "252", rx: "13" }));
+    handClip.appendChild(el("rect", { x: "-17", y: "-58", width: "34", height: "42", rx: "15" }));
+    handClip.appendChild(el("path", { d: "M -12,-30 C -13,-18 -8,-6 0,0 C 8,-6 13,-18 12,-30 Z" }));
+    handClip.appendChild(el("rect", {
+      x: "-10", y: "-16", width: "20", height: "16", rx: "8",
+      transform: "translate(-20,-40) rotate(-35)"
+    }));
     gradDefs.appendChild(handClip);
 
-    var shadow = el("rect", { x: "8", y: "-320", width: "60", height: "330", fill: "#C98C68", opacity: "0.9", "clip-path": "url(#handclip)" });
+    var shadow = el("rect", { x: "6", y: "-320", width: "60", height: "330", fill: "#C98C68", opacity: "0.9", "clip-path": "url(#handclip)" });
 
     orient.appendChild(parts);
     orient.appendChild(shadow);
