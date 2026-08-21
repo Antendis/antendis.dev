@@ -61,6 +61,10 @@
     opacity: 0;
   }
 
+  .seed {
+    opacity: 0;
+  }
+
   @keyframes pollen-drift {
     0%   { transform: translate(0px, 0px); }
     50%  { transform: translate(var(--dx), var(--dy)); }
@@ -147,6 +151,8 @@
   // slots: [{row, x}] in final (jittered) x order. Returns array of palette indices.
   function assignHues(slots) {
     var n = slots.length;
+    var maxPerHue = Math.max(2, Math.ceil(n / 3));
+    var minDistinct = Math.min(5, n);
     var adj = [];
     for (var i = 0; i < n; i++) adj.push([]);
     function link(i, j) { adj[i].push(j); adj[j].push(i); }
@@ -177,7 +183,7 @@
         var s = order[oi];
         var cands = [];
         for (var h = 0; h < palette.length; h++) {
-          if (counts[h] >= 2) continue;
+          if (counts[h] >= maxPerHue) continue;
           var conflict = false;
           for (var k = 0; k < adj[s].length; k++) { if (hue[adj[s][k]] === h) { conflict = true; break; } }
           if (conflict) continue;
@@ -190,7 +196,7 @@
       }
       if (strict) {
         var distinct = counts.filter(function (c) { return c > 0; }).length;
-        if (distinct < 5) return null;
+        if (distinct < minDistinct) return null;
         if (counts[CREAM_IDX] < 1 || counts[CREAM_IDX] > 2) return null;
         var creamInFront = false;
         for (var i = 0; i < n; i++) if (hue[i] === CREAM_IDX && slots[i].row === "front") creamInFront = true;
@@ -217,7 +223,7 @@
       for (var i = 0; i < n; i++) {
         var cands3 = [];
         for (var h = 0; h < palette.length; h++) {
-          if (counts3[h] >= 2) continue;
+          if (counts3[h] >= maxPerHue) continue;
           var conflict3 = false;
           for (var k = 0; k < adj[i].length; k++) { if (hue3[adj[i][k]] === h) { conflict3 = true; break; } }
           if (!conflict3) cands3.push(h);
@@ -433,8 +439,70 @@
 
   // ---------- hand that drops the seeds ----------
   // built from blocked primitives (rects + ellipses), the way a flat cartoon hand
-  // is actually constructed. All coordinates below are hand-local, pinch at (0,0).
+  // is actually constructed. All coordinates below are hand-local, pinch/release point at (0,0).
+  // The hand has two complete, self-contained states (fist / open) swapped on a key rather
+  // than morphed, exactly the way traditional 2D animation swaps a cel.
   var SKIN = "#E8B08A";
+  var SKIN_SHADOW = "#C98C68";
+  var handClipCounter = 0;
+
+  function buildHandVariant(specificParts, specificClipShapes) {
+    var g = el("g", {});
+    var forearm = el("rect", { x: "-13", y: "-300", width: "26", height: "252", rx: "13", fill: SKIN });
+    var cuff = el("rect", { x: "-16", y: "-108", width: "32", height: "28", rx: "8", fill: "#3D6E8C" });
+    g.appendChild(forearm);
+    g.appendChild(cuff);
+    specificParts.forEach(function (p) { g.appendChild(p); });
+
+    // two-tone shading: hard-edged shadow down the right side, clipped to the union
+    // of every skin shape (cuff excluded) so it never spills off this state's silhouette
+    var clipId = "handclip" + (handClipCounter++);
+    var clip = el("clipPath", { id: clipId });
+    clip.appendChild(el("rect", { x: "-13", y: "-300", width: "26", height: "252", rx: "13" }));
+    specificClipShapes.forEach(function (s) { clip.appendChild(s); });
+    gradDefs.appendChild(clip);
+
+    var shadow = el("rect", { x: "6", y: "-320", width: "60", height: "330", fill: SKIN_SHADOW, opacity: "0.9", "clip-path": "url(#" + clipId + ")" });
+    g.appendChild(shadow);
+
+    return g;
+  }
+
+  function buildHandFist() {
+    return buildHandVariant(
+      [
+        el("rect", { x: "-19", y: "-56", width: "38", height: "36", rx: "16", fill: SKIN }),
+        el("ellipse", { cx: "-6", cy: "-21", rx: "6", ry: "4", fill: SKIN_SHADOW }),
+        el("ellipse", { cx: "7", cy: "-21", rx: "6", ry: "4", fill: SKIN_SHADOW }),
+        el("rect", { x: "-11", y: "-15", width: "22", height: "14", rx: "7", transform: "translate(-6,-30) rotate(-12)", fill: SKIN })
+      ],
+      [
+        el("rect", { x: "-19", y: "-56", width: "38", height: "36", rx: "16" }),
+        el("rect", { x: "-11", y: "-15", width: "22", height: "14", rx: "7", transform: "translate(-6,-30) rotate(-12)" })
+      ]
+    );
+  }
+
+  function buildHandOpen() {
+    var fingerAngles = [-26, -9, 8, 24];
+    var fingerXs = [-12, -4, 4, 12];
+    var fingerParts = [], fingerClips = [];
+    fingerAngles.forEach(function (angle, i) {
+      var t = "translate(" + fingerXs[i] + ",-24) rotate(" + angle + " 0 0)";
+      fingerParts.push(el("rect", { x: "-4.5", y: "-26", width: "9", height: "26", rx: "4.5", transform: t, fill: SKIN }));
+      fingerClips.push(el("rect", { x: "-4.5", y: "-26", width: "9", height: "26", rx: "4.5", transform: t }));
+    });
+    var thumb = el("rect", { x: "-9", y: "-16", width: "18", height: "16", rx: "8", transform: "translate(-20,-42) rotate(-38)", fill: SKIN });
+    var thumbClip = el("rect", { x: "-9", y: "-16", width: "18", height: "16", rx: "8", transform: "translate(-20,-42) rotate(-38)" });
+    var palm = el("rect", { x: "-18", y: "-56", width: "36", height: "34", rx: "14", fill: SKIN });
+    var palmClip = el("rect", { x: "-18", y: "-56", width: "36", height: "34", rx: "14" });
+
+    return buildHandVariant(
+      [palm].concat(fingerParts).concat([thumb]),
+      [palmClip].concat(fingerClips).concat([thumbClip])
+    );
+  }
+
   function buildHand(container) {
     var motion = el("g", {});
     motion.style.transform = "translateY(-320px)";
@@ -442,47 +510,21 @@
     var root = el("g", { transform: "translate(400,150)" });
     var idle = el("g", { "class": "hand-idle" });
 
-    // static reach-in angle + size, pivoting about the pinch point (0,0);
-    // kept on its own element so it composes cleanly with the CSS idle-sway on `idle`
+    // one-shot gesture rotate (fist -> open) kept on its own element so it composes
+    // cleanly with both the CSS idle-sway on `idle` and the static reach-in angle on `orient`
+    var gesture = el("g", {});
+
+    // static reach-in angle + size, pivoting about the pinch/release point (0,0)
     var orient = el("g", { transform: "scale(1.2) rotate(-18)" });
 
-    var parts = el("g", { "class": "hand-parts" });
-    // mitten construction: arm -> cuff -> elongated oblong palm -> tapered fingers -> thumb nub.
-    // forearm deliberately overlaps the palm (ends at y=-48, palm starts at y=-58) so they read
-    // as one continuous limb instead of two separate objects.
-    var forearm = el("rect", { x: "-13", y: "-300", width: "26", height: "252", rx: "13", fill: SKIN });
-    var cuff = el("rect", { x: "-16", y: "-108", width: "32", height: "28", rx: "8", fill: "#3D6E8C" });
-    var palm = el("rect", { x: "-17", y: "-58", width: "34", height: "42", rx: "15", fill: SKIN });
-    var fingers = el("path", { d: "M -12,-30 C -13,-18 -8,-6 0,0 C 8,-6 13,-18 12,-30 Z", fill: SKIN });
-    // the thumb bump is the key silhouette cue that reads "hand" instead of "ball on a stick"
-    var thumb = el("rect", {
-      x: "-10", y: "-16", width: "20", height: "16", rx: "8",
-      transform: "translate(-20,-40) rotate(-35)", fill: SKIN
-    });
+    var fist = buildHandFist();
+    var open = buildHandOpen();
+    open.style.opacity = "0";
 
-    parts.appendChild(forearm);
-    parts.appendChild(cuff);
-    parts.appendChild(palm);
-    parts.appendChild(fingers);
-    parts.appendChild(thumb);
-
-    // two-tone shading: hard-edged shadow down the right side, clipped to the union
-    // of every skin shape (cuff excluded) so it never spills off the silhouette
-    var handClip = el("clipPath", { id: "handclip" });
-    handClip.appendChild(el("rect", { x: "-13", y: "-300", width: "26", height: "252", rx: "13" }));
-    handClip.appendChild(el("rect", { x: "-17", y: "-58", width: "34", height: "42", rx: "15" }));
-    handClip.appendChild(el("path", { d: "M -12,-30 C -13,-18 -8,-6 0,0 C 8,-6 13,-18 12,-30 Z" }));
-    handClip.appendChild(el("rect", {
-      x: "-10", y: "-16", width: "20", height: "16", rx: "8",
-      transform: "translate(-20,-40) rotate(-35)"
-    }));
-    gradDefs.appendChild(handClip);
-
-    var shadow = el("rect", { x: "6", y: "-320", width: "60", height: "330", fill: "#C98C68", opacity: "0.9", "clip-path": "url(#handclip)" });
-
-    orient.appendChild(parts);
-    orient.appendChild(shadow);
-    idle.appendChild(orient);
+    orient.appendChild(fist);
+    orient.appendChild(open);
+    gesture.appendChild(orient);
+    idle.appendChild(gesture);
     root.appendChild(idle);
     motion.appendChild(root);
     container.appendChild(motion);
@@ -492,16 +534,41 @@
       { transform: "translateY(0px)" }
     ], { duration: 1000, delay: 0, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" });
 
+    // 1250ms: swap fist -> open over ~120ms, plus a tiny -4deg rotate as it opens
+    fist.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: 1250, fill: "forwards" });
+    open.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, delay: 1250, fill: "forwards" });
+    gesture.animate([
+      { transform: "rotate(0deg)" },
+      { transform: "rotate(-4deg)" }
+    ], { duration: 120, delay: 1250, easing: "ease-out", fill: "forwards" });
+
     return { motion: motion, idle: idle };
   }
 
   // ---------- generate placement ----------
-  var backBaseX = [322, 372, 428, 474];
-  var frontBaseX = [292, 344, 399, 452, 506];
+  // random cluster size per page load; spread scales with N so it widens rather than densifies
+  function evenSpread(count, lo, hi) {
+    var arr = [];
+    if (count <= 1) { arr.push((lo + hi) / 2); return arr; }
+    for (var i = 0; i < count; i++) arr.push(lo + (hi - lo) * i / (count - 1));
+    return arr;
+  }
+
+  var N = Math.floor(rand(6, 12)); // 6..11 inclusive
+  var backCount = Math.max(1, Math.floor(N * 0.45));
+  var frontCount = Math.max(1, N - backCount);
+  var spanHalf = 40 + N * 12;
+  var xMin = 400 - spanHalf, xMax = 400 + spanHalf;
+
+  var frontBaseX = evenSpread(frontCount, xMin, xMax);
+  var backBaseXRaw = evenSpread(backCount, xMin, xMax);
+  // offset the back row by roughly half a gap so the two rows interleave, not line up in columns
+  var interleave = frontCount > 1 ? (xMax - xMin) / (frontCount - 1) / 2 : (xMax - xMin) / 4;
+  var backBaseX = backBaseXRaw.map(function (x) { return x + interleave; });
 
   var configs = [];
   backBaseX.forEach(function (bx) {
-    var x = bx + rand(-10, 10);
+    var x = bx + rand(-12, 12);
     configs.push({
       row: "back", rowGroup: backRow,
       x: x, y: groundY(x),
@@ -536,7 +603,6 @@
 
   // ---------- build DOM + choreograph ----------
   var hand = reduced ? null : buildHand(handGroup);
-  var maxDropDelay = 0;
 
   configs.forEach(function (spec) {
     var t = buildTulip(spec, spec.rowGroup);
@@ -559,10 +625,10 @@
       return;
     }
 
-    var dropIndex = spec.dropIndex;
-    var dropDelay = dropIndex * 140 + rand(0, 180) + 1100; // +1100ms: wait for the hand to arrive
-    if (dropDelay > maxDropDelay) maxDropDelay = dropDelay;
-    var dropDuration = 850 + rand(0, 100);
+    // all seeds release together at 1350ms (fist opens at 1250ms) with only a tiny
+    // jitter so it reads as one release, not a staggered sprinkle
+    var dropDelay = 1350 + rand(0, 120);
+    var dropDuration = rand(780, 980);
     var landTime = dropDelay + dropDuration * 0.62;
     var stemStart = landTime + 500;
     var stemDuration = 4200;
@@ -580,24 +646,17 @@
     var bx1 = rand(2, 7);
     var bx2 = rand(2, 7);
     t.seedG.style.transform = "translate(" + sx + "px," + sy + "px) rotate(0deg)";
+    var fadeInOffset = Math.min(0.18, 80 / dropDuration);
     var dropKF = [
-      { transform: "translate(" + sx + "px," + sy + "px) rotate(0deg)", offset: 0, easing: "cubic-bezier(.5,0,.9,.35)" },
+      { transform: "translate(" + sx + "px," + sy + "px) rotate(0deg)", opacity: 0, offset: 0, easing: "cubic-bezier(.5,0,.9,.35)" },
+      { opacity: 1, offset: fadeInOffset, easing: "cubic-bezier(.5,0,.9,.35)" },
       { transform: "translate(0px,0px) rotate(" + r + "deg)", offset: 0.62, easing: "cubic-bezier(.2,.6,.4,1)" },
       { transform: "translate(" + bx1 + "px,-14px) rotate(" + (r + 8) + "deg)", offset: 0.76, easing: "cubic-bezier(.5,0,.9,.35)" },
       { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 12) + "deg)", offset: 0.87, easing: "cubic-bezier(.2,.6,.4,1)" },
       { transform: "translate(" + bx2 + "px,-4.5px) rotate(" + (r + 14) + "deg)", offset: 0.94, easing: "cubic-bezier(.5,0,.9,.35)" },
-      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg)", offset: 1 }
+      { transform: "translate(" + bx2 + "px,0px) rotate(" + (r + 15) + "deg)", opacity: 1, offset: 1 }
     ];
     t.seedG.animate(dropKF, { duration: dropDuration, delay: dropDelay, fill: "forwards" });
-
-    // tiny recoil flick of the hand at the moment this seed is released
-    if (hand) {
-      hand.idle.animate([
-        { transform: "rotate(0deg)", offset: 0 },
-        { transform: "rotate(3deg)", offset: 0.4 },
-        { transform: "rotate(0deg)", offset: 1 }
-      ], { duration: 220, delay: dropDelay, fill: "none" });
-    }
 
     // 2. IMPACT PUFF
     for (var pi = 0; pi < 3; pi++) {
@@ -690,13 +749,12 @@
     t.headSwayEl.style.animationIterationCount = "infinite";
   });
 
-  // hand exit: after the last seed has left the fingertip (+ its recoil settles), withdraw and remove
+  // hand exit: fixed beat, 1900ms -> 2800ms, well after the single all-at-once release at 1350ms
   if (hand) {
-    var handExitStart = maxDropDelay + 220 + 200;
     var handExit = hand.motion.animate([
       { transform: "translateY(0px)" },
       { transform: "translateY(-320px)" }
-    ], { duration: 900, delay: handExitStart, easing: "cubic-bezier(.5,0,.9,.35)", fill: "forwards" });
+    ], { duration: 900, delay: 1900, easing: "cubic-bezier(.5,0,.9,.35)", fill: "forwards" });
     handExit.onfinish = function () {
       if (handGroup.parentNode) handGroup.parentNode.removeChild(handGroup);
     };
