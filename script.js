@@ -178,12 +178,42 @@ function updateAge() {
   }
 }
 
-// Start age ticker: render immediately, then update on a plain interval
-// (no need for per-frame requestAnimationFrame precision here). Respect
-// prefers-reduced-motion by rendering once, statically, and not ticking.
+// Start age ticker: render immediately, then update every animation frame
+// so the trailing decimal digits read as a smooth blur instead of visibly
+// skipping values. Respect prefers-reduced-motion by rendering once,
+// statically, and not starting the loop. Pauses while the tab is hidden.
 updateAge();
 if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  setInterval(updateAge, 100);
+  let ageRafId = null;
+
+  function ageTick() {
+    updateAge();
+    ageRafId = requestAnimationFrame(ageTick);
+  }
+
+  function startAgeTicker() {
+    if (ageRafId === null) {
+      ageRafId = requestAnimationFrame(ageTick);
+    }
+  }
+
+  function stopAgeTicker() {
+    if (ageRafId !== null) {
+      cancelAnimationFrame(ageRafId);
+      ageRafId = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopAgeTicker();
+    } else {
+      updateAge();
+      startAgeTicker();
+    }
+  });
+
+  startAgeTicker();
 }
 
 // Load achievements and grades from config
