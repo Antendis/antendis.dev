@@ -854,8 +854,13 @@ a:hover {
 }
 
 @media (min-width: 768px) {
+  /* A 1fr:2fr split gave "languages" only ~1/3 of the row, so its five short
+     chips wrapped raggedly (3 lines) while "tools" (2/3, twenty chips) had
+     room to spare. Fix the narrow column to a width its own content wraps
+     cleanly into (two tidy rows) and let "tools" take the rest -- the same
+     fixed-column + 1fr pattern .contact-row already uses above. */
   .skills-grid {
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 16rem 1fr;
     gap: 3rem;
   }
 
@@ -1009,6 +1014,16 @@ a:hover {
 
   .grade-subject {
     font-size: 0.9375rem;
+  }
+
+  /* Every other panel's last block ends in a full-width rule (.hackathon-row,
+     .contact-rows, .entry-list) that reads as a closing line even flush
+     against the next kicker. The chip list has no such rule, so with panels
+     stacked in flow it butted straight into "contact" below. Give it the
+     same block-to-block breathing room .uni-block already uses elsewhere in
+     this stack instead of inventing a new spacing value. */
+  .skills-grid {
+    margin-bottom: 1.5rem;
   }
 
   .js .panel {
