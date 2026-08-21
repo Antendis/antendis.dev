@@ -475,7 +475,10 @@
     var palmClip = el("rect", { x: "-30", y: "-72", width: "60", height: "56", rx: "18" });
 
     var fingerXs = [-28, -13, 2, 17];
-    var fingerAngles = [-12, -4, 4, 12];
+    // rotating about each finger's TOP-centre: positive angle swings a finger's tip
+    // toward +x, negative toward -x. For an outward splay the two left fingers must
+    // swing further left (+angle) and the two right fingers further right (-angle).
+    var fingerAngles = [12, 4, -4, -12];
     var fingerParts = [], fingerClips = [];
     fingerXs.forEach(function (x, i) {
       var pivotX = x + 6; // rotate about each finger's own top-centre
