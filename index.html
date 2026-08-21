@@ -76,11 +76,11 @@
   </script>
 
   <link rel="preload" as="font" type="font/woff2" href="assets/fonts/newsreader-latin-opsz-normal.woff2" crossorigin>
-  <link rel="stylesheet" href="fonts.css?v=20260821d">
-  <link rel="stylesheet" href="style.css?v=20260821d">
-  <script src="config.js?v=20260821d" defer></script>
+  <link rel="stylesheet" href="fonts.css?v=20260821e">
+  <link rel="stylesheet" href="style.css?v=20260821e">
+  <script src="config.js?v=20260821e" defer></script>
   <!-- Three.js for 3D globe -->
-  <script src="vendor/three.min.js?v=20260821d" defer></script>
+  <script src="vendor/three.min.js?v=20260821e" defer></script>
 </head>
 <body>
   <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
@@ -205,6 +205,17 @@
             <!-- Populated by JS -->
           </div>
         </div>
+
+        <aside class="uni-block" id="railExtra" aria-label="Roles and activities">
+          <h3 class="mono-label">roles &amp; activities</h3>
+          <ul class="data-rows" id="rolesList">
+            <!-- Populated by JS -->
+          </ul>
+          <div class="data-row hackathon-row">
+            <span class="data-title">hackathons attended</span>
+            <span class="data-num" id="hackathonCount">0</span>
+          </div>
+        </aside>
       </section>
 
       <!-- Skills -->
@@ -271,20 +282,10 @@
     <!-- Globe rail -->
     <div class="globe-rail">
       <div id="globeViz" aria-hidden="true"></div>
-      <aside class="rail-extra" id="railExtra" aria-label="Roles and activities">
-        <h3 class="mono-label">roles &amp; activities</h3>
-        <ul class="data-rows" id="rolesList">
-          <!-- Populated by JS -->
-        </ul>
-        <div class="data-row hackathon-row">
-          <span class="data-title">hackathons attended</span>
-          <span class="data-num" id="hackathonCount">0</span>
-        </div>
-      </aside>
     </div>
   </div>
 
-  <script src="script.js?v=20260821d" defer></script>
-  <script src="globe.js?v=20260821d" defer></script>
+  <script src="script.js?v=20260821e" defer></script>
+  <script src="globe.js?v=20260821e" defer></script>
 </body>
 </html>

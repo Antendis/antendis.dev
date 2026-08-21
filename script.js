@@ -33,8 +33,8 @@
       }
     });
     document.title = TITLES[id];
-    // Expose active panel on <html> so CSS can drive rail-extra visibility
-    // and any other panel-specific styles without extra JS.
+    // Expose active panel on <html> so CSS can drive panel-specific styles
+    // (e.g. the intro panel's footer spacing) without extra JS.
     document.documentElement.dataset.panel = id;
     if (isTabMode()) {
       window.scrollTo({ top: 0, behavior: 'auto' });

@@ -321,10 +321,6 @@ html[data-panel="intro"] .footer {
   margin-bottom: clamp(1.25rem, 3vw, 2rem);
 }
 
-#achievements .uni-block {
-  margin-bottom: 0;
-}
-
 .js .panel {
   display: none;
 }
@@ -375,59 +371,6 @@ html[data-panel="intro"] .footer {
      desyncs the box from its own aspect-ratio and un-squares the globe
      mid-transition. overflow:hidden makes aspect-ratio authoritative. */
   overflow: hidden;
-}
-
-/* Shrink globe on university tab to make room for roles. Width (not
-   max-height) is what's animated below, since it maps 1:1 to rendered
-   size across its whole range -- max-height was frequently non-binding
-   (the natural box is far smaller than 70vh), so most of the transition
-   was a dead zone. aspect-ratio keeps the globe square as it narrows. */
-html[data-panel="achievements"] #globeViz {
-  width: 75%;
-}
-
-/* Animate the globe shrinking/growing as tabs switch (per-frame redraw is
-   driven from the render loop in globe.js so the WebGL canvas tracks it). */
-@media (prefers-reduced-motion: no-preference) {
-  #globeViz {
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-}
-
-/* Rail extra: roles & activities shown only on university tab */
-.rail-extra {
-  display: none;
-  /* centre the roles block in the space between the globe and the rail bottom */
-  margin-top: auto;
-  margin-bottom: auto;
-  width: 100%;
-  padding-top: 1.5rem;
-  overflow: hidden;
-}
-
-html[data-panel="achievements"] .rail-extra {
-  display: block;
-}
-
-.rail-extra .mono-label {
-  display: block;
-  margin-bottom: 0.6rem;
-}
-
-.rail-extra .data-rows {
-  font-size: 0.9375rem;
-}
-
-.rail-extra .data-row {
-  padding: 0.6rem 0;
-}
-
-.rail-extra .data-title {
-  font-size: 0.9375rem;
-}
-
-.rail-extra .data-num {
-  font-size: 1.4rem;
 }
 
 /* ---------- type ---------- */
@@ -654,9 +597,18 @@ a:hover {
 
 .grade-years {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  /* Single column until the 768px breakpoint locks in exactly two --
+     see there for why this is a fixed count rather than auto-fit. */
+  grid-template-columns: 1fr;
   gap: 1.75rem;
   align-items: start;
+}
+
+/* Year 3 (and any year beyond) reads as a full-width strip below the two
+   grade columns rather than a third grid cell -- avoids an orphaned
+   single column under Year 1 once there are three year sections. */
+.grade-years > .grade-year:nth-child(n+3) {
+  grid-column: 1 / -1;
 }
 
 .grade-year .mono-label {
@@ -672,6 +624,7 @@ a:hover {
 .grade-row {
   display: grid;
   grid-template-columns: 1fr minmax(40px, 80px) 2.8rem;
+  grid-template-areas: "subject bar num";
   gap: 0.75rem;
   align-items: center;
   border-top: 1px solid var(--rule-soft);
@@ -679,10 +632,12 @@ a:hover {
 }
 
 .grade-subject {
+  grid-area: subject;
   font-size: 0.875rem;
 }
 
 .grade-bar {
+  grid-area: bar;
   display: block;
   height: 2px;
   background: var(--rule-soft);
@@ -696,6 +651,7 @@ a:hover {
 }
 
 .grade-num {
+  grid-area: num;
   font-family: var(--mono);
   font-size: 0.71875rem;
   font-variant-numeric: tabular-nums;
@@ -718,6 +674,15 @@ a:hover {
   color: var(--ink-3);
   padding: 0.42rem 0;
   border-top: 1px solid var(--rule-soft);
+}
+
+/* Year 3 in progress: an accent rail (the same green used for "current"
+   elsewhere, e.g. the active nav link) reads as a deliberate, ongoing
+   state rather than an empty/broken row. */
+.grade-placement {
+  border-top: none;
+  border-left: 2px solid var(--green);
+  padding: 0.65rem 0 0.65rem 1rem;
 }
 
 /* ---------- skills ---------- */
@@ -865,7 +830,27 @@ a:hover {
   }
 
   .grade-years {
+    /* Fixed two-column count (not auto-fit) so a third, later-appended
+       section never collapses the grid to a lone middle column -- the
+       nth-child(n+3) rule above then pulls it out to its own full-width
+       row instead of sitting as an orphaned grid cell. */
+    grid-template-columns: repeat(2, minmax(17rem, 1fr));
     gap: 1.25rem 2rem;
+  }
+
+  /* Two columns halve the row's available width, which isn't always room
+     enough for subject + bar + percentage side by side without wrapping
+     (see the longest module titles). Stack the bar/percentage under the
+     subject instead of shrinking the type -- restored to one line once
+     screens are wide enough (see the 1680px breakpoint below). */
+  .grade-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "subject subject"
+      "bar num";
+    row-gap: 0.35rem;
+    column-gap: 0.6rem;
+    padding: 0.6rem 0;
   }
 
   .entry {
@@ -895,6 +880,39 @@ a:hover {
 
   .globe-rail {
     display: none;
+  }
+}
+
+/* Once the globe rail reappears at 1200px it claims up to var(--globe-w)
+   of width before the content column gets anything, tightening the two
+   grade-year columns further still (even with the stacked row above).
+   Trim the achievements panel's side padding, tighten the grid gap and
+   nudge the subject size down a touch -- by ~1680px the rail is a small
+   enough share of the viewport that none of this is needed any more. */
+@media (min-width: 1200px) and (max-width: 1679px) {
+  html[data-panel="achievements"] .content {
+    padding-inline: clamp(1.25rem, 2vw, 2.5rem);
+  }
+
+  .grade-years {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1rem;
+  }
+
+  .grade-subject {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Wide enough now that each grade-year column comfortably fits subject +
+   bar + percentage on one line again -- back to the compact single-line
+   row instead of the stacked layout used from 768px up. */
+@media (min-width: 1680px) {
+  .grade-row {
+    grid-template-columns: 1fr minmax(40px, 80px) 2.8rem;
+    grid-template-areas: "subject bar num";
+    gap: 0.75rem;
+    padding: 0.42rem 0;
   }
 }
 

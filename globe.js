@@ -286,9 +286,9 @@ function animateGlobe() {
   // Skip work entirely while the rail is hidden or the tab is backgrounded
   if (!globeVisible || document.hidden) return;
 
-  // Track the container size every frame so CSS size transitions (the globe
-  // shrinking/growing when switching to/from the university tab) render
-  // smoothly rather than snapping at the end of the transition.
+  // Track the container size every frame so any layout-driven resize
+  // (window resize, sidebar/rail becoming visible, etc.) is picked up and
+  // applied smoothly rather than snapping on the next render.
   if (globeContainer) {
     const w = globeContainer.clientWidth;
     const h = globeContainer.clientHeight;
