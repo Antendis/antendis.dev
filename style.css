@@ -960,7 +960,10 @@ a:hover {
   }
 
   html {
-    scroll-padding-top: 6rem;
+    /* Also read by #contact below, so the trailing scroll room it reserves
+       always matches the offset an anchor jump needs to clear. */
+    --sticky-offset: 6rem;
+    scroll-padding-top: var(--sticky-offset);
   }
 
   .content {
@@ -995,12 +998,18 @@ a:hover {
 
   .footer {
     padding: 1.5rem 0 2rem;
-    /* All panels render stacked in normal flow on mobile, so anchor-jumping
-       to the last section (contact) needs enough scrollable room below it
-       for the browser to bring it flush under the sticky top bar. Without
-       this the scroll simply clamps at the document's natural end, landing
-       short of the target. */
-    margin-bottom: 10rem;
+  }
+
+  /* Panels stack in normal document flow on mobile, so anchor-jumping to
+     the last section (contact) needs scrollable room below it for the
+     browser to bring it flush under the sticky top bar -- otherwise the
+     scroll clamps at the document's natural end and lands short. Sizing
+     the last panel to a full viewport (minus that same offset) guarantees
+     the room on any device height, instead of guessing a fixed amount of
+     trailing blank space that happens to cover today's common phones. */
+  #contact {
+    min-height: calc(100vh - var(--sticky-offset));
+    min-height: calc(100dvh - var(--sticky-offset));
   }
 }
 
