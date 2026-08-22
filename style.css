@@ -20,6 +20,32 @@
   --globe-w: 34rem;
 }
 
+/* Registers --globe-w as an animatable <length> instead of an opaque token,
+   so the panel-driven change to it below (see the layout breakpoints and
+   reduced-motion sections) interpolates on its own -- .layout's
+   grid-template-columns then just recomputes from the live, in-between
+   value every frame, the same way it already recomputes on an ordinary
+   window resize, with no extra transition needed on grid-template-columns
+   itself. Where @property isn't supported the declaration is ignored and
+   --globe-w stays an unregistered custom property, so the change simply
+   snaps instead of animating -- an acceptable fallback (see the
+   reduced-motion guard below for where the transition itself lives).
+
+   initial-value is in px, not rem, deliberately: a rem initial-value here
+   (544px, tried first) made the transition below silently stop
+   interpolating -- it'd jump straight to the target instead of easing --
+   in every Chromium build tested, apparently specific to a registered
+   <length>'s initial-value being font-relative rather than to its number
+   matching any other declared value. px sidesteps it and is otherwise
+   equivalent, since this is only ever a pre-cascade fallback (every real
+   value --globe-w takes is set explicitly below, at every width the rail
+   is even visible). */
+@property --globe-w {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 544px;
+}
+
 /* Inverted ink-on-dark-paper palette. Light mode is untouched by default.
    Without JS (or before the theme toggle has ever been used) this follows
    the OS/browser preference. Once the toggle sets an explicit data-theme,
@@ -394,16 +420,15 @@ html[data-panel="achievements"] .content {
   overflow: hidden;
 }
 
-/* University keeps the globe at roughly its original, smaller size rather
-   than growing with the rail below -- the rail itself (--globe-w) stays
-   the same for every panel, so switching tabs only ever changes
-   #globeViz's own width, never the grid column it sits in (see the
-   transition rule right after this for why that split matters). 29.5rem
-   is 34rem minus this rail's own horizontal padding (3rem + 1.5rem): the
-   flat globe size every panel rendered before the rail below started
-   growing past 1680px. Below 1680px the rail is already this size for
-   every tab (there's no room to spare from the two grade-year columns
-   otherwise -- see the layout breakpoints below), so no override is
+/* University keeps the globe at roughly its original, smaller size even
+   though its own rail (--globe-w) still grows past 1680px, same as before
+   (see the layout breakpoints below) -- every other panel now gets its own,
+   wider rail there instead, so this pin is what keeps university from
+   growing along with it. 29.5rem is 34rem minus this rail's own horizontal
+   padding (3rem + 1.5rem): the flat globe size university rendered before
+   its rail started growing past 1680px. Below 1680px university's rail is
+   already this size (there's no room to spare from the two grade-year
+   columns otherwise -- see the layout breakpoints below), so no override is
    needed there. */
 @media (min-width: 1680px) {
   html[data-panel="achievements"] #globeViz {
@@ -418,8 +443,22 @@ html[data-panel="achievements"] .content {
    transition (an earlier version animated max-height instead, which was
    rarely the binding constraint against this box's natural size, so most
    of the transition was a dead zone and the globe looked like it snapped
-   at the end). */
+   at the end).
+
+   --globe-w gets its own transition alongside it (registered as a <length>
+   above so it can have one at all) -- switching tabs now changes the rail's
+   width too, not just university's pin, so both need to move together.
+   #globeViz's own width transition still does the work of animating
+   university's fixed 29.5rem pin in and out; for every other panel
+   #globeViz has no override at all (plain 100%), so once the rail itself is
+   animating smoothly, #globeViz just tracks its continuously-resizing
+   container frame by frame -- ordinary layout, not a second transition
+   racing the first. */
 @media (prefers-reduced-motion: no-preference) {
+  :root {
+    transition: --globe-w 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   #globeViz {
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -955,10 +994,38 @@ a:hover {
    never asks for more than the full var(--globe-w), so the rail reclaims
    its normal 34rem size on its own as soon as there's room (in practice a
    little before 1680px) -- then the rule below picks up and keeps it
-   growing past that point instead of capping it there for good. */
+   growing past that point instead of capping it there for good.
+
+   This is the default (unscoped) value, so it's what university uses --
+   only university has the grade-year columns this band exists for, and
+   the override right after this gives every other panel a wider rail
+   instead, now that there's no shared-rail constraint forcing them to
+   match it (see there for the reasoning; --sidebar-w and --globe-w's own
+   @property registration above are what let switching between the two
+   values animate instead of snap). */
 @media (min-width: 1440px) and (max-width: 1679px) {
   :root {
     --globe-w: min(34rem, calc(100vw - 1112px));
+  }
+
+  /* No grade-year grid to protect on these panels, and .panel's own 64ch
+     cap (60ch for .entry-desc) already leaves slack in the content column
+     the university formula above doesn't spend -- so it can give some of
+     that slack to the rail instead. Same min()-against-100vw shape as the
+     university formula above (so this band keeps its slope-1 property:
+     the content column's own width stays flat across it rather than
+     shrinking further as the viewport widens), just tuned to a smaller
+     content-column floor -- 984px keeps the intro/work reading measure a
+     hair under its 62ch/60ch cap rather than exactly at it, nowhere close
+     to actually feeling cramped (verified against the rendered prose
+     width, not just the arithmetic). The 44rem ceiling is inert here (not
+     reached until just past this band's own 1679px top); it exists so
+     this and the wide-screen rule below share the same cap shape. */
+  html[data-panel="intro"],
+  html[data-panel="projects"],
+  html[data-panel="skills"],
+  html[data-panel="contact"] {
+    --globe-w: min(44rem, calc(100vw - 984px));
   }
 }
 
@@ -970,13 +1037,33 @@ a:hover {
    is tuned to land at exactly 34rem right at this 1680px boundary (no
    jump against the band above), reaching the 44rem ceiling -- a deliberate
    "big enough, no bigger" cap rather than unbounded growth -- around
-   2480px. University pins back to its original size against this via the
-   #globeViz-level override near the rail's own rules, rather than here,
-   so the rail stays one shared width for every panel (see there for why
-   that split matters for the tab-switch transition). */
+   2480px.
+
+   This is the default (unscoped) value, so -- same as the band below
+   1680px -- it's what university uses; the #globeViz-level override near
+   the rail's own rules pins university's actual globe size back down
+   against this growth, rather than this rule doing it, so this stays a
+   single plain rail-width formula reusable by the override right after
+   it too. */
 @media (min-width: 1680px) {
   :root {
     --globe-w: clamp(34rem, 13rem + 20vw, 44rem);
+  }
+
+  /* Wider rail for every non-university panel, same reasoning as the band
+     below 1680px. 43.5rem is exactly what the min() above lands on at
+     this 1680px boundary (100vw - 984px = 696px there), so the switch
+     from that rule to this one is continuous; 10vw carries it on growing
+     from there up to a 50rem ceiling -- deliberately bigger than
+     university's own 44rem cap above, since this rail no longer has to
+     double as university's, and reaching it around 2720px keeps "big
+     enough, no bigger" from wide monitors as much as it does for
+     university. */
+  html[data-panel="intro"],
+  html[data-panel="projects"],
+  html[data-panel="skills"],
+  html[data-panel="contact"] {
+    --globe-w: clamp(43.5rem, 33rem + 10vw, 50rem);
   }
 }
 
