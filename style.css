@@ -437,14 +437,6 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
-/* Every other panel opens with a .section-kicker above its heading; intro
-   had none, so it started abruptly with no framing. Kept as its own class
-   (rather than folding into .section-kicker itself) so this one line of
-   spacing can be tuned or dropped independently of the shared kicker style. */
-.intro-kicker {
-  margin-bottom: 0.85rem;
-}
-
 .hero-title {
   font-size: clamp(2.5rem, 4.5vw, 3.4rem);
   font-weight: 400;
