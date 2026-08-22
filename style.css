@@ -125,11 +125,20 @@ body {
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr) minmax(0, var(--globe-w));
   min-height: 100vh;
   min-height: 100dvh;
-  max-width: 1700px;
+  /* Raised from 1700px, which capped the layout well short of the globe's
+     own fluid ceiling (see --globe-w below) -- on anything wider the globe
+     stopped growing, but the layout box did too, leaving a dead strip of
+     unused viewport beyond it. 3600px is a generous sanity ceiling rather
+     than a real constraint: it clears every width in current use (up to
+     3440px ultrawide) so the layout fills the viewport there, while still
+     stopping a hypothetical much larger display from stretching the
+     content column unbounded. */
+  max-width: 3600px;
   /* Pin to the left edge rather than centering: centering pushed the sidebar
      away from the viewport edge on wide/ultrawide screens, leaving a large
-     dead gap to its left. Any slack past 1700px now collects on the right,
-     next to the globe, where it reads as intentional breathing room. */
+     dead gap to its left. Any slack past the cap above still collects on
+     the right, next to the globe, where it reads as intentional breathing
+     room. */
   margin-right: auto;
 }
 
@@ -379,6 +388,37 @@ html[data-panel="achievements"] .content {
      desyncs the box from its own aspect-ratio and un-squares the globe
      mid-transition. overflow:hidden makes aspect-ratio authoritative. */
   overflow: hidden;
+}
+
+/* University keeps the globe at roughly its original, smaller size rather
+   than growing with the rail below -- the rail itself (--globe-w) stays
+   the same for every panel, so switching tabs only ever changes
+   #globeViz's own width, never the grid column it sits in (see the
+   transition rule right after this for why that split matters). 29.5rem
+   is 34rem minus this rail's own horizontal padding (3rem + 1.5rem): the
+   flat globe size every panel rendered before the rail below started
+   growing past 1680px. Below 1680px the rail is already this size for
+   every tab (there's no room to spare from the two grade-year columns
+   otherwise -- see the layout breakpoints below), so no override is
+   needed there. */
+@media (min-width: 1680px) {
+  html[data-panel="achievements"] #globeViz {
+    width: min(29.5rem, 100%);
+  }
+}
+
+/* Animate the globe growing/shrinking as tabs switch (per-frame redraw is
+   driven from the render loop in globe.js so the WebGL canvas tracks it).
+   Width is the one property this ever touches -- with aspect-ratio deriving
+   height, it's the single dimension actually binding across the whole
+   transition (an earlier version animated max-height instead, which was
+   rarely the binding constraint against this box's natural size, so most
+   of the transition was a dead zone and the globe looked like it snapped
+   at the end). */
+@media (prefers-reduced-motion: no-preference) {
+  #globeViz {
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
 /* ---------- type ---------- */
@@ -909,11 +949,30 @@ a:hover {
    grade-year columns enough room for the longest module title on one line,
    given the content padding is a flat 4.5rem at this width; min() means it
    never asks for more than the full var(--globe-w), so the rail reclaims
-   its normal size on its own as soon as there's room (in practice a little
-   before 1680px). */
+   its normal 34rem size on its own as soon as there's room (in practice a
+   little before 1680px) -- then the rule below picks up and keeps it
+   growing past that point instead of capping it there for good. */
 @media (min-width: 1440px) and (max-width: 1679px) {
   :root {
     --globe-w: min(34rem, calc(100vw - 1112px));
+  }
+}
+
+/* Past 1680px the two grade-year columns above are no longer tight (the
+   shrink band above has already handed the rail back its full 34rem by
+   this point), so nothing still needs --globe-w pinned there -- let it
+   keep growing instead of sitting flat, so the globe actually fills the
+   extra room on wide screens rather than stalling at 472px forever. 20vw
+   is tuned to land at exactly 34rem right at this 1680px boundary (no
+   jump against the band above), reaching the 44rem ceiling -- a deliberate
+   "big enough, no bigger" cap rather than unbounded growth -- around
+   2480px. University pins back to its original size against this via the
+   #globeViz-level override near the rail's own rules, rather than here,
+   so the rail stays one shared width for every panel (see there for why
+   that split matters for the tab-switch transition). */
+@media (min-width: 1680px) {
+  :root {
+    --globe-w: clamp(34rem, 13rem + 20vw, 44rem);
   }
 }
 
