@@ -307,11 +307,15 @@ html[data-theme="dark"] .theme-toggle-icon .sun-rays line {
   max-width: 64ch;
 }
 
-/* Intro panel: vertically centered, biased slightly upward */
+/* Intro panel: vertically centered, biased slightly upward. A fixed value
+   rather than a percentage: padding-bottom as a percentage resolves
+   against the containing block's *width*, not its height, so it grew with
+   the content column on wide screens (see --globe-w above) instead of
+   tracking anything about how much vertical room was actually available. */
 #intro.is-active {
   margin-top: auto;
   margin-bottom: auto;
-  padding-bottom: 14%;
+  padding-bottom: 7.5rem;
 }
 
 /* On the home tab, stop the footer from grabbing auto-margin space so the
@@ -984,6 +988,89 @@ a:hover {
 
   .layout {
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+}
+
+/* ---------- short viewport heights ---------- */
+
+/* Work is the tallest of the tabs and the last to clear the viewport as
+   height shrinks -- purely a function of height, not width, since none of
+   this reflows with the content column's width. Below 900px it compresses
+   further, using the same vertical rhythm the rest of this file already
+   uses, rather than holding its tall-viewport spacing all the way down to
+   a height it no longer fits. Scoped to the work tab itself (rather than
+   the shared .content/.section-head rules it draws on) so every other
+   panel's spacing stays completely untouched through this band; 900px and
+   above is untouched for work too. min-width here matches the breakpoint
+   below that switches to the stacked mobile layout, whose own .content
+   padding is tuned separately -- without it, these (more specific)
+   selectors would win over the mobile rule's plain .content padding on
+   any phone shorter than 899px, which is most of them. */
+@media (min-width: 1024px) and (max-height: 899px) {
+  html[data-panel="projects"] .content {
+    padding-top: clamp(1rem, 3.5vh, 5.25rem);
+    padding-bottom: clamp(1rem, 3.5vh, 2.25rem);
+  }
+
+  html[data-panel="projects"] .section-head {
+    margin-bottom: clamp(1.5rem, 4.3vh, 2.5rem);
+  }
+
+  html[data-panel="projects"] .section-head h2 {
+    margin-bottom: clamp(0.25rem, 1vh, 0.45rem);
+    padding-top: clamp(0.75rem, 2.5vh, 1.5rem);
+  }
+
+  /* .entry and its children only ever appear inside #projects, so these
+     are already effectively scoped there without needing the prefix. */
+  .entry {
+    padding: clamp(1rem, 3.5vh, 2.25rem) 0;
+  }
+
+  .entry-titleline {
+    margin-bottom: clamp(0.5rem, 1.7vh, 0.9rem);
+  }
+
+  .entry-desc {
+    margin-bottom: clamp(0.5rem, 1.7vh, 1.1rem);
+  }
+}
+
+/* University and skills both clear the viewport earlier than work does
+   (800px and 760px respectively, before any of the above), so their own
+   spacing only needs to compress a little further, in a narrower band
+   just below that. */
+@media (min-width: 1024px) and (max-height: 799px) {
+  html[data-panel="achievements"] .content {
+    padding-top: clamp(0.75rem, 3.3vh, 3.5rem);
+    padding-bottom: clamp(0.75rem, 3vh, 2.25rem);
+  }
+
+  html[data-panel="skills"] .content {
+    padding-top: clamp(1.25rem, 4.5vh, 5.25rem);
+    padding-bottom: clamp(1rem, 3vh, 2.25rem);
+  }
+
+  .uni-block {
+    margin-bottom: clamp(0.6rem, 2.5vh, 1.5rem);
+  }
+
+  .uni-block > .mono-label,
+  .grades-head {
+    margin-bottom: clamp(0.25rem, 1vh, 0.65rem);
+  }
+
+  .grade-row {
+    padding: clamp(0.04rem, 0.2vh, 0.28rem) 0;
+  }
+
+  .skills-list {
+    gap: clamp(0.3rem, 1.5vh, 0.55rem);
+  }
+
+  .skills-col .mono-label {
+    margin-bottom: clamp(0.35rem, 1.5vh, 0.7rem);
+    padding-bottom: clamp(0.35rem, 1.5vh, 0.7rem);
   }
 }
 
