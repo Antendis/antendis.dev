@@ -39,7 +39,7 @@
   <main class="notfound">
     <h1 class="hero-title">this one isn&rsquo;t here <span class="accent">anymore</span></h1>
     <div class="prose">
-      <p>Something was growing here for a while. It has since been taken down.</p>
+      <p>Something was growing here for a while. It has since withered.</p>
     </div>
     <a href="/" class="link-accent">back to antendis<span class="accent">.</span>dev &nearr;</a>
   </main>
