@@ -398,7 +398,12 @@ html[data-panel="achievements"] .content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: clamp(3rem, 15vh, 11rem) 3rem 2rem 1.5rem;
+  /* Top padding was 15vh (clamp(3rem, 15vh, 11rem)), sitting the globe's
+     top edge at 15% of viewport height -- lower than it needs to be. 11vh
+     (clamp bounds scaled down with it, same ~0.73 ratio as the vh term
+     itself) raises that to 11%, still comfortably inside the 3rem/8rem
+     floor and ceiling for any realistic viewport height. */
+  padding: clamp(2.25rem, 11vh, 8rem) 3rem 2rem 1.5rem;
 }
 
 #globeViz {
@@ -1015,17 +1020,30 @@ a:hover {
      university formula above (so this band keeps its slope-1 property:
      the content column's own width stays flat across it rather than
      shrinking further as the viewport widens), just tuned to a smaller
-     content-column floor -- 984px keeps the intro/work reading measure a
-     hair under its 62ch/60ch cap rather than exactly at it, nowhere close
-     to actually feeling cramped (verified against the rendered prose
-     width, not just the arithmetic). The 44rem ceiling is inert here (not
-     reached until just past this band's own 1679px top); it exists so
-     this and the wide-screen rule below share the same cap shape. */
+     content-column floor (verified against the rendered prose width, not
+     just the arithmetic).
+
+     1092px keeps this rail a flat 20px of #globeViz above university's own
+     at every width in this band (both formulas share the same 100vw
+     slope, so a fixed offset is a fixed gap) rather than the full-width
+     34rem this band used to reach -- af1f613 widened every non-university
+     rail to fill the space freed by .rail-extra's removal, which the owner
+     then found oversized; this pulls it back down to a size that's still
+     visibly, deliberately bigger than university's without the two
+     stacking to near-parity. A flat 70% cut (the size actually asked for)
+     doesn't work here: university's own globe is already 76-78% of this
+     band's pre-existing size through most of it, so anything near 70%
+     lands at or below university and erases the contrast outright -- this
+     band settles for something closer to 72-82% instead, tightest right
+     where university crowds it and loosest at 1440 where there's more
+     room. 37rem is comfortably above this band's own ceiling (591px at
+     1679px, just before the wide-screen rule below takes over) so it
+     stays inert, the same role 44rem played before. */
   html[data-panel="intro"],
   html[data-panel="projects"],
   html[data-panel="skills"],
   html[data-panel="contact"] {
-    --globe-w: min(44rem, calc(100vw - 984px));
+    --globe-w: min(37rem, calc(100vw - 1092px));
   }
 }
 
@@ -1051,19 +1069,25 @@ a:hover {
   }
 
   /* Wider rail for every non-university panel, same reasoning as the band
-     below 1680px. 43.5rem is exactly what the min() above lands on at
-     this 1680px boundary (100vw - 984px = 696px there), so the switch
-     from that rule to this one is continuous; 10vw carries it on growing
-     from there up to a 50rem ceiling -- deliberately bigger than
-     university's own 44rem cap above, since this rail no longer has to
-     double as university's, and reaching it around 2720px keeps "big
-     enough, no bigger" from wide monitors as much as it does for
-     university. */
+     below 1680px, scaled down the same way. Past this point university's
+     own #globeViz is pinned flat at 472px (see the override below) instead
+     of still growing with its rail, so a straight 70% cut of the old
+     712px-at-2560 ceiling (about 500px) lands only ~28px above that pin at
+     the narrow end of this band -- thin enough to read as parity on some
+     screens rather than the deliberate size difference the owner asked to
+     keep. 37rem keeps a steadier ~50px+ margin over university's 472px
+     across the band instead (widening further at the high end, where the
+     old rail had the most room to spare anyway), landing around 77-84% of
+     the old size rather than a flat 70% -- still a real, visible cut, just
+     eased back from literal 70% enough to not erase the contrast. 34rem +
+     3vw keeps it growing (so wide screens still get more globe than
+     narrow ones); the 40rem ceiling is a "big enough" cap in the same
+     spirit as the old 50rem, just scaled down with everything else. */
   html[data-panel="intro"],
   html[data-panel="projects"],
   html[data-panel="skills"],
   html[data-panel="contact"] {
-    --globe-w: clamp(43.5rem, 33rem + 10vw, 50rem);
+    --globe-w: clamp(37rem, 34rem + 3vw, 40rem);
   }
 }
 
