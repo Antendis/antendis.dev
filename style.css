@@ -18,6 +18,7 @@
   --mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   --sidebar-w: 15rem;
   --globe-w: 34rem;
+  --globe-shift: 0px;
 }
 
 /* Registers --globe-w as an animatable <length> instead of an opaque token,
@@ -44,6 +45,17 @@
   syntax: '<length>';
   inherits: true;
   initial-value: 544px;
+}
+
+/* Registers --globe-shift the same way and for the same reason as --globe-w
+   above -- it moves #globeViz horizontally (see the rail rules below) via a
+   plain position offset, decoupled from --globe-w so the rail can gain
+   breathing room on non-university panels without resizing the globe
+   itself. initial-value is px for the same documented reason as --globe-w's. */
+@property --globe-shift {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
 }
 
 /* Inverted ink-on-dark-paper palette. Light mode is untouched by default.
@@ -415,6 +427,18 @@ html[data-panel="achievements"] .content {
     ever constrains directly; aspect-ratio derives height from it, which
     keeps the box square instead of two axes being capped independently */
   margin-inline: auto;
+  /* Nudges the globe left off the rail's own right-aligned edge, independent
+     of its size -- width (and aspect-ratio deriving height from it) stays
+     the only dimension anything binds against; this just repositions the
+     resulting box. --globe-shift is 0 by default (university included), so
+     this is inert there; the non-university overrides live with --globe-w's
+     own below (see the layout breakpoints section for why). Right, not
+     left/margin, because #globeViz is already width:100% of the rail's own
+     content box -- shifting via left/margin would need a matching width
+     change to avoid resizing the box, right on a position:relative element
+     just slides the whole box as painted, leaving the rail's own grid
+     column (and the content column it borrows nothing from) untouched. */
+  right: var(--globe-shift);
   flex-shrink: 0;
   /* Without this, the WebGL <canvas> (sized in JS via the render loop
      below) can carry a taller inline height from a previous, larger frame
@@ -458,10 +482,23 @@ html[data-panel="achievements"] .content {
    #globeViz has no override at all (plain 100%), so once the rail itself is
    animating smoothly, #globeViz just tracks its continuously-resizing
    container frame by frame -- ordinary layout, not a second transition
-   racing the first. */
+   racing the first.
+
+   --globe-shift gets its own transition alongside --globe-w, registered the
+   same way, but #globeViz's right is deliberately left out of the
+   transition list below -- right is always just var(--globe-shift), never
+   pinned to a literal value the way university's width is, so it's the
+   width:100% case above, not the width-transition case: giving it its own
+   transition would make it chase --globe-shift's already-animating value
+   frame by frame, each frame's slightly-different computed value restarting
+   a fresh 0.5s transition against the next one, dragging the visible
+   settle time well past 0.5s in a decelerating trail (confirmed by sampling
+   it). Leaving right untransitioned makes it track --globe-shift's own
+   transition directly instead, same as width already tracks --globe-w's. */
 @media (prefers-reduced-motion: no-preference) {
   :root {
-    transition: --globe-w 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: --globe-w 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+      --globe-shift 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   #globeViz {
@@ -1044,6 +1081,14 @@ a:hover {
   html[data-panel="skills"],
   html[data-panel="contact"] {
     --globe-w: min(37rem, calc(100vw - 1092px));
+    /* Shifts the globe left off the rail's right edge (see --globe-shift's
+       registration and #globeViz's use of it above) so it isn't flush
+       against the viewport edge -- university is untouched, since its own
+       rule never sets --globe-shift and the property defaults to 0. 4.5rem
+       matches .content's own horizontal padding (the vw term is flat here
+       too, same reason this band's --globe-w is flat -- see above), landing
+       the two side gaps within a few px of each other through this band. */
+    --globe-shift: 4.5rem;
   }
 }
 
@@ -1088,6 +1133,21 @@ a:hover {
   html[data-panel="skills"],
   html[data-panel="contact"] {
     --globe-w: clamp(37rem, 34rem + 3vw, 40rem);
+    /* Same left-shift as the band below 1680px (see --globe-shift there),
+       but growing with the viewport instead of flat: the gap this is
+       balancing against (content column's right edge to the globe) grows
+       with viewport width almost 1:1 up here, since neither the 64ch prose
+       column nor --globe-w's own growth comes close to keeping pace with
+       100vw, so a flat shift would fall further behind at every step past
+       1680px. 48vw - 46rem tracks that growth at roughly half its rate
+       (half of what's left over after --globe-w's own ~3vw claim on it),
+       landing the two side gaps within a few px of each other at 1920 and
+       2560 alike (checked against rendered measurements, not just the
+       arithmetic). The floor is the flat band's own 4.5rem, which the raw
+       calc already lands on almost exactly at 1680px (no visible seam);
+       32rem caps it "big enough, no bigger" the same way --globe-w is
+       capped above, clear of every width in current use. */
+    --globe-shift: clamp(4.5rem, 48vw - 46rem, 32rem);
   }
 }
 
