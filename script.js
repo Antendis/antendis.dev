@@ -175,6 +175,108 @@
   }
 })();
 
+// Hero typing: on the first load of a session the intro body writes itself
+// in, just after the title (which appears normally). The paragraph carries
+// inline markup -- accent spans and the live age counter -- so rather than
+// retyping a string, each existing text node is split into per-character
+// spans that are then revealed in order, leaving the element structure
+// untouched. #age is revealed whole instead of split, because the age ticker
+// rewrites its textContent every frame and would wipe any spans inside it.
+// Once finished the original markup is restored, which drops ~450 throwaway
+// spans and gets back the kerning that splitting into separate text runs
+// costs.
+(function () {
+  const root = document.documentElement;
+  if (!root.classList.contains('type-hero')) return;
+
+  const reveal = () => root.classList.remove('type-hero');
+
+  try {
+    const prose = document.querySelector('#intro .prose');
+    const body = prose && prose.querySelector('p');
+    if (!body) {
+      reveal();
+      return;
+    }
+    const signoff = prose.querySelector('.signoff');
+
+    // Don't replay on a reload later in the same session.
+    try { sessionStorage.setItem('heroTyped', '1'); } catch (e) {}
+
+    // Split one element's text nodes into revealable units, preserving markup.
+    function split(host) {
+      const units = [];
+      (function walk(node) {
+        Array.from(node.childNodes).forEach(child => {
+          if (child.nodeType === 3) {
+            const frag = document.createDocumentFragment();
+            Array.from(child.nodeValue).forEach(ch => {
+              const span = document.createElement('span');
+              span.className = 'type-char';
+              span.textContent = ch;
+              frag.appendChild(span);
+              units.push(span);
+            });
+            node.replaceChild(frag, child);
+          } else if (child.nodeType === 1) {
+            if (child.id === 'age') {
+              child.classList.add('type-char');
+              units.push(child);
+            } else {
+              walk(child);
+            }
+          }
+        });
+      })(host);
+      return units;
+    }
+
+    const passes = [{ host: body, html: body.innerHTML, ms: 1500 }];
+    if (signoff) passes.push({ host: signoff, html: signoff.innerHTML, ms: 420, delay: 260 });
+    passes.forEach(p => { p.units = split(p.host); });
+
+    // Everything is split and hidden, so the block can be shown again.
+    reveal();
+
+    // Belt and braces: if the loop ever stalls, put the real markup back.
+    const bail = setTimeout(() => passes.forEach(restore), 8000);
+    function restore(p) {
+      if (p.done) return;
+      p.done = true;
+      p.host.innerHTML = p.html;
+    }
+
+    function run(i) {
+      const p = passes[i];
+      if (!p) {
+        clearTimeout(bail);
+        return;
+      }
+      const start = performance.now() + (p.delay || 0);
+      let shown = 0;
+      (function frame(now) {
+        const elapsed = now - start;
+        if (elapsed >= 0) {
+          const target = elapsed >= p.ms
+            ? p.units.length
+            : Math.floor((elapsed / p.ms) * p.units.length);
+          for (; shown < target; shown++) p.units[shown].classList.add('is-typed');
+        }
+        if (shown < p.units.length) {
+          requestAnimationFrame(frame);
+        } else {
+          restore(p);
+          run(i + 1);
+        }
+      })(performance.now());
+    }
+
+    run(0);
+  } catch (e) {
+    reveal();
+  }
+})();
+
 // Dynamic age calculation
 
 function updateAge() {

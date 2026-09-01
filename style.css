@@ -219,6 +219,23 @@ body {
   width: fit-content;
 }
 
+/* Reserve the roman width so hovering can't resize the box. The link is
+   width:fit-content and :hover switches it to italic, which in Newsreader is
+   narrower -- so the box used to shrink out from under the pointer near its
+   right edge, lose :hover, snap back to roman, catch the pointer again, and
+   flicker between the two forever. A hidden roman copy pins the intrinsic
+   width in both states. (Padding can't fix this: it shifts both edges
+   equally and the ambiguous strip survives.) */
+.side-link::after {
+  content: attr(data-label);
+  display: block;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-style: normal;
+  pointer-events: none;
+}
+
 .side-link:hover {
   font-style: italic;
   color: var(--ink);
@@ -848,9 +865,17 @@ a:hover {
   font-size: 0.8125rem;
   letter-spacing: 0.02em;
   color: var(--ink-2);
+  text-align: center;
   padding: 0.4rem 0.85rem;
   border: 1px solid var(--rule);
   border-radius: 999px;
+  /* Share out each row's leftover width between its own chips. Wrapping is
+     strictly in source order, so whenever the next chip is too wide to fit
+     (a long one like "jupyter notebook" after a short row) the row used to
+     just end early and leave an obvious hole. Growing the chips closes it
+     without reordering the list, which is content from config.js and would
+     otherwise need width-aware repacking on every resize. */
+  flex: 1 1 auto;
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
 }
 
@@ -862,6 +887,24 @@ a:hover {
 
 .skills-list li:active {
   transform: scale(0.94);
+}
+
+/* ---------- hero typing ---------- */
+
+/* Set on <html> by the head script only when the intro is about to type
+   itself in, and cleared by script.js the moment it starts (or if it can't
+   run). Hiding it up front stops the finished paragraph flashing into view
+   before the animation begins. */
+.type-hero #intro .prose {
+  visibility: hidden;
+}
+
+.type-char {
+  opacity: 0;
+}
+
+.type-char.is-typed {
+  opacity: 1;
 }
 
 /* ---------- about ---------- */
