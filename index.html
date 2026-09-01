@@ -78,12 +78,14 @@
   <!-- Decide before first paint whether the intro body should write itself
        in, so the finished text never flashes up before the animation. The
        typing script in script.js clears this class (and reveals the text)
-       when it finishes, or immediately if anything goes wrong. -->
+       when it finishes, or immediately if anything goes wrong.
+       Runs on every page load: switching panels doesn't reload, so this is
+       already "first time" in normal use, and gating it on sessionStorage
+       meant a hard refresh wouldn't replay it. -->
   <script>
     (function () {
       try {
-        if (!sessionStorage.getItem('heroTyped') &&
-            !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
           document.documentElement.classList.add('type-hero');
         }
       } catch (e) {}
@@ -91,11 +93,11 @@
   </script>
 
   <link rel="preload" as="font" type="font/woff2" href="assets/fonts/newsreader-latin-opsz-normal.woff2" crossorigin>
-  <link rel="stylesheet" href="fonts.css?v=20260821m">
-  <link rel="stylesheet" href="style.css?v=20260821m">
-  <script src="config.js?v=20260821m" defer></script>
+  <link rel="stylesheet" href="fonts.css?v=20260821n">
+  <link rel="stylesheet" href="style.css?v=20260821n">
+  <script src="config.js?v=20260821n" defer></script>
   <!-- Three.js for 3D globe -->
-  <script src="vendor/three.min.js?v=20260821m" defer></script>
+  <script src="vendor/three.min.js?v=20260821n" defer></script>
 </head>
 <body>
   <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
@@ -300,7 +302,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=20260821m" defer></script>
-  <script src="globe.js?v=20260821m" defer></script>
+  <script src="script.js?v=20260821n" defer></script>
+  <script src="globe.js?v=20260821n" defer></script>
 </body>
 </html>

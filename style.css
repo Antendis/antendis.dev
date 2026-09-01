@@ -889,6 +889,18 @@ a:hover {
   transform: scale(0.94);
 }
 
+/* The globe can only draw once three.js and the map geometry are both in,
+   so it always arrives after the text. Fade it in when it does rather than
+   letting a finished globe pop into place. */
+#globeViz canvas {
+  opacity: 0;
+}
+
+#globeViz.is-drawn canvas {
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
 /* ---------- hero typing ---------- */
 
 /* Set on <html> by the head script only when the intro is about to type

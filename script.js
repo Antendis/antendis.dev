@@ -200,9 +200,6 @@
     }
     const signoff = prose.querySelector('.signoff');
 
-    // Don't replay on a reload later in the same session.
-    try { sessionStorage.setItem('heroTyped', '1'); } catch (e) {}
-
     // Split one element's text nodes into revealable units, preserving markup.
     function split(host) {
       const units = [];
@@ -668,11 +665,11 @@ if (!(typeof config !== 'undefined' && config.visitsApi)) {
   visitorsCache = recentLocalVisitors();
 }
 
-// Auto-track location when page loads
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    trackVisitorLocation();
-  }, 2000);
+// Auto-track location once the page is interactive. The old two-second wait
+// after `load` was what made the visitor dot pop in well after the globe
+// itself; a short defer is enough to stay out of the way of first paint.
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(trackVisitorLocation, 300);
 });
 
 // Expose functions globally for debugging and globe integration

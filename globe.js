@@ -114,18 +114,34 @@ function initGlobe(container, width, height) {
   console.log('Globe initialized successfully');
 }
 
+// Start the map download the moment this file runs, rather than inside
+// initGlobe. This script is deferred, so that's still before the page has
+// finished loading -- the 99KB fetch then overlaps images, fonts and
+// three.js instead of queueing behind all of them, which is what made the
+// globe show up whole seconds after everything else had settled.
+const geoJsonReady = fetch('custom.geo.json').then(response => response.json());
+
 function loadGlobeFromGeoJSON() {
-  fetch('custom.geo.json')
-    .then(response => response.json())
+  geoJsonReady
     .then(data => {
       createGlobeFromGeoJSON(data);
       updateVisitorMarkers();
+      markGlobeDrawn();
     })
     .catch(error => {
       console.warn('GeoJSON load failed, using simple globe');
       createSimpleGlobe();
       updateVisitorMarkers();
+      markGlobeDrawn();
     });
+}
+
+// Reveal on the frame after the geometry exists, so the fade covers a drawn
+// globe rather than an empty canvas.
+function markGlobeDrawn() {
+  requestAnimationFrame(() => {
+    if (globeContainer) globeContainer.classList.add('is-drawn');
+  });
 }
 
 function latLonToVector3(lat, lon, radius) {
@@ -328,7 +344,12 @@ function onGlobeResize(width, height) {
 
 // Initialize lazily: a ResizeObserver fires only when #globeViz actually has
 // layout size, so hidden viewports (<1200px) never create a WebGL context.
-window.addEventListener('load', () => {
+//
+// Set up as soon as this deferred script runs (the DOM is parsed and
+// three.js, also deferred, has already executed) rather than waiting for
+// `load`. `load` waits on every image, font and analytics request, which
+// delayed the globe long after the rest of the page had settled.
+(() => {
   const container = document.getElementById('globeViz');
   globeContainer = container;
 
@@ -351,4 +372,4 @@ window.addEventListener('load', () => {
     // inside the render loop so setSize and render happen in the same frame —
     // resizing here, a frame before the redraw, caused a visible flash.
   }).observe(container);
-});
+})();
