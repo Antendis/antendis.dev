@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Glitch test | Rohail Sheikh</title>
+<meta name="robots" content="noindex" />
+<!--
+  This is a redirect shim, not a copy of index.html. The real page changes
+  constantly, so a duplicate here would drift the moment it next changes and
+  end up testing a stale page instead of the live one. The glitch effect
+  itself lives entirely on the real page, gated behind ?glitch=1 (see the
+  head script and the glitch intro module in script.js) -- this file's only
+  job is landing testers there with the flag on.
+-->
+<meta http-equiv="refresh" content="0; url=/?glitch=1" />
+<script>location.replace('/?glitch=1');</script>
+</head>
+<body>
+<p>Redirecting to <a href="/?glitch=1">the glitch test</a>&hellip;</p>
+</body>
+</html>
