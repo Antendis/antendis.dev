@@ -95,12 +95,19 @@
   </script>
 
   <link rel="preload" as="font" type="font/woff2" href="assets/fonts/newsreader-latin-opsz-normal.woff2" crossorigin>
+  <!-- Three.js itself still only ever loads/runs from globe.js, once the
+       rail can actually be seen (see globe.js) -- this just warms the HTTP
+       cache for it on desktop, at parse time, instead of leaving the ~600KB
+       fetch to start only once globe.js gets around to injecting the tag
+       (which was the first-load latency this was written to close). The
+       `media` query means browsers under the breakpoint never fetch it at
+       all, so the mobile transfer saving is untouched. Must carry the exact
+       same ?v= globe.js requests below -- a mismatch fetches the file twice
+       instead of reusing this preload. -->
+  <link rel="preload" as="script" href="vendor/three.min.js?v=20260821o" media="(min-width: 1440px)">
   <link rel="stylesheet" href="fonts.css?v=20260821o">
   <link rel="stylesheet" href="style.css?v=20260821o">
   <script src="config.js?v=20260821o" defer></script>
-  <!-- Three.js for the globe loads lazily from globe.js itself, only once
-       the rail is actually going to be visible (see globe.js) -- no static
-       tag here. -->
 </head>
 <body>
   <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
