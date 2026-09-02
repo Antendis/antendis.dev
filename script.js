@@ -405,6 +405,8 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const SPAN_CAP = 2500;
   const STUTTER_DELAYS_MS = [200, 600, 1000, 1400]; // spread through phase 1, last one at the sweep's start
   const GLYPH_SUB_CHANCE = 0.05; // sparingly -- corruption, not noise
+  const FLICKER_CHANCE = 0.03; // proportion of eligible chars picked as flickering
+  const FLICKER_MAX = 10; // hard cap regardless of pool size -- a few unstable glyphs, not noise
 
   // Paint-only corruption (opacity, text-shadow) costs no reflow; the rest
   // changes glyph width, so it's mixed in less often (see pickVariant).
@@ -435,9 +437,39 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return ch === ch.toUpperCase() && ch !== ch.toLowerCase() ? sub.toUpperCase() : sub;
   }
 
+  function randomLetter(ch) {
+    const upper = ch === ch.toUpperCase() && ch !== ch.toLowerCase();
+    const letter = String.fromCharCode(97 + ((Math.random() * 26) | 0));
+    return upper ? letter.toUpperCase() : letter;
+  }
+
+  // Picks a small, low, fixed-for-the-run subset of the pool's letter
+  // characters (never #age, which already has its own haywire-digits
+  // treatment) to flicker through random letters on every mutation tick
+  // instead of the usual occasional digit swap -- see mutateTick and
+  // applyVariant below. Chosen once, up front, so the same handful of
+  // glyphs stay unstable for the whole corrupt phase rather than a
+  // different random set each tick.
+  function markFlickering(pool) {
+    const eligible = pool.filter(u => !u.isAge && /[a-zA-Z]/.test(u.ch));
+    let budget = Math.min(FLICKER_MAX, Math.round(eligible.length * FLICKER_CHANCE));
+    while (budget > 0 && eligible.length) {
+      const i = (Math.random() * eligible.length) | 0;
+      eligible[i].flicker = true;
+      eligible.splice(i, 1);
+      budget--;
+    }
+  }
+
   function applyVariant(u) {
     clearVariants(u.el);
     u.el.classList.add(pickVariant());
+    if (u.flicker) {
+      // Unstable glyph: cycles through random letters rather than the
+      // usual true-char/digit-swap choice, until the sweep resolves it.
+      u.el.textContent = randomLetter(u.ch);
+      return;
+    }
     const sub = Math.random() < GLYPH_SUB_CHANCE ? GLYPH_SUBS[u.ch.toLowerCase()] : null;
     u.el.textContent = sub ? matchCase(u.ch, sub) : u.ch;
   }
@@ -468,6 +500,11 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       for (let i = 0; i < batchSize; i++) {
         applyVariant(pending[(Math.random() * pending.length) | 0]);
       }
+      // Flickering units re-roll every tick regardless of the random batch
+      // above -- otherwise they'd only occasionally catch its draw and read
+      // as just more of the general corruption instead of a few glyphs
+      // visibly, continuously unstable.
+      pending.forEach(u => { if (u.flicker) applyVariant(u); });
     }
     if (ageUnit && !ageUnit.cleaned) {
       clearVariants(ageUnit.el);
@@ -567,9 +604,10 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const pool = [];
       hosts.forEach(h => {
         splitIntoChars(h.el, 'glitch-char', budget).forEach(el => {
-          pool.push({ el, isAge: el.id === 'age', ch: el.id === 'age' ? '' : el.textContent, cleaned: false });
+          pool.push({ el, isAge: el.id === 'age', ch: el.id === 'age' ? '' : el.textContent, cleaned: false, flicker: false });
         });
       });
+      markFlickering(pool);
       startSequence(hosts, pool);
     } catch (e) {
       hosts.forEach(h => { h.el.innerHTML = h.html; });
