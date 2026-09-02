@@ -135,15 +135,49 @@ function initGlobe(container, width, height) {
   console.log('Globe initialized successfully');
 }
 
-// Start the map download the moment this file runs, rather than inside
-// initGlobe. This script is deferred, so that's still before the page has
-// finished loading -- the 99KB fetch then overlaps images, fonts and
-// three.js instead of queueing behind all of them, which is what made the
-// globe show up whole seconds after everything else had settled.
-const geoJsonReady = fetch('custom.geo.json').then(response => response.json());
+// This file's own cache-busting query string, reused below for the three.js
+// tag it creates -- so bumping the site-wide ?v= only ever means touching
+// index.html, not also a hardcoded copy of the same version living here.
+const CACHE_BUST = (document.currentScript && document.currentScript.src.split('?')[1]) || '';
+
+let geoJsonReady = null;
+let threeReady = null;
+
+// Start the map download the moment the globe is actually going to be
+// needed (see GLOBE_MQ below), rather than waiting on three.js or on
+// initGlobe. Kept as a lazy starter rather than firing at module scope
+// unconditionally: .globe-rail is display:none below 1440px, so on every
+// phone and small-laptop visit this 99KB was downloaded for a globe that
+// would never draw. Once GLOBE_MQ matches, this still starts as early as
+// it did before (synchronously, in parallel with three.js) -- see boot()
+// below -- so the desktop timing this was written for is unchanged.
+function ensureGeoJson() {
+  if (!geoJsonReady) {
+    geoJsonReady = fetch('custom.geo.json').then(response => response.json());
+  }
+  return geoJsonReady;
+}
+
+// Loads three.js itself, once. The static <script> tag this replaced ran on
+// every device via `defer`; three.js is ~600KB, six times the map's own
+// weight, so it's the one worth actually gating rather than just starting
+// early -- see GLOBE_MQ below for where that gate lives.
+function loadThree() {
+  if (!threeReady) {
+    threeReady = new Promise((resolve, reject) => {
+      if (typeof THREE !== 'undefined') { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = 'vendor/three.min.js' + (CACHE_BUST ? '?' + CACHE_BUST : '');
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('three.js failed to load'));
+      document.head.appendChild(script);
+    });
+  }
+  return threeReady;
+}
 
 function loadGlobeFromGeoJSON() {
-  geoJsonReady
+  ensureGeoJson()
     .then(data => {
       createGlobeFromGeoJSON(data);
       updateVisitorMarkers();
@@ -368,34 +402,63 @@ function onGlobeResize(width, height) {
   renderer.setSize(width, height);
 }
 
-// Initialize lazily: a ResizeObserver fires only when #globeViz actually has
-// layout size, so hidden viewports (<1200px) never create a WebGL context.
-//
-// Set up as soon as this deferred script runs (the DOM is parsed and
-// three.js, also deferred, has already executed) rather than waiting for
-// `load`. `load` waits on every image, font and analytics request, which
-// delayed the globe long after the rest of the page had settled.
+// .globe-rail is display:none below 1440px (see style.css), so below that
+// width #globeViz never has layout size and nothing here should even ask
+// for three.js. matchMedia rather than a one-off innerWidth check so a
+// desktop window resized up across the breakpoint later still picks the
+// globe up, not just a page freshly loaded above it.
+const GLOBE_MQ = window.matchMedia('(min-width: 1440px)');
+
+// Boots the globe once the rail can actually be seen: loads three.js and
+// the map geometry together (each starts as early as it did before this
+// gate existed -- see loadThree() and ensureGeoJson() above), then falls
+// back to the pre-three.js lazy-init behaviour of only creating the WebGL
+// context once #globeViz genuinely has layout size. Set up as soon as this
+// deferred script runs (the DOM is parsed) rather than waiting for `load`,
+// which waits on every image, font and analytics request and delayed the
+// globe long after the rest of the page had settled.
 (() => {
   const container = document.getElementById('globeViz');
   globeContainer = container;
+  if (!container) return;
 
-  if (!container || typeof THREE === 'undefined') {
-    console.error('Globe setup failed:', { container: !!container, THREE: typeof THREE });
-    return;
+  let booted = false;
+  let initialized = false;
+
+  function boot() {
+    if (booted) return;
+    booted = true;
+    Promise.all([loadThree(), ensureGeoJson()])
+      .then(() => {
+        new ResizeObserver(entries => {
+          const { width, height } = entries[0].contentRect;
+          globeVisible = width > 0 && height > 0;
+          if (!globeVisible) return;
+
+          if (!initialized) {
+            initialized = true;
+            initGlobe(container, width, height);
+          }
+          // Ongoing resizes (window resize, tab-switch globe transition) are
+          // applied inside the render loop so setSize and render happen in
+          // the same frame -- resizing here, a frame before the redraw,
+          // caused a visible flash.
+        }).observe(container);
+      })
+      .catch(error => {
+        console.error('Globe setup failed:', error);
+      });
   }
 
-  let initialized = false;
-  new ResizeObserver(entries => {
-    const { width, height } = entries[0].contentRect;
-    globeVisible = width > 0 && height > 0;
-    if (!globeVisible) return;
+  function sync() {
+    // Once loaded, stay loaded rather than tearing down a live WebGL
+    // context if the window narrows again -- the CSS already hides the
+    // rail below the breakpoint regardless.
+    if (GLOBE_MQ.matches) boot();
+  }
 
-    if (!initialized) {
-      initialized = true;
-      initGlobe(container, width, height);
-    }
-    // Ongoing resizes (window resize, tab-switch globe transition) are applied
-    // inside the render loop so setSize and render happen in the same frame —
-    // resizing here, a frame before the redraw, caused a visible flash.
-  }).observe(container);
+  sync();
+  if (typeof GLOBE_MQ.addEventListener === 'function') {
+    GLOBE_MQ.addEventListener('change', sync);
+  }
 })();

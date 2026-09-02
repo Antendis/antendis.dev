@@ -98,8 +98,9 @@
   <link rel="stylesheet" href="fonts.css?v=20260821n">
   <link rel="stylesheet" href="style.css?v=20260821n">
   <script src="config.js?v=20260821n" defer></script>
-  <!-- Three.js for 3D globe -->
-  <script src="vendor/three.min.js?v=20260821n" defer></script>
+  <!-- Three.js for the globe loads lazily from globe.js itself, only once
+       the rail is actually going to be visible (see globe.js) -- no static
+       tag here. -->
 </head>
 <body>
   <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
