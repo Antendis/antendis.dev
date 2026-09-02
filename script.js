@@ -416,10 +416,11 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   ];
   const ALL_VARIANTS = PAINT_VARIANTS.concat(REFLOW_VARIANTS);
 
-  // Visually-similar/block-ish stand-ins for a small set of common letters --
-  // deliberately short, and only ever applied to a handful of characters at
-  // once (GLYPH_SUB_CHANCE), so it reads as corruption rather than noise.
-  const GLYPH_SUBS = { a: 'ɑ', e: 'ə', o: '0', i: 'ı', s: '5', t: '7', g: '9', l: '1' };
+  // Leetspeak-style lookalike digits for a small set of common letters --
+  // only ever applied to a handful of characters at once (GLYPH_SUB_CHANCE),
+  // so it reads as corruption rather than noise. Case is handled separately
+  // by matchCase(); digits have no case of their own to carry.
+  const GLYPH_SUBS = { a: '4', b: '8', e: '3', g: '9', i: '1', l: '1', o: '0', s: '5', t: '7' };
 
   function pickVariant() {
     const pool = Math.random() < 0.55 ? PAINT_VARIANTS : REFLOW_VARIANTS;
