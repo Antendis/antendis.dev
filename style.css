@@ -906,8 +906,10 @@ a:hover {
 /* Set on <html> by the head script only when the intro is about to type
    itself in, and cleared by script.js the moment it starts (or if it can't
    run). Hiding it up front stops the finished paragraph flashing into view
-   before the animation begins. */
-.type-hero #intro .prose {
+   before the animation begins. .footer is a persistent element outside any
+   one panel, so it's targeted on its own rather than scoped under #intro. */
+.type-hero #intro .prose,
+.type-hero .footer {
   visibility: hidden;
 }
 

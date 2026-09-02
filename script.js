@@ -254,9 +254,13 @@ function splitIntoChars(host, className, budget) {
       return;
     }
     const signoff = prose.querySelector('.signoff');
+    const footer = document.querySelector('.footer p');
 
     const passes = [{ host: body, html: body.innerHTML, ms: 1500 }];
     if (signoff) passes.push({ host: signoff, html: signoff.innerHTML, ms: 420, delay: 260 });
+    // Final pass: the footer, so it reads as written too, not just dropped
+    // in -- same brief, sequential mechanism as the signoff above, after it.
+    if (footer) passes.push({ host: footer, html: footer.innerHTML, ms: 350, delay: 220 });
     passes.forEach(p => { p.units = splitIntoChars(p.host, 'type-char'); });
 
     // Everything is split and hidden, so the block can be shown again.
