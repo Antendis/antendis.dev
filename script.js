@@ -175,16 +175,62 @@
   }
 })();
 
+// Shared text-splitting helper, used by both the hero-typing effect below
+// and the glitch intro further down: walks an element's text nodes and
+// explodes each character into its own <span>, leaving any inline markup
+// (accent spans, links, etc.) untouched so per-character effects can be
+// layered on without retyping any strings. #age is deliberately left whole
+// -- not split -- because the age ticker rewrites its textContent every
+// frame and would wipe out any spans nested inside it; callers get #age
+// itself back as one of the returned units instead, tagged with the same
+// class as everything else.
+//
+// budget, if given, is a shared { remaining } counter decremented per unit
+// produced -- once it hits 0, any characters still left in the text node
+// being walked are left as plain, unsplit text rather than throwing or
+// silently continuing past the cap. Omit it for no limit (the typing
+// effect's use below never needs one; the glitch intro's does, to bound how
+// much of the page it touches).
+function splitIntoChars(host, className, budget) {
+  const units = [];
+  (function walk(node) {
+    Array.from(node.childNodes).forEach(child => {
+      if (budget && budget.remaining <= 0) return;
+      if (child.nodeType === 3) {
+        const chars = Array.from(child.nodeValue);
+        const frag = document.createDocumentFragment();
+        let i = 0;
+        for (; i < chars.length; i++) {
+          if (budget && budget.remaining <= 0) break;
+          const span = document.createElement('span');
+          span.className = className;
+          span.textContent = chars[i];
+          frag.appendChild(span);
+          units.push(span);
+          if (budget) budget.remaining--;
+        }
+        if (i < chars.length) {
+          frag.appendChild(document.createTextNode(chars.slice(i).join('')));
+        }
+        node.replaceChild(frag, child);
+      } else if (child.nodeType === 1) {
+        if (child.id === 'age') {
+          child.classList.add(className);
+          units.push(child);
+          if (budget) budget.remaining--;
+        } else {
+          walk(child);
+        }
+      }
+    });
+  })(host);
+  return units;
+}
+
 // Hero typing: on the first load of a session the intro body writes itself
-// in, just after the title (which appears normally). The paragraph carries
-// inline markup -- accent spans and the live age counter -- so rather than
-// retyping a string, each existing text node is split into per-character
-// spans that are then revealed in order, leaving the element structure
-// untouched. #age is revealed whole instead of split, because the age ticker
-// rewrites its textContent every frame and would wipe any spans inside it.
-// Once finished the original markup is restored, which drops ~450 throwaway
-// spans and gets back the kerning that splitting into separate text runs
-// costs.
+// in, just after the title (which appears normally). Once finished the
+// original markup is restored, which drops ~450 throwaway spans and gets
+// back the kerning that splitting into separate text runs costs.
 (function () {
   const root = document.documentElement;
   if (!root.classList.contains('type-hero')) return;
@@ -200,37 +246,9 @@
     }
     const signoff = prose.querySelector('.signoff');
 
-    // Split one element's text nodes into revealable units, preserving markup.
-    function split(host) {
-      const units = [];
-      (function walk(node) {
-        Array.from(node.childNodes).forEach(child => {
-          if (child.nodeType === 3) {
-            const frag = document.createDocumentFragment();
-            Array.from(child.nodeValue).forEach(ch => {
-              const span = document.createElement('span');
-              span.className = 'type-char';
-              span.textContent = ch;
-              frag.appendChild(span);
-              units.push(span);
-            });
-            node.replaceChild(frag, child);
-          } else if (child.nodeType === 1) {
-            if (child.id === 'age') {
-              child.classList.add('type-char');
-              units.push(child);
-            } else {
-              walk(child);
-            }
-          }
-        });
-      })(host);
-      return units;
-    }
-
     const passes = [{ host: body, html: body.innerHTML, ms: 1500 }];
     if (signoff) passes.push({ host: signoff, html: signoff.innerHTML, ms: 420, delay: 260 });
-    passes.forEach(p => { p.units = split(p.host); });
+    passes.forEach(p => { p.units = splitIntoChars(p.host, 'type-char'); });
 
     // Everything is split and hidden, so the block can be shown again.
     reveal();
@@ -276,15 +294,27 @@
 
 // Dynamic age calculation
 
-function updateAge() {
+function ageYears() {
   const birthDate = new Date('2003-05-22');
-  const now = new Date();
-  const ageInMilliseconds = now - birthDate;
-  const ageInYears = ageInMilliseconds / (365.25 * 24 * 60 * 60 * 1000);
+  return (Date.now() - birthDate) / (365.25 * 24 * 60 * 60 * 1000);
+}
+
+function ageString() {
+  return `${ageYears().toFixed(9)} years old`;
+}
+
+// Set (to a same-shape string of randomised digits) by the glitch intro
+// while #age hasn't been reached by its sweep yet, and cleared once it has
+// -- see the glitch intro module further down. Kept here, next to the
+// ticker that's the only thing that ever reads it, rather than owned by the
+// glitch module itself, so updateAge() stays the single place that decides
+// what #age actually shows.
+let ageGlitchText = null;
+
+function updateAge() {
   const ageElement = document.getElementById('age');
-  if (ageElement) {
-    ageElement.textContent = `${ageInYears.toFixed(9)} years old`;
-  }
+  if (!ageElement) return;
+  ageElement.textContent = ageGlitchText !== null ? ageGlitchText : ageString();
 }
 
 // Start age ticker: render immediately, then update every animation frame
@@ -324,6 +354,320 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 
   startAgeTicker();
 }
+
+// Glitch intro: a print/typesetting failure -- wrong faces, wrong weights,
+// spurious italics, letter-spacing collapse, ink misregistration -- rather
+// than a video glitch (scanlines, RGB split), which would read as a broken
+// screen instead of a bad print run. Replaces the type-in effect above on
+// the flagged test page (see the head script in index.html, which gates
+// first paint on 'type-hero' XOR 'glitch-intro' -- never both, so the two
+// effects can never run back to back). Gated behind ?glitch=1 so normal
+// visitors never load, run, or pay for any of this; see /glitchtest, a
+// redirect shim rather than a page copy, for how testers reach the flag.
+//
+// Three phases, ~2.4s total:
+//   1. Corrupt (0 - ~1.4s): the sidebar, the active panel and the footer
+//      are exploded into per-character spans (via the shared splitIntoChars
+//      helper above) and re-randomised every ~90ms -- ~11 times a second,
+//      not every frame, both because per-frame reads as static noise and
+//      because font/weight swaps reflow text.
+//   2. Sweep (~1.4s - ~2.1s): every affected span is sorted by its real
+//      getBoundingClientRect().x (tie-broken on y) and un-glitched in that
+//      order over ~700ms, so the clean-up reads as one front moving left to
+//      right across the sidebar and the content column together, not a
+//      per-element snap.
+//   3. Settle (~2.1s - ~2.4s): a short grace window, then the original
+//      markup is restored outright (dropping every throwaway span).
+(function () {
+  let GLITCH_ENABLED = false;
+  try {
+    GLITCH_ENABLED = new URLSearchParams(location.search).get('glitch') === '1';
+  } catch (e) {}
+  if (!GLITCH_ENABLED) return;
+
+  const root = document.documentElement;
+  const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const PHASE1_MS = 1400;
+  const SWEEP_MS = 700;
+  const SETTLE_MS = 300;
+  const TICK_MS = 90; // ~11 mutation passes/sec -- see the phase-1 note above
+  const FAILSAFE_MS = 6000;
+  const SPAN_CAP = 2500;
+  const STUTTER_DELAYS_MS = [200, 600, 1000, 1400]; // spread through phase 1, last one at the sweep's start
+  const GLYPH_SUB_CHANCE = 0.05; // sparingly -- corruption, not noise
+
+  // Paint-only corruption (opacity, text-shadow) costs no reflow; the rest
+  // changes glyph width, so it's mixed in less often (see pickVariant).
+  const PAINT_VARIANTS = ['g-bleed', 'g-faint'];
+  const REFLOW_VARIANTS = [
+    'g-font-fallback', 'g-font-mono', 'g-font-system',
+    'g-weight-bold', 'g-weight-light', 'g-italic',
+    'g-space-tight', 'g-space-loose'
+  ];
+  const ALL_VARIANTS = PAINT_VARIANTS.concat(REFLOW_VARIANTS);
+
+  // Visually-similar/block-ish stand-ins for a small set of common letters --
+  // deliberately short, and only ever applied to a handful of characters at
+  // once (GLYPH_SUB_CHANCE), so it reads as corruption rather than noise.
+  const GLYPH_SUBS = { a: 'ɑ', e: 'ə', o: '0', i: 'ı', s: '5', t: '7', g: '9', l: '1' };
+
+  function pickVariant() {
+    const pool = Math.random() < 0.55 ? PAINT_VARIANTS : REFLOW_VARIANTS;
+    return pool[(Math.random() * pool.length) | 0];
+  }
+
+  function clearVariants(el) {
+    ALL_VARIANTS.forEach(v => el.classList.remove(v));
+  }
+
+  function matchCase(ch, sub) {
+    return ch === ch.toUpperCase() && ch !== ch.toLowerCase() ? sub.toUpperCase() : sub;
+  }
+
+  function applyVariant(u) {
+    clearVariants(u.el);
+    u.el.classList.add(pickVariant());
+    const sub = Math.random() < GLYPH_SUB_CHANCE ? GLYPH_SUBS[u.ch.toLowerCase()] : null;
+    u.el.textContent = sub ? matchCase(u.ch, sub) : u.ch;
+  }
+
+  function scrambleAge() {
+    // Same length and shape as the real string -- only the digits move --
+    // so #age never reflows while it's "haywire".
+    return ageString().replace(/[0-9]/g, () => String((Math.random() * 10) | 0));
+  }
+
+  function shuffleTitle(str) {
+    const chars = Array.from(str);
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      const tmp = chars[i]; chars[i] = chars[j]; chars[j] = tmp;
+    }
+    return chars.join('');
+  }
+
+  // One mutation pass: re-randomises a rotating slice of whatever hasn't
+  // been swept clean yet (not the whole pool every tick -- see the phase-1
+  // note above), keeps #age's digits haywire, and keeps the tab title
+  // scrambled for as long as nothing has navigated away underneath it.
+  function mutateTick(pool, ageUnit, isTitleScrambling, trueTitle) {
+    const pending = pool.filter(u => !u.cleaned && !u.isAge);
+    if (pending.length) {
+      const batchSize = Math.min(pending.length, Math.max(6, Math.round(pending.length * 0.18)));
+      for (let i = 0; i < batchSize; i++) {
+        applyVariant(pending[(Math.random() * pending.length) | 0]);
+      }
+    }
+    if (ageUnit && !ageUnit.cleaned) {
+      clearVariants(ageUnit.el);
+      ageUnit.el.classList.add(pickVariant());
+      ageGlitchText = scrambleAge();
+    }
+    if (isTitleScrambling()) {
+      document.title = shuffleTitle(trueTitle);
+    }
+  }
+
+  function resolveUnit(u) {
+    u.cleaned = true;
+    if (u.isAge) {
+      clearVariants(u.el);
+      ageGlitchText = null;
+    } else {
+      clearVariants(u.el);
+      u.el.textContent = u.ch;
+    }
+  }
+
+  // Phase 2: snapshot every unit's real position now that phase 1 has
+  // stopped moving things around (collecting positions per-frame during the
+  // sweep itself would have the front chase its own furniture as spans
+  // un-corrupt and reflow under it), sort left to right, then reveal that
+  // many of them per frame over SWEEP_MS. Phase 3 is just the short grace
+  // window (SETTLE_MS) after the last one resolves, then finalize().
+  function sweep(pool, stopTitleScramble, trueTitle, finalize) {
+    stopTitleScramble();
+    document.title = trueTitle;
+
+    pool.forEach(u => {
+      const r = u.el.getBoundingClientRect();
+      u.x = r.x;
+      u.y = r.y;
+    });
+    pool.sort((a, b) => a.x - b.x || a.y - b.y);
+
+    let cleaned = 0;
+    const start = performance.now();
+
+    // Each frame after the first runs as its own rAF callback, outside the
+    // try/catch this function was called from -- wrap it here too, so a
+    // runtime error partway through the sweep still restores clean text on
+    // the spot instead of waiting on the failsafe timer.
+    (function frame(now) {
+      try {
+        const elapsed = now - start;
+        const target = elapsed >= SWEEP_MS ? pool.length : Math.floor((elapsed / SWEEP_MS) * pool.length);
+        for (; cleaned < target; cleaned++) resolveUnit(pool[cleaned]);
+        if (cleaned < pool.length) {
+          requestAnimationFrame(frame);
+        } else {
+          setTimeout(finalize, SETTLE_MS);
+        }
+      } catch (e) {
+        finalize();
+      }
+    })(start);
+  }
+
+  let activeCleanup = null;
+
+  function run() {
+    if (prefersReducedMotion()) {
+      root.classList.remove('glitch-intro');
+      return;
+    }
+    if (activeCleanup) { activeCleanup(); activeCleanup = null; }
+    try {
+      doRun();
+    } catch (e) {
+      root.classList.remove('glitch-intro');
+      ageGlitchText = null;
+    }
+  }
+
+  function doRun() {
+    const hosts = [
+      { el: document.querySelector('.sidebar') },
+      { el: document.querySelector('.panel.is-active') },
+      { el: document.querySelector('.footer') }
+    ].filter(h => h.el);
+
+    if (!hosts.length) {
+      root.classList.remove('glitch-intro');
+      return;
+    }
+
+    // Captured before any splitting touches the DOM, so an error partway
+    // through the split below still has a complete, safe set to restore.
+    hosts.forEach(h => { h.html = h.el.innerHTML; });
+
+    try {
+      const budget = { remaining: SPAN_CAP };
+      const pool = [];
+      hosts.forEach(h => {
+        splitIntoChars(h.el, 'glitch-char', budget).forEach(el => {
+          pool.push({ el, isAge: el.id === 'age', ch: el.id === 'age' ? '' : el.textContent, cleaned: false });
+        });
+      });
+      startSequence(hosts, pool);
+    } catch (e) {
+      hosts.forEach(h => { h.el.innerHTML = h.html; });
+      root.classList.remove('glitch-intro');
+      ageGlitchText = null;
+    }
+  }
+
+  function startSequence(hosts, pool) {
+    const ageUnit = pool.find(u => u.isAge) || null;
+    const trueTitle = document.title;
+    let titleScrambling = true;
+    let done = false;
+    let mutateTimer = null;
+    const timers = [];
+
+    function cleanup() {
+      if (done) return;
+      done = true;
+      if (activeCleanup === cleanup) activeCleanup = null;
+      timers.forEach(clearTimeout);
+      if (mutateTimer) clearInterval(mutateTimer);
+      window.removeEventListener('hashchange', onNavigate);
+      ageGlitchText = null;
+      if (titleScrambling) document.title = trueTitle;
+      hosts.forEach(h => { h.el.innerHTML = h.html; });
+      root.classList.remove('glitch-intro');
+    }
+    activeCleanup = cleanup;
+
+    // The user navigated to a different panel mid-sequence (vanishingly
+    // rare -- this only ever runs in the first ~2.4s of a load): the router
+    // has already set the correct title for wherever they went, so don't
+    // fight it by restoring the stale one this run captured.
+    function onNavigate() {
+      titleScrambling = false;
+      cleanup();
+    }
+    window.addEventListener('hashchange', onNavigate, { once: true });
+
+    // Failsafe: force a clean restore if the sequence ever stalls.
+    timers.push(setTimeout(cleanup, FAILSAFE_MS));
+
+    // A few globe rotation jumps through phase 1 (silent no-op if the globe
+    // isn't up or its rail is hidden -- see glitchStutter() in globe.js),
+    // left to ease themselves back to true rotation on their own timeline so
+    // the globe reads as settling across the same window the text sweep
+    // resolves in, rather than snapping back at some unrelated moment.
+    STUTTER_DELAYS_MS.forEach(ms => {
+      timers.push(setTimeout(() => {
+        try { window.globe?.glitchStutter?.(); } catch (e) {}
+      }, ms));
+    });
+
+    // Everything is split and (if this is the page's first run) pre-hidden
+    // via .glitch-intro -- apply the initial fully-corrupted state before
+    // revealing, so first paint is already mid-glitch instead of flashing
+    // clean text first.
+    pool.forEach(u => { if (!u.isAge) applyVariant(u); });
+    if (ageUnit) {
+      clearVariants(ageUnit.el);
+      ageUnit.el.classList.add(pickVariant());
+      ageGlitchText = scrambleAge();
+    }
+    root.classList.remove('glitch-intro');
+
+    mutateTimer = setInterval(() => {
+      try {
+        mutateTick(pool, ageUnit, () => titleScrambling, trueTitle);
+      } catch (e) {
+        cleanup();
+      }
+    }, TICK_MS);
+
+    timers.push(setTimeout(() => {
+      clearInterval(mutateTimer);
+      mutateTimer = null;
+      try {
+        sweep(pool, () => { titleScrambling = false; }, trueTitle, cleanup);
+      } catch (e) {
+        cleanup();
+      }
+    }, PHASE1_MS));
+  }
+
+  if (root.classList.contains('glitch-intro')) run();
+
+  // Test-only replay, so the effect can be watched repeatedly without a
+  // full reload: press "r" (no modifiers, and not while focus is in a form
+  // field -- this site has none today, but it costs nothing to check) or
+  // click the small control this adds in the corner. Both only ever exist
+  // behind the same ?glitch=1 flag that gates the whole module above, so
+  // neither the binding nor the control exists on the normal page.
+  window.addEventListener('keydown', e => {
+    if (e.key.toLowerCase() !== 'r' || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    run();
+  });
+
+  const replayBtn = document.createElement('button');
+  replayBtn.type = 'button';
+  replayBtn.className = 'glitch-replay';
+  replayBtn.textContent = 'replay glitch (r)';
+  replayBtn.setAttribute('aria-label', 'Replay the glitch intro effect');
+  replayBtn.addEventListener('click', run);
+  document.body.appendChild(replayBtn);
+})();
 
 // Load achievements and grades from config
 function loadAchievements() {

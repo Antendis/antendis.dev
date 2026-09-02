@@ -919,6 +919,72 @@ a:hover {
   opacity: 1;
 }
 
+/* ---------- glitch intro ----------
+   A print/typesetting failure resolving into the clean design, not a video
+   glitch -- so this stays wrong faces, wrong weights, spurious italics,
+   letter-spacing collapse and ink misregistration; never scanlines or RGB
+   split, which would read as a broken screen rather than a bad print run.
+   Test-only (?glitch=1 -- see script.js and /glitchtest); completely inert
+   otherwise, since none of these classes are ever applied without it. */
+
+/* Set on <html> by the head script only when ?glitch=1 is present and
+   motion is allowed, and cleared by script.js the instant the initial
+   corrupted state is ready to show -- so first paint is already glitched
+   rather than flashing clean text first. Mirrors .type-hero above exactly,
+   just for the other intro treatment (the two are mutually exclusive -- see
+   the head script). */
+.glitch-intro .sidebar,
+.glitch-intro .content .panel.is-active,
+.glitch-intro .footer {
+  visibility: hidden;
+}
+
+/* Font-family swap: the wrong stylesheet's face, briefly. */
+.g-font-fallback { font-family: Georgia, 'Times New Roman', serif; }
+.g-font-mono { font-family: var(--mono); }
+.g-font-system { font-family: system-ui, sans-serif; }
+
+/* Wrong cut of the face, as if the wrong weight/style file loaded. */
+.g-weight-bold { font-weight: 700; }
+.g-weight-light { font-weight: 400; }
+.g-italic { font-style: italic; }
+
+/* Letter-spacing collapse/spread -- small, both directions. */
+.g-space-tight { letter-spacing: -0.05em; }
+.g-space-loose { letter-spacing: 0.1em; }
+
+/* Ink bleed: a duplicated, 1-2px offset ghost of the character in the
+   site's own ink/green -- print misregistration standing in for chromatic
+   aberration, which would read as a broken monitor rather than a bad
+   impression. */
+.g-bleed { text-shadow: 1.5px 0 var(--green), -1px 0.5px var(--ink); }
+
+/* Under-inked dropout. */
+.g-faint { opacity: 0.4; }
+
+/* Test-only replay control, added by script.js only behind ?glitch=1 --
+   never present (and this rule therefore inert) on the normal site. */
+.glitch-replay {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+
+.glitch-replay:hover {
+  color: var(--green);
+  border-color: var(--accent-decoration);
+}
+
 /* ---------- about ---------- */
 
 .prose {

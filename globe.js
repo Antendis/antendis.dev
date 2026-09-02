@@ -12,6 +12,14 @@ let lastGlobeH = 0;
 const GLOBE_RADIUS = 100;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// The globe's own true, undisturbed rotation, and a transient offset the
+// glitch intro's stutter hook (see glitchStutter() below) layers on top and
+// eases back out of -- kept apart so the correction itself is just this
+// offset decaying to 0 against a rotation that never stopped advancing,
+// rather than a second jump.
+let baseRotationY = 0;
+let stutterOffset = 0;
+
 // Palette (matches style.css tokens). Resolved from the live CSS custom
 // properties at init, and again on refreshTheme(), so the globe follows
 // the active light/dark theme instead of hardcoding the light-mode hex
@@ -79,10 +87,23 @@ function syncGlobeDebugHooks() {
   window.__globeMaterialColors = themedMaterials.map(({ material, role }) => ({ role, hex: material.color.getHex() }));
 }
 
-// Handed to script.js's theme toggle so it can repaint the already-built
-// globe after a light/dark switch, the same way visitorTracking is handed
-// the other way for globe.js to pull visitor data from.
-window.globe = { refreshTheme };
+// Applies one random rotation jump, eased back out over subsequent frames
+// by the decay in animateGlobe() rather than snapped back in one step --
+// called a few times by the glitch intro's corrupt phase (see script.js) so
+// the globe reads as caught up in the same misregistration as the text,
+// without the correction itself looking like a second glitch. Silent no-op
+// if the globe hasn't initialised yet or its rail is hidden -- callers use
+// it as a fire-and-forget hook, same as refreshTheme().
+function glitchStutter() {
+  if (!globeGroup || !globeVisible || REDUCED_MOTION) return;
+  stutterOffset += (Math.random() - 0.5) * 0.5;
+}
+
+// Handed to script.js's theme toggle (and, for glitchStutter, the glitch
+// intro) so each can drive the already-built globe from outside without
+// reaching into its internals -- the same way visitorTracking is handed the
+// other way for globe.js to pull visitor data from.
+window.globe = { refreshTheme, glitchStutter };
 
 function initGlobe(container, width, height) {
   readPalette();
@@ -316,7 +337,12 @@ function animateGlobe() {
   }
 
   if (globeGroup && !REDUCED_MOTION) {
-    globeGroup.rotation.y += 0.001; // Slow rotation
+    baseRotationY += 0.001; // Slow rotation
+    if (stutterOffset !== 0) {
+      stutterOffset *= 0.85;
+      if (Math.abs(stutterOffset) < 0.0005) stutterOffset = 0;
+    }
+    globeGroup.rotation.y = baseRotationY + stutterOffset;
   }
 
   // Pulsate current visitor marker

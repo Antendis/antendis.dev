@@ -75,19 +75,21 @@
     })();
   </script>
 
-  <!-- Decide before first paint whether the intro body should write itself
-       in, so the finished text never flashes up before the animation. The
-       typing script in script.js clears this class (and reveals the text)
-       when it finishes, or immediately if anything goes wrong.
-       Runs on every page load: switching panels doesn't reload, so this is
-       already "first time" in normal use, and gating it on sessionStorage
-       meant a hard refresh wouldn't replay it. -->
+  <!-- Decide before first paint which intro treatment (if any) gates the
+       hero text: the glitch effect on the flagged test page (?glitch=1 --
+       see /glitchtest and script.js), the ordinary type-in everywhere else.
+       Both hide their own scope only until their own script is ready to
+       show it (glitched or typed), and reveal it immediately if anything
+       goes wrong, so the finished/failed state is never a flash of the
+       wrong one. Runs on every page load: switching panels doesn't reload,
+       so this is already "first time" in normal use, and gating it on
+       sessionStorage meant a hard refresh wouldn't replay it. -->
   <script>
     (function () {
       try {
-        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          document.documentElement.classList.add('type-hero');
-        }
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var glitch = new URLSearchParams(location.search).get('glitch') === '1';
+        document.documentElement.classList.add(glitch ? 'glitch-intro' : 'type-hero');
       } catch (e) {}
     })();
   </script>
