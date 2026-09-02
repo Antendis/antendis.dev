@@ -197,6 +197,15 @@ function splitIntoChars(host, className, budget) {
     Array.from(node.childNodes).forEach(child => {
       if (budget && budget.remaining <= 0) return;
       if (child.nodeType === 3) {
+        // Whitespace-only text nodes are the newlines/indentation between
+        // sibling elements in the authored HTML -- structurally invisible,
+        // not text to animate. Left as plain text nodes rather than wrapped
+        // in a span: inside a flex container, a whitespace-only *text node*
+        // is skipped when laying out flex items, but a whitespace-only
+        // *span* is a real element and becomes a flex item like any other,
+        // multiplying `gap` once per character. Wrapping them was blowing
+        // .sidebar's height out to 3x the viewport.
+        if (/^\s*$/.test(child.nodeValue)) return;
         const chars = Array.from(child.nodeValue);
         const frag = document.createDocumentFragment();
         let i = 0;
