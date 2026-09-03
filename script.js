@@ -68,11 +68,9 @@
 // inline head script already applied any saved choice before first paint;
 // this wires up the button and keeps things in sync with live OS changes.
 (function () {
-  const toggle = document.getElementById('themeToggle');
-  if (!toggle) return;
+  if (!document.getElementById('themeToggle')) return;
 
   const media = window.matchMedia('(prefers-color-scheme: dark)');
-  const colorMeta = document.getElementById('themeColorMeta');
   const DARK_COLOR = '#16140F';
   const LIGHT_COLOR = '#F7F1E3';
 
@@ -80,9 +78,19 @@
     return document.documentElement.dataset.theme || (media.matches ? 'dark' : 'light');
   }
 
+  // Re-queried on every call rather than cached once at module init: the
+  // glitch intro further down replaces .sidebar's innerHTML wholesale when
+  // it finishes (to drop its throwaway spans), which silently detaches a
+  // listener bound to the button itself and leaves a cached reference
+  // pointing at a node that's no longer in the DOM -- the toggle would still
+  // render, just stop responding to clicks after the first glitch run.
   function reflect(theme) {
-    toggle.setAttribute('aria-pressed', theme === 'dark');
-    toggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+      toggle.setAttribute('aria-pressed', theme === 'dark');
+      toggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+    const colorMeta = document.getElementById('themeColorMeta');
     if (colorMeta) {
       colorMeta.setAttribute('content', theme === 'dark' ? DARK_COLOR : LIGHT_COLOR);
     }
@@ -106,7 +114,11 @@
     }
   });
 
-  toggle.addEventListener('click', () => {
+  // Delegated on document rather than bound to the button, for the same
+  // reason reflect() re-queries above: this listener has to survive the
+  // button underneath it being torn down and recreated by the glitch intro.
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#themeToggle')) return;
     const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
     localStorage.setItem('theme', next);
