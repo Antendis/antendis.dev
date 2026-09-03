@@ -386,6 +386,37 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   startAgeTicker();
 }
 
+// Load achievements and tech stack from config before the glitch module
+// below runs. Order matters here: the glitch module captures whichever
+// panel is active and restores that exact snapshot when it finishes, so if
+// this ran after it (as it used to -- it's defined further down and was
+// invoked down there too, in file order), a fresh load landing straight on
+// #achievements would let the glitch intro snapshot the panel *before* its
+// roles list and hackathon count existed, corrupt/resolve that empty shell,
+// then restore it -- wiping out the real content the moment the intro
+// finished. loadAchievements/loadTechStack/reflowSkillsList(s) are plain
+// function declarations further down, hoisted, so calling them here is
+// fine regardless of where in the file they're defined.
+if (typeof config !== 'undefined') {
+  loadAchievements();
+  loadTechStack();
+  reflowSkillsLists();
+
+  // Re-pack on resize (debounced -- the skills grid's column width, and
+  // whether the layout is tabbed or stacked at all, both change with it)
+  // and once webfonts finish loading, since chip width depends on
+  // JetBrains Mono's real metrics, not the fallback font it's measured
+  // against on a cold load.
+  let reflowTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(reflowTimer);
+    reflowTimer = setTimeout(reflowSkillsLists, 120);
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(reflowSkillsLists).catch(() => {});
+  }
+}
+
 // Glitch intro: a print/typesetting failure -- wrong faces, wrong weights,
 // spurious italics, letter-spacing collapse, ink misregistration -- rather
 // than a video glitch (scanlines, RGB split), which would read as a broken
@@ -987,27 +1018,6 @@ function reflowSkillsList(container) {
 function reflowSkillsLists() {
   reflowSkillsList(document.getElementById('techLanguages'));
   reflowSkillsList(document.getElementById('techTools'));
-}
-
-// Load achievements and tech stack when page loads
-if (typeof config !== 'undefined') {
-  loadAchievements();
-  loadTechStack();
-  reflowSkillsLists();
-
-  // Re-pack on resize (debounced -- the skills grid's column width, and
-  // whether the layout is tabbed or stacked at all, both change with it)
-  // and once webfonts finish loading, since chip width depends on
-  // JetBrains Mono's real metrics, not the fallback font it's measured
-  // against on a cold load.
-  let reflowTimer = null;
-  window.addEventListener('resize', () => {
-    clearTimeout(reflowTimer);
-    reflowTimer = setTimeout(reflowSkillsLists, 120);
-  });
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(reflowSkillsLists).catch(() => {});
-  }
 }
 
 // Copy to clipboard, then open the mail client -- the mailto: trigger waits
