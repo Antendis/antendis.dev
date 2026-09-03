@@ -20,6 +20,14 @@ const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 let baseRotationY = 0;
 let stutterOffset = 0;
 
+// A brief on-screen position jump, layered the same way as stutterOffset
+// above (a transient offset the render loop eases back to 0 every frame)
+// but applied as a CSS transform on the container rather than anything
+// inside the scene, so it moves the whole globe box -- reads as the globe
+// itself glitching in place, not the camera or geometry doing something odd.
+let teleportX = 0;
+let teleportY = 0;
+
 // Palette (matches style.css tokens). Resolved from the live CSS custom
 // properties at init, and again on refreshTheme(), so the globe follows
 // the active light/dark theme instead of hardcoding the light-mode hex
@@ -87,16 +95,19 @@ function syncGlobeDebugHooks() {
   window.__globeMaterialColors = themedMaterials.map(({ material, role }) => ({ role, hex: material.color.getHex() }));
 }
 
-// Applies one random rotation jump, eased back out over subsequent frames
-// by the decay in animateGlobe() rather than snapped back in one step --
-// called a few times by the glitch intro's corrupt phase (see script.js) so
-// the globe reads as caught up in the same misregistration as the text,
-// without the correction itself looking like a second glitch. Silent no-op
-// if the globe hasn't initialised yet or its rail is hidden -- callers use
-// it as a fire-and-forget hook, same as refreshTheme().
+// Applies one random rotation jump and one random position jump together,
+// both eased back out over subsequent frames by the decay in animateGlobe()
+// rather than snapped back in one step -- called a few times by the glitch
+// intro's corrupt phase (see script.js) so the globe reads as caught up in
+// the same misregistration as the text (a rotation stutter plus a brief
+// teleport), without the correction itself looking like a second glitch.
+// Silent no-op if the globe hasn't initialised yet or its rail is hidden --
+// callers use it as a fire-and-forget hook, same as refreshTheme().
 function glitchStutter() {
   if (!globeGroup || !globeVisible || REDUCED_MOTION) return;
   stutterOffset += (Math.random() - 0.5) * 0.5;
+  teleportX += (Math.random() - 0.5) * 36;
+  teleportY += (Math.random() - 0.5) * 36;
 }
 
 // Handed to script.js's theme toggle (and, for glitchStutter, the glitch
@@ -377,6 +388,16 @@ function animateGlobe() {
       if (Math.abs(stutterOffset) < 0.0005) stutterOffset = 0;
     }
     globeGroup.rotation.y = baseRotationY + stutterOffset;
+  }
+
+  if (globeContainer && !REDUCED_MOTION && (teleportX !== 0 || teleportY !== 0)) {
+    teleportX *= 0.8;
+    teleportY *= 0.8;
+    if (Math.abs(teleportX) < 0.3) teleportX = 0;
+    if (Math.abs(teleportY) < 0.3) teleportY = 0;
+    globeContainer.style.transform = (teleportX || teleportY)
+      ? `translate(${teleportX.toFixed(1)}px, ${teleportY.toFixed(1)}px)`
+      : '';
   }
 
   // Pulsate current visitor marker
