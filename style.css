@@ -958,13 +958,16 @@ a:hover {
 .g-weight-light { font-weight: 400; }
 .g-italic { font-style: italic; }
 
-/* Letter-spacing collapse/spread -- small, both directions. */
-.g-space-tight { letter-spacing: -0.05em; }
-.g-space-loose { letter-spacing: 0.1em; }
+/* Letter-spacing collapse/spread -- small, both directions. Was 0.1em/-0.05em;
+   turned down after it read as whole words visibly pulling apart mid-sweep
+   (a wrapped 11-character word gaining ~20px) rather than a subtle tracking
+   shift, especially with several reflow variants landing on the same line
+   at once. */
+.g-space-tight { letter-spacing: -0.03em; }
+.g-space-loose { letter-spacing: 0.05em; }
 
-/* ...but a good deal smaller in the sidebar's footer links, which are 12px
-   mono already tracked out to 0.06em. The same 0.1em that reads as a subtle
-   spread in 18px body copy reads as broken words there. */
+/* ...smaller still in the sidebar's footer links, which are 12px mono
+   already tracked out to 0.06em. */
 .side-foot a .g-space-tight { letter-spacing: -0.02em; }
 .side-foot a .g-space-loose { letter-spacing: 0.03em; }
 
