@@ -134,9 +134,14 @@ Saves reading whole files (`style.css` ~1500 lines, `script.js` ~900).
   theme toggle · content/panels · globe rail · type · sections · entries ·
   university · skills · about · contact · hero typing · glitch · responsive ·
   breakpoints · motion preferences.
-- Intro treatments are chosen pre-paint in `index.html`'s head: `glitch-intro` on
-  `?glitch=1`, otherwise `type-hero`. `/glitchtest/index.html` is a redirect shim,
-  deliberately **not** a copy of the site.
+- The glitch intro is the default treatment for every visitor, gated pre-paint in
+  `index.html`'s head via the `glitch-intro` class on `<html>`. The old `type-hero`
+  typing effect is still in `script.js`/`style.css` but dormant — nothing sets
+  `type-hero` anymore, so it never runs. `?glitch=1` no longer decides whether the
+  intro plays; it only shows the debug replay control (button + `r` key) in the
+  corner, for testing without a full reload — see `GLITCH_DEBUG` in `script.js`.
+  `/glitchtest/index.html` is a redirect shim to that flag, deliberately **not** a
+  copy of the site.
 
 ## Working efficiently
 

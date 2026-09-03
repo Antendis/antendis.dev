@@ -389,12 +389,12 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 // Glitch intro: a print/typesetting failure -- wrong faces, wrong weights,
 // spurious italics, letter-spacing collapse, ink misregistration -- rather
 // than a video glitch (scanlines, RGB split), which would read as a broken
-// screen instead of a bad print run. Replaces the type-in effect above on
-// the flagged test page (see the head script in index.html, which gates
-// first paint on 'type-hero' XOR 'glitch-intro' -- never both, so the two
-// effects can never run back to back). Gated behind ?glitch=1 so normal
-// visitors never load, run, or pay for any of this; see /glitchtest, a
-// redirect shim rather than a page copy, for how testers reach the flag.
+// screen instead of a bad print run. The default intro for every visitor
+// (see the head script in index.html, which gates first paint on
+// 'glitch-intro'); the hero-typing effect above is dormant now that nothing
+// ever sets 'type-hero'. ?glitch=1 (see /glitchtest) no longer decides
+// whether this runs -- only whether the debug replay control at the bottom
+// of this module is shown, for testing the effect without a full reload.
 //
 // Two waves, back to back, ~2.4s total. The sidebar, the active panel and
 // the footer are exploded into per-character spans (via the shared
@@ -415,11 +415,13 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 // Both fronts are the same mechanism -- see waveFront() below, which is also
 // where the two things that make a front read as a front are written down.
 (function () {
-  let GLITCH_ENABLED = false;
+  // Debug-only: whether the replay control (button + "r" key) at the
+  // bottom of this module gets added. Doesn't gate the effect itself
+  // anymore -- see the header comment above.
+  let GLITCH_DEBUG = false;
   try {
-    GLITCH_ENABLED = new URLSearchParams(location.search).get('glitch') === '1';
+    GLITCH_DEBUG = new URLSearchParams(location.search).get('glitch') === '1';
   } catch (e) {}
-  if (!GLITCH_ENABLED) return;
 
   const root = document.documentElement;
   const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -813,26 +815,29 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 
   if (root.classList.contains('glitch-intro')) run();
 
-  // Test-only replay, so the effect can be watched repeatedly without a
-  // full reload: press "r" (no modifiers, and not while focus is in a form
-  // field -- this site has none today, but it costs nothing to check) or
-  // click the small control this adds in the corner. Both only ever exist
-  // behind the same ?glitch=1 flag that gates the whole module above, so
-  // neither the binding nor the control exists on the normal page.
-  window.addEventListener('keydown', e => {
-    if (e.key.toLowerCase() !== 'r' || e.metaKey || e.ctrlKey || e.altKey) return;
-    const t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-    run();
-  });
+  // Debug-only replay, so the effect can be watched repeatedly without a
+  // full reload while testing: press "r" (no modifiers, and not while focus
+  // is in a form field -- this site has none today, but it costs nothing to
+  // check) or click the small control this adds in the corner. Both only
+  // ever exist behind ?glitch=1 (see GLITCH_DEBUG above), so neither the
+  // binding nor the control exists for an ordinary visitor -- the intro
+  // itself still runs for them, same as everyone else.
+  if (GLITCH_DEBUG) {
+    window.addEventListener('keydown', e => {
+      if (e.key.toLowerCase() !== 'r' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      run();
+    });
 
-  const replayBtn = document.createElement('button');
-  replayBtn.type = 'button';
-  replayBtn.className = 'glitch-replay';
-  replayBtn.textContent = 'replay glitch (r)';
-  replayBtn.setAttribute('aria-label', 'Replay the glitch intro effect');
-  replayBtn.addEventListener('click', run);
-  document.body.appendChild(replayBtn);
+    const replayBtn = document.createElement('button');
+    replayBtn.type = 'button';
+    replayBtn.className = 'glitch-replay';
+    replayBtn.textContent = 'replay glitch (r)';
+    replayBtn.setAttribute('aria-label', 'Replay the glitch intro effect');
+    replayBtn.addEventListener('click', run);
+    document.body.appendChild(replayBtn);
+  }
 })();
 
 // Load achievements and grades from config
