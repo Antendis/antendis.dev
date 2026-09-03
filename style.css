@@ -876,13 +876,12 @@ a:hover {
   padding: 0.4rem 0.85rem;
   border: 1px solid var(--rule);
   border-radius: 999px;
-  /* Share out each row's leftover width between its own chips. Wrapping is
-     strictly in source order, so whenever the next chip is too wide to fit
-     (a long one like "jupyter notebook" after a short row) the row used to
-     just end early and leave an obvious hole. Growing the chips closes it
-     without reordering the list, which is content from config.js and would
-     otherwise need width-aware repacking on every resize. */
-  flex: 1 1 auto;
+  /* Sized to content, not stretched -- reflowSkillsLists() in script.js
+     assigns each chip a visual `order` so wrapping packs rows tight (a
+     short chip no longer inflates to fill a row it happens to share with
+     only one or two others), so there's nothing left for flex-grow to
+     usefully do here. */
+  flex: 0 0 auto;
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
 }
 

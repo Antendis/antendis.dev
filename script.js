@@ -36,6 +36,12 @@
     // Expose active panel on <html> so CSS can drive panel-specific styles
     // (e.g. the intro panel's footer spacing) without extra JS.
     document.documentElement.dataset.panel = id;
+    // The skills panel is display:none while inactive, so its chip lists
+    // have no width to pack against until it's the one being shown --
+    // reflowSkillsLists() itself is defined further down but hoisted, and
+    // a no-op on every other panel (and before config.js has populated the
+    // lists at all, on the very first call this router makes at load).
+    if (id === 'skills') reflowSkillsLists();
     if (isTabMode()) {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
@@ -927,10 +933,76 @@ function loadTechStack() {
   }
 }
 
+// Skills chips: pack them tightly instead of leaving flex-wrap's strict
+// source-order wrapping to a per-row flex-grow stretch, which used to
+// balloon a lone short chip sharing a row with only one or two others (a
+// single-character "C" nearly as wide as "javascript" next to it). First-fit
+// decreasing bin packing reassigns each chip's *visual* order -- never its
+// position in the DOM, so source order (and reading/tab order) stays
+// exactly what config.js specifies -- so flex-wrap's own native wrapping
+// lands on tighter row boundaries instead.
+function reflowSkillsList(container) {
+  if (!container) return;
+  const items = Array.from(container.children);
+  if (!items.length) return;
+
+  // Clear any previous run's assignment before measuring, so a chip's own
+  // leftover `order` from a stale packing can't skew where flex-wrap thinks
+  // this row currently breaks.
+  items.forEach(li => { li.style.order = ''; });
+  const width = container.clientWidth;
+  if (!width) return; // hidden (inactive) panel -- nothing to measure yet
+  const gap = parseFloat(getComputedStyle(container).columnGap) || 0;
+
+  const widths = items.map(li => li.getBoundingClientRect().width);
+  const byWidthDesc = items.map((_, i) => i).sort((a, b) => widths[b] - widths[a]);
+
+  const rows = [];
+  byWidthDesc.forEach(i => {
+    const w = widths[i];
+    let row = rows.find(r => r.used + (r.indices.length ? gap : 0) + w <= width + 0.5);
+    if (!row) {
+      row = { used: 0, indices: [] };
+      rows.push(row);
+    }
+    row.used += (row.indices.length ? gap : 0) + w;
+    row.indices.push(i);
+  });
+
+  // Within a row, keep the chips in their original relative order -- only
+  // *which* row a chip lands in was up for grabs, not the reading order
+  // among a row's own chips.
+  let seq = 0;
+  rows.forEach(row => {
+    row.indices.sort((a, b) => a - b);
+    row.indices.forEach(i => { items[i].style.order = String(seq++); });
+  });
+}
+
+function reflowSkillsLists() {
+  reflowSkillsList(document.getElementById('techLanguages'));
+  reflowSkillsList(document.getElementById('techTools'));
+}
+
 // Load achievements and tech stack when page loads
 if (typeof config !== 'undefined') {
   loadAchievements();
   loadTechStack();
+  reflowSkillsLists();
+
+  // Re-pack on resize (debounced -- the skills grid's column width, and
+  // whether the layout is tabbed or stacked at all, both change with it)
+  // and once webfonts finish loading, since chip width depends on
+  // JetBrains Mono's real metrics, not the fallback font it's measured
+  // against on a cold load.
+  let reflowTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(reflowTimer);
+    reflowTimer = setTimeout(reflowSkillsLists, 120);
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(reflowSkillsLists).catch(() => {});
+  }
 }
 
 // Copy to clipboard, then open the mail client -- the mailto: trigger waits
