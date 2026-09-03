@@ -106,6 +106,60 @@ static `<script src="vendor/three.min.js">`. Setup must not wait for `window.loa
 doing so once delayed the globe by seconds because the map fetch didn't even start
 until everything else had finished.
 
+**Never split whitespace-only text nodes.** `splitIntoChars()` walks text nodes and
+wraps each character in a span. Wrapping the newlines/indentation *between* elements
+turns them into extra children — and inside a flex container each becomes a flex
+item, so the container's `gap` is multiplied by every whitespace character. This
+inflated `.sidebar` to a 2609px scrollHeight (gap 44px × ~28 phantom items) and gave
+`.side-nav` 542px instead of 173px. It also broke the sweep: the phantom spans sat at
+`x = 0`, sorted to the front of the queue, and burned ~300ms of the 700ms sweep
+resolving invisible units — which read as "stalls, then snaps".
+
+**The preload `?v=` must match exactly.** `index.html` preloads three.js behind
+`media="(min-width: 1440px)"`. If its query string drifts from what `globe.js`
+requests, the browser fetches the file twice instead of reusing the preload. Check
+there is exactly one network request for `three.min.js` after any version bump.
+
+## Where things live
+
+Saves reading whole files (`style.css` ~1500 lines, `script.js` ~900).
+
+- `script.js`, in order: hash router · theme toggle · mobile scrollspy ·
+  `splitIntoChars()` (shared) · hero typing · age ticker · config loaders
+  (grades/roles/tech) · clipboard copy · glitch intro · visitor tracking.
+- `globe.js`: palette helpers (`cssColorToHex`, `readPalette`) · `themedMaterial` /
+  `refreshTheme` / `glitchStutter` (exposed on `window.globe`) · lazy `loadThree()`
+  and `ensureGeoJson()` · `initGlobe` · geometry builders · render loop.
+- `style.css`: tokens and `@property` registrations · base · layout · sidebar ·
+  theme toggle · content/panels · globe rail · type · sections · entries ·
+  university · skills · about · contact · hero typing · glitch · responsive ·
+  breakpoints · motion preferences.
+- Intro treatments are chosen pre-paint in `index.html`'s head: `glitch-intro` on
+  `?glitch=1`, otherwise `type-hero`. `/glitchtest/index.html` is a redirect shim,
+  deliberately **not** a copy of the site.
+
+## Working efficiently
+
+Token cost grows with (context size × number of tool calls), so the cheapest work is
+work that doesn't re-read things.
+
+- **Batch changes.** Several tweaks in one pass costs one cold start; the same
+  tweaks one at a time re-read the codebase every time (~15k tokens before any work
+  begins). Ask for the whole list up front.
+- **Do small surgical edits directly.** A three-line CSS fix does not need a
+  subagent that must first learn the codebase.
+- **Read narrowly.** `grep`/`sed` for the rule or function you need instead of
+  reading `style.css` or `script.js` whole. Never re-read a file you just edited.
+- **Scale verification to risk.** Cosmetic or copy change: 2-3 assertions and one
+  screenshot. Reserve full sweeps (all panels × widths × heights down to 700px,
+  light and dark) for layout, globe and loading changes.
+- **Prefer numbers to pictures.** A measured `getBoundingClientRect()` answers most
+  questions; screenshots are expensive and only needed when judging how something
+  *looks*.
+- **Don't build review artifacts** unless they were asked for.
+- **Point at this file instead of restating it.** Briefs should say "follow
+  CLAUDE.md" rather than repeating the invariants above.
+
 ## Accessibility / motion
 
 - Honour `prefers-reduced-motion: reduce` — the typing intro, glitch intro and globe
