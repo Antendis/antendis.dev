@@ -464,7 +464,7 @@ if (typeof config !== 'undefined') {
   const FAILSAFE_MS = 6000;
   const SPAN_CAP = 2500;
   const STUTTER_DELAYS_MS = [200, 600, 1000, 1400]; // spread across both waves, one on each front's start
-  const GLYPH_SUB_CHANCE = 0.05; // sparingly -- corruption, not noise
+  const GLYPH_SUB_CHANCE = 0.15; // tripled from 0.05 for a more prominent effect
   const FLICKER_CHANCE = 0.03; // proportion of eligible chars picked as flickering
   const FLICKER_MAX = 10; // hard cap regardless of pool size -- a few unstable glyphs, not noise
 
