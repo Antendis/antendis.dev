@@ -622,8 +622,23 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const t = Math.min(1, (now - start) / durationMs);
         if (pending.length && (now - lastStep >= STEP_MS || t >= 1)) {
           lastStep = now;
-          const front = x0 + (x1 - x0 + 1) * t;
           const xs = pending.map(u => u.el.getBoundingClientRect().x);
+          // x0/x1 are widened (never narrowed) from whatever's still
+          // pending, not just measured once at the top. During the sweep,
+          // mutateTick keeps re-rolling variants on units the front hasn't
+          // reached yet, and some of those (bold, a font swap, the loose-
+          // tracking variant) push a character wider than wherever x1 stood
+          // when the wave started -- reachable, per this math, only once t
+          // hits 1. That's what "gets most of the way, then the remainder
+          // jumps at once" actually was: not a snapshot going stale (each
+          // step already re-reads live positions above), but the *target*
+          // the front was advancing toward being too narrow for where the
+          // text kept moving.
+          for (let i = 0; i < xs.length; i++) {
+            if (xs[i] < x0) x0 = xs[i];
+            if (xs[i] > x1) x1 = xs[i];
+          }
+          const front = x0 + (x1 - x0 + 1) * t;
           const rest = [];
           for (let i = 0; i < pending.length; i++) {
             if (xs[i] <= front) act(pending[i]);
