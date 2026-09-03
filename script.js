@@ -606,12 +606,23 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       if (i === 0 || x > x1) x1 = x;
     });
     const start = performance.now();
+    let lastStep = 0;
+    // The rect reads above (a forced layout) and the DOM writes `act` makes
+    // are the wave's real cost, paid across however many hundred units are
+    // still pending. Stepping at ~30fps here instead of matching the
+    // display's ~60fps halves that cost without the front reading as
+    // anything but smooth -- it was already advancing in whole-character
+    // jumps, not continuous pixels -- and leaves more of the main thread
+    // free for whatever else is starting up alongside it, typically the
+    // globe's own three.js init on first load.
+    const STEP_MS = 32;
 
     (function frame(now) {
       try {
         const t = Math.min(1, (now - start) / durationMs);
-        const front = x0 + (x1 - x0 + 1) * t;
-        if (pending.length) {
+        if (pending.length && (now - lastStep >= STEP_MS || t >= 1)) {
+          lastStep = now;
+          const front = x0 + (x1 - x0 + 1) * t;
           const xs = pending.map(u => u.el.getBoundingClientRect().x);
           const rest = [];
           for (let i = 0; i < pending.length; i++) {
