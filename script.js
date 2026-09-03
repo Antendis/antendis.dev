@@ -378,19 +378,24 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 // visitors never load, run, or pay for any of this; see /glitchtest, a
 // redirect shim rather than a page copy, for how testers reach the flag.
 //
-// Three phases, ~2.4s total:
-//   1. Corrupt (0 - ~1.4s): the sidebar, the active panel and the footer
-//      are exploded into per-character spans (via the shared splitIntoChars
-//      helper above) and re-randomised every ~90ms -- ~11 times a second,
+// Two waves, back to back, ~2.4s total. The sidebar, the active panel and
+// the footer are exploded into per-character spans (via the shared
+// splitIntoChars helper above) up front, corrupted, and then hidden -- and
+// two fronts cross the page left to right in succession:
+//   1. Wave in (0 - ~1.0s): the first front reveals the text in its
+//      corrupted state, so the page doesn't arrive already broken, it
+//      breaks its way in from the left.
+//   2. Wave through (~1.0s - ~2.1s): the second front follows immediately,
+//      with no pause between them, resolving each character to its true
+//      self as it passes. Corruption keeps re-randomising (every ~90ms --
 //      not every frame, both because per-frame reads as static noise and
-//      because font/weight swaps reflow text.
-//   2. Sweep (~1.4s - ~2.1s): every affected span is sorted by its real
-//      getBoundingClientRect().x (tie-broken on y) and un-glitched in that
-//      order over ~700ms, so the clean-up reads as one front moving left to
-//      right across the sidebar and the content column together, not a
-//      per-element snap.
+//      because font/weight swaps reflow text) on everything the first front
+//      has revealed and the second hasn't yet reached, so the strip between
+//      the two fronts is the only part still moving.
 //   3. Settle (~2.1s - ~2.4s): a short grace window, then the original
 //      markup is restored outright (dropping every throwaway span).
+// Both fronts are the same mechanism -- see waveFront() below, which is also
+// where the two things that make a front read as a front are written down.
 (function () {
   let GLITCH_ENABLED = false;
   try {
@@ -401,13 +406,13 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const root = document.documentElement;
   const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const PHASE1_MS = 1400;
-  const SWEEP_MS = 700;
+  const WAVE_IN_MS = 1000;
+  const SWEEP_MS = 1100;
   const SETTLE_MS = 300;
   const TICK_MS = 90; // ~11 mutation passes/sec -- see the phase-1 note above
   const FAILSAFE_MS = 6000;
   const SPAN_CAP = 2500;
-  const STUTTER_DELAYS_MS = [200, 600, 1000, 1400]; // spread through phase 1, last one at the sweep's start
+  const STUTTER_DELAYS_MS = [200, 600, 1000, 1400]; // spread across both waves, one on each front's start
   const GLYPH_SUB_CHANCE = 0.05; // sparingly -- corruption, not noise
   const FLICKER_CHANCE = 0.03; // proportion of eligible chars picked as flickering
   const FLICKER_MAX = 10; // hard cap regardless of pool size -- a few unstable glyphs, not noise
@@ -498,7 +503,11 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   // note above), keeps #age's digits haywire, and keeps the tab title
   // scrambled for as long as nothing has navigated away underneath it.
   function mutateTick(pool, ageUnit, isTitleScrambling, trueTitle) {
-    const pending = pool.filter(u => !u.cleaned && !u.isAge);
+    // Only what's on screen and not yet resolved: units the first front
+    // hasn't reached are still veiled, and re-rolling their variants would
+    // change their widths and shove the visible text around ahead of a
+    // front that hasn't got there yet.
+    const pending = pool.filter(u => u.revealed && !u.cleaned && !u.isAge);
     if (pending.length) {
       const batchSize = Math.min(pending.length, Math.max(6, Math.round(pending.length * 0.18)));
       for (let i = 0; i < batchSize; i++) {
@@ -510,7 +519,7 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       // visibly, continuously unstable.
       pending.forEach(u => { if (u.flicker) applyVariant(u); });
     }
-    if (ageUnit && !ageUnit.cleaned) {
+    if (ageUnit && ageUnit.revealed && !ageUnit.cleaned) {
       clearVariants(ageUnit.el);
       ageUnit.el.classList.add(pickVariant());
       ageGlitchText = scrambleAge();
@@ -520,53 +529,99 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     }
   }
 
+  function revealUnit(u) {
+    u.revealed = true;
+    u.el.classList.remove('g-veiled');
+  }
+
   function resolveUnit(u) {
+    u.revealed = true;
     u.cleaned = true;
+    u.el.classList.remove('g-veiled');
+    clearVariants(u.el);
     if (u.isAge) {
-      clearVariants(u.el);
       ageGlitchText = null;
     } else {
-      clearVariants(u.el);
       u.el.textContent = u.ch;
     }
   }
 
-  // Phase 2: snapshot every unit's real position now that phase 1 has
-  // stopped moving things around (collecting positions per-frame during the
-  // sweep itself would have the front chase its own furniture as spans
-  // un-corrupt and reflow under it), sort left to right, then reveal that
-  // many of them per frame over SWEEP_MS. Phase 3 is just the short grace
-  // window (SETTLE_MS) after the last one resolves, then finalize().
-  function sweep(pool, stopTitleScramble, trueTitle, finalize) {
-    stopTitleScramble();
-    document.title = trueTitle;
-
-    pool.forEach(u => {
-      const r = u.el.getBoundingClientRect();
-      u.x = r.x;
-      u.y = r.y;
+  // The one mechanism behind both waves: a front that crosses the affected
+  // text left to right at a constant speed over durationMs, applying `act`
+  // to every unit it passes, then calling onDone.
+  //
+  // The front is a real x coordinate advancing linearly from the leftmost
+  // unit to the rightmost, and each frame it acts on whatever is currently
+  // to the left of it -- read live, not from a snapshot taken before the
+  // wave started. Both halves of that matter, and both were wrong before:
+  //
+  //   * Advancing by x rather than by "this many units per frame" is what
+  //     makes the front move at a constant speed. Resolving a fixed share of
+  //     a position-sorted list per frame moves at a constant speed through
+  //     the *list*, and a paragraph's characters are nothing like evenly
+  //     spread across its width -- every wrapped line contributes a
+  //     character to the left-hand columns and only the long ones reach the
+  //     right-hand end. So the front crawled through the dense left and then
+  //     covered the sparse right in a frame or two, which is exactly the
+  //     "gets most of the way across, then the remainder snaps" this
+  //     replaced.
+  //
+  //   * Reading positions live is what keeps the front where the eye sees
+  //     it. Corrupted text is not the width of clean text -- half the
+  //     variants swap the face or the tracking -- so every character the
+  //     front resolves reflows the ones after it. Measured against a
+  //     snapshot taken before the sweep, the still-corrupted tail had
+  //     drifted to x=587 while the coordinates driving the front said x=824,
+  //     with 10% of the pool left: a 237px lag, and the pile-up it caused at
+  //     the end read as the same snap. Acting on whatever is left of the
+  //     front *right now* is what "a front crossing the page" actually
+  //     means, and it costs nothing to be correct about it.
+  //
+  // Each frame does all its rect reads first and all its mutations after, so
+  // there's one forced layout per frame rather than one per unit.
+  //
+  // Each frame after the first runs as its own rAF callback, outside the
+  // try/catch this function was called from -- wrap it here too, so a
+  // runtime error partway through a wave still finishes the wave's work on
+  // the spot instead of leaving text stranded until the failsafe timer.
+  function waveFront(units, durationMs, act, onDone) {
+    let pending = units.slice();
+    let x0 = 0;
+    let x1 = 0;
+    pending.forEach((u, i) => {
+      const x = u.el.getBoundingClientRect().x;
+      if (i === 0 || x < x0) x0 = x;
+      if (i === 0 || x > x1) x1 = x;
     });
-    pool.sort((a, b) => a.x - b.x || a.y - b.y);
-
-    let cleaned = 0;
     const start = performance.now();
 
-    // Each frame after the first runs as its own rAF callback, outside the
-    // try/catch this function was called from -- wrap it here too, so a
-    // runtime error partway through the sweep still restores clean text on
-    // the spot instead of waiting on the failsafe timer.
     (function frame(now) {
       try {
-        const elapsed = now - start;
-        const target = elapsed >= SWEEP_MS ? pool.length : Math.floor((elapsed / SWEEP_MS) * pool.length);
-        for (; cleaned < target; cleaned++) resolveUnit(pool[cleaned]);
-        if (cleaned < pool.length) {
+        const t = Math.min(1, (now - start) / durationMs);
+        const front = x0 + (x1 - x0 + 1) * t;
+        if (pending.length) {
+          const xs = pending.map(u => u.el.getBoundingClientRect().x);
+          const rest = [];
+          for (let i = 0; i < pending.length; i++) {
+            if (xs[i] <= front) act(pending[i]);
+            else rest.push(pending[i]);
+          }
+          pending = rest;
+        }
+        if (t < 1) {
           requestAnimationFrame(frame);
         } else {
-          setTimeout(finalize, SETTLE_MS);
+          // Anything the front never caught -- a unit that reflowed out past
+          // where the right edge was when the wave started -- is finished
+          // here rather than left behind.
+          pending.forEach(act);
+          pending = [];
+          onDone();
         }
       } catch (e) {
-        finalize();
+        pending.forEach(act);
+        pending = [];
+        onDone();
       }
     })(start);
   }
@@ -608,7 +663,7 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const pool = [];
       hosts.forEach(h => {
         splitIntoChars(h.el, 'glitch-char', budget).forEach(el => {
-          pool.push({ el, isAge: el.id === 'age', ch: el.id === 'age' ? '' : el.textContent, cleaned: false, flicker: false });
+          pool.push({ el, isAge: el.id === 'age', ch: el.id === 'age' ? '' : el.textContent, revealed: false, cleaned: false, flicker: false });
         });
       });
       markFlickering(pool);
@@ -667,10 +722,16 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     });
 
     // Everything is split and (if this is the page's first run) pre-hidden
-    // via .glitch-intro -- apply the initial fully-corrupted state before
-    // revealing, so first paint is already mid-glitch instead of flashing
-    // clean text first.
-    pool.forEach(u => { if (!u.isAge) applyVariant(u); });
+    // via .glitch-intro -- corrupt it and veil it before lifting that, so
+    // the hosts come back with their non-text furniture (the theme toggle,
+    // the icons) in place and every split character still to arrive. The
+    // veil is per-character opacity, applied while the layout is already
+    // final, so the first front reveals text into space that was always
+    // there rather than growing lines out from the left.
+    pool.forEach(u => {
+      if (!u.isAge) applyVariant(u);
+      u.el.classList.add('g-veiled');
+    });
     if (ageUnit) {
       clearVariants(ageUnit.el);
       ageUnit.el.classList.add(pickVariant());
@@ -686,15 +747,24 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       }
     }, TICK_MS);
 
-    timers.push(setTimeout(() => {
-      clearInterval(mutateTimer);
-      mutateTimer = null;
-      try {
-        sweep(pool, () => { titleScrambling = false; }, trueTitle, cleanup);
-      } catch (e) {
-        cleanup();
-      }
-    }, PHASE1_MS));
+    // Wave in, then -- from inside the first front's completion, so there is
+    // no timer and no gap between them -- wave through.
+    try {
+      waveFront(pool, WAVE_IN_MS, revealUnit, () => {
+        try {
+          titleScrambling = false;
+          document.title = trueTitle;
+          waveFront(pool, SWEEP_MS, resolveUnit, () => {
+            if (mutateTimer) { clearInterval(mutateTimer); mutateTimer = null; }
+            timers.push(setTimeout(cleanup, SETTLE_MS));
+          });
+        } catch (e) {
+          cleanup();
+        }
+      });
+    } catch (e) {
+      cleanup();
+    }
   }
 
   if (root.classList.contains('glitch-intro')) run();

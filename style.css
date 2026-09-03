@@ -968,6 +968,11 @@ a:hover {
 .side-foot a .g-space-tight { letter-spacing: -0.02em; }
 .side-foot a .g-space-loose { letter-spacing: 0.03em; }
 
+/* Held back from the first wave until the front reaches it -- see the glitch
+   module in script.js. Two classes' worth of specificity so it wins over
+   .g-faint's own opacity regardless of source order. */
+.glitch-char.g-veiled { opacity: 0; }
+
 /* Ink bleed: a duplicated, 1-2px offset ghost of the character in the
    site's own ink/green -- print misregistration standing in for chromatic
    aberration, which would read as a broken monitor rather than a bad
