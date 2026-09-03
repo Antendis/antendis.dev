@@ -259,6 +259,13 @@ body {
   gap: 0.4rem;
 }
 
+/* The icon/label separation is a margin on the icon, deliberately NOT the
+   flex `gap` it used to be. These links are inline-flex, so every direct
+   child is a flex item -- and the glitch intro splits their label into one
+   span per character, turning six letters into six flex items with the gap
+   applied between each. That rendered "github" with ~7px between every
+   letter for the whole corrupt phase. A margin only ever separates the two
+   things it's meant to. */
 .side-foot a {
   font-family: var(--mono);
   font-size: 0.75rem;
@@ -268,12 +275,12 @@ body {
   width: fit-content;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
 }
 
 .side-foot a .icon {
   width: 13px;
   height: 13px;
+  margin-right: 0.45rem;
 }
 
 .side-foot a:hover {
@@ -954,6 +961,12 @@ a:hover {
 /* Letter-spacing collapse/spread -- small, both directions. */
 .g-space-tight { letter-spacing: -0.05em; }
 .g-space-loose { letter-spacing: 0.1em; }
+
+/* ...but a good deal smaller in the sidebar's footer links, which are 12px
+   mono already tracked out to 0.06em. The same 0.1em that reads as a subtle
+   spread in 18px body copy reads as broken words there. */
+.side-foot a .g-space-tight { letter-spacing: -0.02em; }
+.side-foot a .g-space-loose { letter-spacing: 0.03em; }
 
 /* Ink bleed: a duplicated, 1-2px offset ghost of the character in the
    site's own ink/green -- print misregistration standing in for chromatic
