@@ -1,3 +1,19 @@
+// Marks the nav link for `id` as current, shared by the desktop hash router
+// below and the mobile scrollspy further down -- they highlight the same
+// .side-link elements via two different signals (the active hash vs. which
+// section is scrolled into view) but need to leave them in the same state.
+function setActiveNavLink(id) {
+  document.querySelectorAll('.side-link').forEach(a => {
+    const current = a.dataset.panel === id;
+    a.classList.toggle('is-current', current);
+    if (current) {
+      a.setAttribute('aria-current', 'page');
+    } else {
+      a.removeAttribute('aria-current');
+    }
+  });
+}
+
 // Hash-based panel router
 (function () {
   const PANELS = ['intro', 'projects', 'achievements', 'skills', 'contact'];
@@ -23,15 +39,7 @@
     document.querySelectorAll('.panel').forEach(p => {
       p.classList.toggle('is-active', p.id === id);
     });
-    document.querySelectorAll('.side-link').forEach(a => {
-      const current = a.dataset.panel === id;
-      a.classList.toggle('is-current', current);
-      if (current) {
-        a.setAttribute('aria-current', 'page');
-      } else {
-        a.removeAttribute('aria-current');
-      }
-    });
+    setActiveNavLink(id);
     document.title = TITLES[id];
     // Expose active panel on <html> so CSS can drive panel-specific styles
     // (e.g. the intro panel's footer spacing) without extra JS.
@@ -143,18 +151,6 @@
   const mq = window.matchMedia('(max-width: 1023px)');
   let observer = null;
 
-  function setCurrent(id) {
-    document.querySelectorAll('.side-link').forEach(a => {
-      const current = a.dataset.panel === id;
-      a.classList.toggle('is-current', current);
-      if (current) {
-        a.setAttribute('aria-current', 'page');
-      } else {
-        a.removeAttribute('aria-current');
-      }
-    });
-  }
-
   function start() {
     if (observer) return;
     const sections = Array.from(document.querySelectorAll('.panel'));
@@ -163,7 +159,7 @@
       if (!visible.length) return;
       // Prefer whichever intersecting section sits closest to the top band.
       visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      setCurrent(visible[0].target.id);
+      setActiveNavLink(visible[0].target.id);
     }, {
       // A thin horizontal band near the top of the viewport decides "current".
       rootMargin: '-45% 0px -50% 0px',
@@ -895,11 +891,10 @@ function loadAchievements() {
 
   // Grades list grouped by university year
   const gradesList = document.getElementById('gradesList');
-  if (gradesList && (config.gradesByYear || config.grades)) {
-    const gradesByYear = config.gradesByYear || { "Year 1": config.grades };
+  if (gradesList && config.gradesByYear) {
     gradesList.className = 'grade-years';
 
-    Object.entries(gradesByYear).forEach(([year, grades]) => {
+    Object.entries(config.gradesByYear).forEach(([year, grades]) => {
       const yearSection = document.createElement('section');
       yearSection.className = 'grade-year';
 
@@ -1057,7 +1052,7 @@ function fallbackCopy(text, textSpan, originalText, button) {
   textarea.style.opacity = '0';
   document.body.appendChild(textarea);
   textarea.select();
-  
+
   try {
     document.execCommand('copy');
     showCopied(textSpan, originalText, button);
@@ -1068,7 +1063,7 @@ function fallbackCopy(text, textSpan, originalText, button) {
       textSpan.textContent = originalText;
     }, 2000);
   }
-  
+
   document.body.removeChild(textarea);
 }
 
