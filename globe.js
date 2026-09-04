@@ -142,8 +142,6 @@ function initGlobe(container, width, height) {
 
   // Listen for visitor updates
   window.addEventListener('visitorLocationUpdated', updateVisitorMarkers);
-
-  console.log('Globe initialized successfully');
 }
 
 // This file's own cache-busting query string, reused below for the three.js
@@ -213,7 +211,7 @@ function markGlobeDrawn() {
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
-  
+
   return new THREE.Vector3(
     -radius * Math.sin(phi) * Math.cos(theta),
     radius * Math.cos(phi),
@@ -241,22 +239,20 @@ function createGlobeFromGeoJSON(geojson) {
       });
     }
   });
-  
+
   // Add subtle grid lines
   createGridLines();
-  
-  console.log('Globe created from GeoJSON');
 }
 
 function createLineFromCoordinates(coordinates, material) {
   const points = [];
-  
+
   coordinates.forEach(coord => {
     const [lon, lat] = coord;
     const vector = latLonToVector3(lat, lon, GLOBE_RADIUS);
     points.push(vector);
   });
-  
+
   if (points.length > 1) {
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     const line = new THREE.Line(geometry, material);
@@ -269,7 +265,7 @@ function createGridLines() {
     opacity: 0.08,
     transparent: true
   });
-  
+
   // Latitude lines
   for (let lat = -80; lat <= 80; lat += 20) {
     const points = [];
@@ -280,7 +276,7 @@ function createGridLines() {
     const line = new THREE.Line(geometry, gridMaterial);
     globeGroup.add(line);
   }
-  
+
   // Longitude lines
   for (let lon = -180; lon < 180; lon += 20) {
     const points = [];
@@ -295,7 +291,6 @@ function createGridLines() {
 
 function createSimpleGlobe() {
   createGridLines();
-  console.log('Simple globe created');
 }
 
 // Markers are rebuilt from scratch on every visitor-list update, so their
@@ -316,7 +311,7 @@ function updateVisitorMarkers() {
   visitorMarkers = [];
 
   const visitors = window.visitorTracking ? window.visitorTracking.getAllVisitors() : [];
-  
+
   visitors.slice(0, 20).forEach(v => {
     if (Number.isFinite(v.latitude) && Number.isFinite(v.longitude)) {
       const marker = createVisitorMarker(v.latitude, v.longitude, v.isSelf === true);
@@ -333,7 +328,7 @@ function updateVisitorMarkers() {
 function createVisitorMarker(lat, lon, isCurrent = false) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
-  
+
   const x = -GLOBE_RADIUS * Math.sin(phi) * Math.cos(theta);
   const y = GLOBE_RADIUS * Math.cos(phi);
   const z = GLOBE_RADIUS * Math.sin(phi) * Math.sin(theta);
@@ -343,7 +338,7 @@ function createVisitorMarker(lat, lon, isCurrent = false) {
     transparent: true,
     opacity: isCurrent ? 1 : 0.45
   });
-  
+
   const marker = new THREE.Mesh(geometry, material);
   marker.position.set(x, y, z);
 
