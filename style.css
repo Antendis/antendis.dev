@@ -14,7 +14,7 @@
   --decoration: rgba(26, 24, 19, 0.32);
   --accent-decoration: rgba(24, 118, 69, 0.4);
   --selection-bg: rgba(24, 118, 69, 0.18);
-  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --serif: 'Newsreader', 'Newsreader Fallback', Georgia, 'Times New Roman', serif;
   --mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   --sidebar-w: 15rem;
   --globe-w: 34rem;

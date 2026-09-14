@@ -16,6 +16,32 @@
   src: url('assets/fonts/newsreader-latin-opsz-italic.woff2') format('woff2-variations');
 }
 
+/* Metric-matched local fallbacks for Newsreader (see --serif in style.css),
+   so the pre-load fallback paint occupies the same box the webfont will and
+   font-display: swap's eventual glyph swap doesn't reflow the page. Sizes
+   are derived from each font's own ascent/descent/xAvgCharWidth (Newsreader
+   read from the woff2 files, Georgia from @capsizecss/metrics) -- don't
+   hand-tune these percentages without recomputing from those sources. */
+@font-face {
+  font-family: 'Newsreader Fallback';
+  font-style: normal;
+  src: local('Georgia');
+  size-adjust: 121.9154%;
+  ascent-override: 60.2877%;
+  descent-override: 21.7364%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Newsreader Fallback';
+  font-style: italic;
+  src: local('Georgia Italic'), local('Georgia');
+  size-adjust: 114.6088%;
+  ascent-override: 64.1312%;
+  descent-override: 23.1221%;
+  line-gap-override: 0%;
+}
+
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
