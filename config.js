@@ -33,7 +33,7 @@ const config = {
   // Tech stack
   tech: {
     languages: ["python", "javascript", "C", "C#", "html/css", "scss", "sql", "bash"],
-    tools: ["react", "next.js", "node.js", ".net", "rest apis", "pytest", "git", "github actions", "azure devops", "docker", "azure", "vercel", "powershell", "figma", "jira", "jupyter notebook", "pandas", "numpy", "tensorflow", "pytorch", "scikit-learn", "ollama"]
+    tools: ["react", "next.js", "node.js", ".net", "umbraco", "rest apis", "pytest", "git", "github actions", "azure devops", "docker", "azure", "vercel", "powershell", "figma", "jira", "jupyter notebook", "pandas", "numpy", "tensorflow", "pytorch", "scikit-learn", "ollama"]
   },
 
   // Visitor-globe backend (Cloudflare Worker base URL, no trailing slash).
